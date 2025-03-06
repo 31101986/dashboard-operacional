@@ -16,3 +16,4 @@ dash-bootstrap-components==1.7.1
 pandas==2.2.3
 plotly==6.0.0
 SQLAlchemy==2.0.38
+python-dotenv==1.0.1
