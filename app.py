@@ -1,37 +1,40 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import html, dcc, Input, Output  # Certifique-se de importar Input e Output
+from dash import html, dcc, Input, Output
 import pages.relatorio1 as rel1
 import pages.relatorio2 as rel2
-import pages.relatorio3 as rel3   # Importa o Relatório 3
+import pages.relatorio3 as rel3
 
-# External stylesheets: Inclui o tema LUX, Font Awesome e animate.css
+# External stylesheets: inclui o tema LUX, Font Awesome e animate.css
 external_stylesheets = [
     dbc.themes.LUX,
     "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
     "https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
 ]
 
+# Cria o app do Dash
 app = dash.Dash(
     __name__,
     suppress_callback_exceptions=True,
     external_stylesheets=external_stylesheets
 )
-server = app.server  # Para deploy, por exemplo, no Heroku
 
-# Navbar
+# Define o objeto do servidor (WSGI callable) que o Gunicorn usará
+server = app.server
+
+# Define a Navbar para a navegação
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dcc.Link("Portal", href="/", className="nav-link")),
         dbc.NavItem(dcc.Link("Relatório 1", href="/relatorio1", className="nav-link")),
         dbc.NavItem(dcc.Link("Relatório 2", href="/relatorio2", className="nav-link")),
-        dbc.NavItem(dcc.Link("Relatório 3", href="/relatorio3", className="nav-link")),  # Link para Relatório 3
+        dbc.NavItem(dcc.Link("Relatório 3", href="/relatorio3", className="nav-link")),
     ],
     brand="Mineração XYZ",
     brand_href="/",
     color="dark",
     dark=True,
-    sticky="top",
+    sticky="top"
 )
 
 # Layout da página inicial (Portal)
