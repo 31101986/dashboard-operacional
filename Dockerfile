@@ -12,9 +12,9 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
  && curl https://packages.microsoft.com/config/debian/11/prod.list \
     > /etc/apt/sources.list.d/mssql-release.list
 
-# (3) Instala o driver msodbcsql17 e as bibliotecas do unixodbc
+# (3) Instala o driver msodbcsql18 e as bibliotecas do unixodbc
 RUN apt-get update && ACCEPT_EULA=Y apt-get install -y \
-    msodbcsql17 \
+    msodbcsql18 \
     unixodbc-dev \
  && rm -rf /var/lib/apt/lists/*
 
