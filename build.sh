@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-set -eux
+set -e  # Faz o script "parar" se ocorrer erro em algum comando
 
-# Atualiza a lista de pacotes e instala ferramentas necessárias
-apt-get update && apt-get install -y curl gnupg apt-transport-https
+echo "Instalando dependências do ODBC Driver..."
+# Atualiza repositórios
+sudo apt-get update
 
-# Importa a chave pública da Microsoft
-curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+# Instala pacotes básicos para baixar e adicionar chaves
+sudo apt-get install -y curl apt-transport-https gnupg2
 
-# Adiciona o repositório da Microsoft (para Debian 11; se necessário, adapte para a sua distribuição)
-curl https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
+# Adiciona o repositório da Microsoft para ODBC
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list \
+    | sudo tee /etc/apt/sources.list.d/mssql-release.list
 
-# Atualiza novamente e instala o driver ODBC 17 para SQL Server e os arquivos de desenvolvimento do unixODBC
-apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
+# Atualiza novamente e instala driver
+sudo apt-get update
+ACCEPT_EULA=Y sudo apt-get install -y msodbcsql18 unixodbc-dev
 
-# (Opcional) Instale outras dependências do sistema, se necessário
-
-# Atualiza o pip e instala as dependências do seu projeto
-pip install --upgrade pip
+echo "Instalando as dependências Python..."
 pip install -r requirements.txt
+
+echo "Build concluído!"
