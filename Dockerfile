@@ -1,43 +1,34 @@
-# (1) Escolhemos uma imagem base do Python 3.11
+# Usando a imagem base do Python 3.11 slim
 FROM python:3.11-slim
 
-# (2) Instalações básicas para poder instalar o ODBC driver
-#    e também dependências do msodbcsql17 (ou 18).
-#    No Debian/Ubuntu, precisamos do curl, gnupg, etc.
+# (1) Instala pacotes básicos necessários para compilar extensões em C++ 
+# (como o pyodbc) e adiciona pacotes para habilitar repositórios da Microsoft
+RUN apt-get update && apt-get install -y \
+    curl gnupg apt-transport-https ca-certificates g++ \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y curl gnupg apt-transport-https ca-certificates
-
-# (3) Adiciona o repositório oficial da Microsoft (para o msodbcsql)
-#    A Microsoft oferece pacotes para Debian/Ubuntu. Ajuste se quiser msodbcsql18
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/debian/11/prod.list \
+# (2) Adiciona a chave GPG da Microsoft e o repositório para o ODBC
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+ && curl https://packages.microsoft.com/config/debian/11/prod.list \
     > /etc/apt/sources.list.d/mssql-release.list
 
-# (4) Instala o msodbcsql17 ou msodbcsql18
-#    e as dependências do unixodbc
+# (3) Instala o driver msodbcsql17 e as bibliotecas do unixodbc
 RUN apt-get update && ACCEPT_EULA=Y apt-get install -y \
     msodbcsql17 \
     unixodbc-dev \
-    && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
-# (5) Cria diretório do app no contêiner
+# (4) Define a pasta de trabalho dentro do container
 WORKDIR /app
 
-# (6) Copia os arquivos do seu projeto para /app
-#    Ajuste se o seu repositório tiver subpastas. 
-#    Se seu requirements.txt está na raiz, você copia tudo.
+# (5) Copia todo o conteúdo do projeto para dentro do container
 COPY . /app
 
-# (7) Instala as dependências Python
+# (6) Instala as dependências Python, incluindo pyodbc
 RUN pip install --no-cache-dir -r requirements.txt
 
-# (8) Define a porta que o Gunicorn vai escutar
+# (7) Expõe a porta que seu servidor Flask/Gunicorn irá escutar
 EXPOSE 8000
 
-# (9) Variável de ambiente (opcional) - faz o Flask/Dash rodar no "production"
-ENV PYTHONUNBUFFERED=1
-
-# (10) Comando final: inicia o Gunicorn apontando para seu app:server
-#     Ajuste se o seu app principal tiver outro nome ou se o server se chama
-#     app.server, etc. 
-CMD gunicorn app:server -b 0.0.0.0:8000
+# (8) Comando que inicia a aplicação
+CMD ["gunicorn", "app:server", "-b", "0.0.0.0:8000"]
