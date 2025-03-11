@@ -135,7 +135,7 @@ home_layout = dbc.Container(
                             dbc.CardBody(
                                 [
                                     html.H4("Produção", className="card-title"),
-                                    html.P("Novo Relatório 4", className="card-text"),
+                                    html.P("Volume - Indicadores", className="card-text"),
                                     dcc.Link("Visualizar", href="/relatorio4", className="btn btn-primary"),
                                 ]
                             ),
@@ -152,7 +152,7 @@ home_layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    html.Footer("© 2025 Mineração XYZ", className="text-center text-muted my-4"),
+                    html.Footer("© 2025 Mineração", className="text-center text-muted my-4"),
                     width=12,
                 )
             ]
