@@ -76,7 +76,7 @@ layout = dbc.Container(
             className="mb-4"
         ),
 
-        # 1) TABELA DE MOVIMENTAÇÃO
+        # 1) TABELA DE MOVIMENTAÇÃO (Dia Atual/Anterior)
         dbc.Row(
             dbc.Col(
                 dbc.Card(
@@ -114,7 +114,7 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # 2) GRÁFICO DE VIAGENS POR HORA TRABALHADA
+        # 2) GRÁFICO DE VIAGENS POR HORA TRABALHADA (Dia Atual/Anterior)
         dbc.Row(
             dbc.Col(
                 dbc.Card(
@@ -219,8 +219,8 @@ layout = dbc.Container(
 def get_datestr(day_choice):
     """
     Retorna a data no formato DD/MM/YYYY.
-    - Se day_choice == "hoje": data atual
-    - Se day_choice == "ontem": data atual - 1 dia
+    - Se day_choice == "hoje": data atual.
+    - Se day_choice == "ontem": data atual - 1 dia.
     """
     now = datetime.now()
     if day_choice == "ontem":
@@ -229,7 +229,7 @@ def get_datestr(day_choice):
 
 def get_producao_dia(day_choice):
     """
-    Consulta 'usp_fato_producao' para a data (hoje ou ontem).
+    Consulta 'usp_fato_producao' para a data (hoje ou ontem) conforme day_choice.
     Filtra dt_registro_turno para a data exata.
     """
     data_str = get_datestr(day_choice)
@@ -239,21 +239,17 @@ def get_producao_dia(day_choice):
     except Exception as e:
         logging.error(f"Erro ao consultar fato_producao (rel4) - day={day_choice}: {e}")
         return pd.DataFrame()
-
     if df.empty:
         return df
-
-    # Convert dt_registro_turno e filtra
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         filter_date = datetime.strptime(data_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filter_date]
-
     return df
 
 def get_hora_dia(day_choice):
     """
-    Consulta 'usp_fato_hora' para a data (hoje ou ontem).
+    Consulta 'usp_fato_hora' para a data (hoje ou ontem) conforme day_choice.
     Filtra dt_registro_turno para a data exata.
     """
     data_str = get_datestr(day_choice)
@@ -263,21 +259,18 @@ def get_hora_dia(day_choice):
     except Exception as e:
         logging.error(f"Erro ao consultar fato_hora (rel4) - day={day_choice}: {e}")
         return pd.DataFrame()
-
     if df.empty:
         return df
-
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         filter_date = datetime.strptime(data_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filter_date]
-
     return df
 
 def calcular_horas_desde_7h(day_choice):
     """
-    - Se day_choice == "ontem": assumimos 24h (dia anterior fechado).
-    - Se day_choice == "hoje": calcula horas passadas desde 07:00 do dia atual.
+    - Se day_choice == "ontem": retorna 24.0 (dia anterior fechado).
+    - Se day_choice == "hoje": calcula as horas decorridas desde 07:00 do dia atual.
     """
     if day_choice == "ontem":
         return 24.0
@@ -292,32 +285,25 @@ def calcular_horas_desde_7h(day_choice):
 def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     if "nome_modelo" not in df.columns or "nome_tipo_estado" not in df.columns or "tempo_hora" not in df.columns:
         return [], [], []
-
     df_f = df[df["nome_modelo"].isin(modelos_lista)].copy()
     if df_f.empty:
         return [], [], []
-
     df_f["tempo_hora"] = pd.to_numeric(df_f["tempo_hora"], errors="coerce").fillna(0)
-
     def calc_indicadores(subdf):
         horas_totais = subdf["tempo_hora"].sum()
         horas_fora = subdf.loc[subdf["nome_tipo_estado"] == "Fora de Frota", "tempo_hora"].sum()
         horas_cal = horas_totais - horas_fora
-
         horas_manut = subdf.loc[subdf["nome_tipo_estado"].isin(
             ["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"]
         ), "tempo_hora"].sum()
         horas_disp = horas_cal - horas_manut
-
         horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin(
             ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
         ), "tempo_hora"].sum()
-
         disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
         util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
         rend = (disp * util) / 100.0
         return disp, util, rend
-
     rows = []
     for modelo, df_grp in df_f.groupby("nome_modelo"):
         disp, util, rend = calc_indicadores(df_grp)
@@ -328,8 +314,6 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
             "rendimento": rend
         })
     df_ind = pd.DataFrame(rows)
-
-    # Linha TOTAL
     disp_all, util_all, rend_all = calc_indicadores(df_f)
     total_row = pd.DataFrame([{
         "nome_modelo": "TOTAL",
@@ -338,9 +322,7 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         "rendimento": rend_all
     }])
     df_ind = pd.concat([df_ind, total_row], ignore_index=True)
-
     data = df_ind.to_dict("records")
-
     columns = [
         {"name": "Modelo", "id": "nome_modelo", "type": "text"},
         {"name": "Disponibilidade (%)", "id": "disponibilidade", "type": "numeric", "format": num_format},
@@ -371,41 +353,33 @@ def update_tabela_movimentacao(_, day_choice):
     df = get_producao_dia(day_choice)
     if df.empty:
         return [], []
-
-    # Filtrar 2 operações
     df = df[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df.empty:
         return [], []
-
-    # Agrupar
     df_grp = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum")
     )
-
-    # Linha TOTAL
     total_line = pd.DataFrame({
         "nome_operacao": ["TOTAL"],
         "viagens": [df_grp["viagens"].sum()],
         "volume": [df_grp["volume"].sum()]
     })
     df_grp = pd.concat([df_grp, total_line], ignore_index=True)
-
-    # Calcula Ritmo
     horas_decorridas = calcular_horas_desde_7h(day_choice)
+    # Multiplica por 24 para projetar a produção total do dia
     df_grp["ritmo_volume"] = (df_grp["volume"] / horas_decorridas) * 24.0
-
     meta_total = META_MINERIO + META_ESTERIL
     style_data_conditional = [
         {
-            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total)},
-            "color": "rgb(0,55,158)",
-            "column_id": "volume"
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total),
+                   "column_id": "volume"},
+            "color": "rgb(0,55,158)"
         },
         {
-            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total)},
-            "color": "red",
-            "column_id": "volume"
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total),
+                   "column_id": "volume"},
+            "color": "red"
         },
         {
             "if": {"filter_query": '{nome_operacao} = "TOTAL"'},
@@ -413,7 +387,6 @@ def update_tabela_movimentacao(_, day_choice):
             "fontWeight": "bold"
         }
     ]
-
     data = df_grp.to_dict("records")
     return data, style_data_conditional
 
@@ -430,34 +403,28 @@ def update_grafico_viagens_hora(_, day_choice):
     df_hora = get_hora_dia(day_choice)
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-
     df_prod = df_prod[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df_prod.empty:
         return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
-
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
         viagens=("nome_equipamento_utilizado", "count")
     )
-
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
     df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
-
     df_merged = pd.merge(df_viagens, df_horas,
                          left_on="nome_equipamento_utilizado",
                          right_on="nome_equipamento",
                          how="inner")
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar Viagens/Hora.", template="plotly_white")
-
     df_merged["viagens_por_hora"] = df_merged.apply(
         lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
         axis=1
     )
     df_merged.sort_values("viagens_por_hora", inplace=True)
-
     fig = px.bar(
         df_merged,
         x="nome_equipamento_utilizado",
@@ -479,7 +446,7 @@ def update_grafico_viagens_hora(_, day_choice):
     return fig
 
 ###############################################################################
-# CALLBACKS - 3 Tabelas Indicadores
+# CALLBACKS - 3 Tabelas de Indicadores
 ###############################################################################
 @callback(
     Output("rel4-tabela-ind-escavacao", "data"),

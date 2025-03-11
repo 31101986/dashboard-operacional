@@ -32,7 +32,7 @@ navbar = dbc.NavbarSimple(
         # dbc.NavItem(dcc.Link("Relatório 1", href="/relatorio1", className="nav-link")),
         # dbc.NavItem(dcc.Link("Relatório 2", href="/relatorio2", className="nav-link")),
         # dbc.NavItem(dcc.Link("Relatório 3", href="/relatorio3", className="nav-link")),
-        dbc.NavItem(dcc.Link("Relatório 4", href="/relatorio4", className="nav-link")),  # Link do Relatório 4
+        dbc.NavItem(dcc.Link("Produção - Indicadores", href="/relatorio4", className="nav-link")),  # Link do Relatório 4
     ],
     brand="Mineração",
     brand_href="/",
@@ -134,7 +134,7 @@ home_layout = dbc.Container(
                             ),
                             dbc.CardBody(
                                 [
-                                    html.H4("Relatório 4", className="card-title"),
+                                    html.H4("Produção", className="card-title"),
                                     html.P("Novo Relatório 4", className="card-text"),
                                     dcc.Link("Visualizar", href="/relatorio4", className="btn btn-primary"),
                                 ]
