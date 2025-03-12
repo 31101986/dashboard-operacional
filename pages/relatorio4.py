@@ -16,6 +16,7 @@ from dash.dash_table import FormatTemplate
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
 
+# ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(
     level=logging.INFO,
     filename="relatorio4.log",
@@ -23,11 +24,10 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# ==================== FORMATAÇÃO NUMÉRICA ====================
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 
-###############################################################################
-# Modelos para as 3 tabelas de indicadores
-###############################################################################
+# ==================== MODELOS PARA INDICADORES ====================
 ESCAVACAO_MODELOS = [
     "ESCAVADEIRA HIDRAULICA SANY SY750H",
     "ESCAVADEIRA HIDRÁULICA CAT 352",
@@ -43,45 +43,52 @@ PERFURACAO_MODELOS = [
     "PERFURATRIZ HIDRAULICA SANDVIK DX800"
 ]
 
-###############################################################################
-# Layout
-###############################################################################
+# ==================== LAYOUT ====================
 layout = dbc.Container(
     [
+        # Título Principal
         dbc.Row(
             dbc.Col(
-                html.H1("Relatório 4 - Dia Atual ou Dia Anterior", className="text-center my-4 text-primary"),
+                html.H1("Relatório 4 - Produção e Indicadores", className="text-center my-4 text-primary"),
                 width=12
             )
         ),
 
-        # Seletor: Dia Atual ou Dia Anterior
+        # Descrição e Seletor
         dbc.Row(
-            dbc.Col(
-                dbc.RadioItems(
-                    id="rel4-day-selector",
-                    className="btn-group",
-                    inputClassName="btn-check",
-                    labelClassName="btn btn-outline-primary",
-                    labelCheckedClassName="active",
-                    options=[
-                        {"label": "Dia Atual", "value": "hoje"},
-                        {"label": "Dia Anterior", "value": "ontem"},
-                    ],
-                    value="hoje",
-                    inline=True
+            [
+                dbc.Col(
+                    html.Div(
+                        [
+                            html.P("Escolha se deseja visualizar o dia atual ou o dia anterior."),
+                            dbc.RadioItems(
+                                id="rel4-day-selector",
+                                className="btn-group",
+                                inputClassName="btn-check",
+                                labelClassName="btn btn-outline-primary",
+                                labelCheckedClassName="active",
+                                options=[
+                                    {"label": "Dia Atual", "value": "hoje"},
+                                    {"label": "Dia Anterior", "value": "ontem"},
+                                ],
+                                value="hoje",
+                                inline=True
+                            )
+                        ],
+                        style={"marginBottom": "10px"}
+                    ),
+                    width=12
                 ),
-                width=12
-            ),
+            ],
             className="mb-4"
         ),
 
-        # 1) TABELA DE MOVIMENTAÇÃO (Dia Atual/Anterior)
+        # 1) TABELA DE MOVIMENTAÇÃO
         dbc.Row(
             dbc.Col(
                 dbc.Card(
                     [
-                        dbc.CardHeader(html.H5("Movimentação (Dia Atual/Anterior)", className="mb-0")),
+                        dbc.CardHeader(html.H5("Movimentação (Dia Atual ou Dia Anterior)", className="mb-0")),
                         dbc.CardBody(
                             dcc.Loading(
                                 dash_table.DataTable(
@@ -114,12 +121,12 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # 2) GRÁFICO DE VIAGENS POR HORA TRABALHADA (Dia Atual/Anterior)
+        # 2) GRÁFICO DE VIAGENS POR HORA TRABALHADA
         dbc.Row(
             dbc.Col(
                 dbc.Card(
                     [
-                        dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Dia Atual/Anterior)")),
+                        dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Dia Atual ou Dia Anterior)")),
                         dbc.CardBody(
                             dcc.Loading(
                                 dcc.Graph(id="rel4-grafico-viagens-hora", config={"displayModeBar": False}),
@@ -134,11 +141,11 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # 3) TABELAS DE INDICADORES - 3 grupos
+        # 3) TABELAS DE INDICADORES (Escavação, Transporte, Perfuração)
         dbc.Row([
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Escavação")),
+                    dbc.CardHeader(html.H5("Indicadores - Escavação", className="mb-0")),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -159,7 +166,7 @@ layout = dbc.Container(
             ),
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Transporte")),
+                    dbc.CardHeader(html.H5("Indicadores - Transporte", className="mb-0")),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -180,7 +187,7 @@ layout = dbc.Container(
             ),
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Perfuração")),
+                    dbc.CardHeader(html.H5("Indicadores - Perfuração", className="mb-0")),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -201,7 +208,7 @@ layout = dbc.Container(
             ),
         ], className="mt-2"),
 
-        # Link para voltar ao Portal
+        # Botão Voltar
         dbc.Row(
             dbc.Col(
                 dcc.Link("Voltar para o Portal", href="/", className="btn btn-secondary"),
@@ -213,24 +220,21 @@ layout = dbc.Container(
     fluid=True
 )
 
-###############################################################################
-# FUNÇÕES AUXILIARES
-###############################################################################
+# ==================== FUNÇÕES AUXILIARES ====================
 def get_datestr(day_choice):
     """
-    Retorna a data no formato DD/MM/YYYY.
-    - Se day_choice == "hoje": data atual.
-    - Se day_choice == "ontem": data atual - 1 dia.
+    Retorna a data no formato DD/MM/YYYY:
+      - day_choice = "hoje": data atual
+      - day_choice = "ontem": data atual - 1 dia
     """
     now = datetime.now()
     if day_choice == "ontem":
-        now = now - timedelta(days=1)
+        now -= timedelta(days=1)
     return now.strftime("%d/%m/%Y")
 
 def get_producao_dia(day_choice):
     """
-    Consulta 'usp_fato_producao' para a data (hoje ou ontem) conforme day_choice.
-    Filtra dt_registro_turno para a data exata.
+    Consulta 'usp_fato_producao' para a data (dia atual ou dia anterior) e filtra dt_registro_turno.
     """
     data_str = get_datestr(day_choice)
     query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{data_str}', '{data_str}'"
@@ -241,16 +245,16 @@ def get_producao_dia(day_choice):
         return pd.DataFrame()
     if df.empty:
         return df
+
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        filter_date = datetime.strptime(data_str, "%d/%m/%Y").date()
-        df = df[df["dt_registro_turno"].dt.date == filter_date]
+        filtro_data = datetime.strptime(data_str, "%d/%m/%Y").date()
+        df = df[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
 def get_hora_dia(day_choice):
     """
-    Consulta 'usp_fato_hora' para a data (hoje ou ontem) conforme day_choice.
-    Filtra dt_registro_turno para a data exata.
+    Consulta 'usp_fato_hora' para a data (dia atual ou dia anterior) e filtra dt_registro_turno.
     """
     data_str = get_datestr(day_choice)
     query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{data_str}', '{data_str}'"
@@ -261,34 +265,39 @@ def get_hora_dia(day_choice):
         return pd.DataFrame()
     if df.empty:
         return df
+
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        filter_date = datetime.strptime(data_str, "%d/%m/%Y").date()
-        df = df[df["dt_registro_turno"].dt.date == filter_date]
+        filtro_data = datetime.strptime(data_str, "%d/%m/%Y").date()
+        df = df[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
 def calcular_horas_desde_7h(day_choice):
     """
-    - Se day_choice == "ontem": retorna 24.0 (dia anterior fechado).
-    - Se day_choice == "hoje": calcula as horas decorridas desde 07:00 do dia atual.
+    - Se 'ontem', retorna 24h (dia anterior finalizado)
+    - Se 'hoje', calcula as horas decorridas desde 07:00 do dia atual e retorna no mínimo 0.01.
     """
     if day_choice == "ontem":
         return 24.0
-    else:
-        now = datetime.now()
-        start_7h = datetime(now.year, now.month, now.day, 7, 0)
-        if now < start_7h:
-            start_7h -= timedelta(days=1)
-        horas_passadas = (now - start_7h).total_seconds() / 3600.0
-        return max(horas_passadas, 0.01)
+    now = datetime.now()
+    start_7h = now.replace(hour=7, minute=0, second=0, microsecond=0)
+    if now < start_7h:
+        # Se ainda não for 07:00, subtrai 1 dia
+        start_7h -= timedelta(days=1)
+    horas_passadas = (now - start_7h).total_seconds() / 3600.0
+    return max(horas_passadas, 0.01)
 
 def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
-    if "nome_modelo" not in df.columns or "nome_tipo_estado" not in df.columns or "tempo_hora" not in df.columns:
+    """
+    Filtra df_hora para certos modelos, agrupa e calcula disponibilidade, utilização, rendimento.
+    """
+    if any(col not in df.columns for col in ["nome_modelo", "nome_tipo_estado", "tempo_hora"]):
         return [], [], []
     df_f = df[df["nome_modelo"].isin(modelos_lista)].copy()
     if df_f.empty:
         return [], [], []
     df_f["tempo_hora"] = pd.to_numeric(df_f["tempo_hora"], errors="coerce").fillna(0)
+
     def calc_indicadores(subdf):
         horas_totais = subdf["tempo_hora"].sum()
         horas_fora = subdf.loc[subdf["nome_tipo_estado"] == "Fora de Frota", "tempo_hora"].sum()
@@ -304,6 +313,7 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
         rend = (disp * util) / 100.0
         return disp, util, rend
+
     rows = []
     for modelo, df_grp in df_f.groupby("nome_modelo"):
         disp, util, rend = calc_indicadores(df_grp)
@@ -322,6 +332,7 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         "rendimento": rend_all
     }])
     df_ind = pd.concat([df_ind, total_row], ignore_index=True)
+
     data = df_ind.to_dict("records")
     columns = [
         {"name": "Modelo", "id": "nome_modelo", "type": "text"},
@@ -340,8 +351,10 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     ]
     return data, columns, style_cond
 
+# ===================== CALLBACKS =====================
+
 ###############################################################################
-# CALLBACK 1 - Tabela de Movimentação
+# 1) Tabela de Movimentação
 ###############################################################################
 @callback(
     Output("rel4-tabela-movimentacao", "data"),
@@ -353,22 +366,30 @@ def update_tabela_movimentacao(_, day_choice):
     df = get_producao_dia(day_choice)
     if df.empty:
         return [], []
+    # Filtra apenas Minério e Estéril
     df = df[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df.empty:
         return [], []
+
+    # Agrupa
     df_grp = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum")
     )
+
+    # Linha TOTAL
     total_line = pd.DataFrame({
         "nome_operacao": ["TOTAL"],
         "viagens": [df_grp["viagens"].sum()],
         "volume": [df_grp["volume"].sum()]
     })
     df_grp = pd.concat([df_grp, total_line], ignore_index=True)
+
+    # Cálculo de Ritmo => (volume / horas_decorridas_desde_7h) * 24
     horas_decorridas = calcular_horas_desde_7h(day_choice)
-    # Multiplica por 24 para projetar a produção total do dia
     df_grp["ritmo_volume"] = (df_grp["volume"] / horas_decorridas) * 24.0
+
+    # Formatação condicional p/ volume (meta)
     meta_total = META_MINERIO + META_ESTERIL
     style_data_conditional = [
         {
@@ -391,7 +412,7 @@ def update_tabela_movimentacao(_, day_choice):
     return data, style_data_conditional
 
 ###############################################################################
-# CALLBACK 2 - Gráfico de Viagens/Hora
+# 2) Gráfico de Viagens por Hora Trabalhada
 ###############################################################################
 @callback(
     Output("rel4-grafico-viagens-hora", "figure"),
@@ -403,28 +424,40 @@ def update_grafico_viagens_hora(_, day_choice):
     df_hora = get_hora_dia(day_choice)
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para o período.", template="plotly_white")
+
+    # Filtra as operações de interesse
     df_prod = df_prod[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df_prod.empty:
         return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
+
+    # Agrupa viagens por equipamento
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
         viagens=("nome_equipamento_utilizado", "count")
     )
+
+    # Filtra df_hora para estados de trabalho
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
     df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
-    df_merged = pd.merge(df_viagens, df_horas,
-                         left_on="nome_equipamento_utilizado",
-                         right_on="nome_equipamento",
-                         how="inner")
+
+    df_merged = pd.merge(
+        df_viagens, df_horas,
+        left_on="nome_equipamento_utilizado",
+        right_on="nome_equipamento",
+        how="inner"
+    )
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar Viagens/Hora.", template="plotly_white")
+
+    # Cálculo de viagens/hora
     df_merged["viagens_por_hora"] = df_merged.apply(
         lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
         axis=1
     )
     df_merged.sort_values("viagens_por_hora", inplace=True)
+
     fig = px.bar(
         df_merged,
         x="nome_equipamento_utilizado",
@@ -446,7 +479,7 @@ def update_grafico_viagens_hora(_, day_choice):
     return fig
 
 ###############################################################################
-# CALLBACKS - 3 Tabelas de Indicadores
+# 3) Tabelas de Indicadores (Escavação, Transporte, Perfuração)
 ###############################################################################
 @callback(
     Output("rel4-tabela-ind-escavacao", "data"),

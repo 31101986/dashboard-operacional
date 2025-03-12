@@ -12,19 +12,30 @@ import pandas as pd
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
 
-# Para formatar colunas numéricas no DataTable com separador de milhares e 2 casas decimais
 from dash.dash_table.Format import Format, Scheme
+
+# Formato numérico com 2 casas e separador de milhar
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 
+# ==================== LAYOUT ====================
 layout = dbc.Container(
     [
-        # Cabeçalho e Filtros
         dbc.Row(
             dbc.Col(
                 html.H1("Relatório 2 - Fato Produção", className="text-center my-4 text-primary"),
                 width=12
             )
         ),
+
+        # Subtítulo ou breve descrição
+        dbc.Row(
+            dbc.Col(
+                html.H5("Análise de Produção e Indicadores no Período Selecionado", className="text-center text-muted"),
+                width=12
+            ),
+            className="mb-4"
+        ),
+
         dbc.Row(
             [
                 dbc.Col(
@@ -45,10 +56,10 @@ layout = dbc.Container(
                 ),
                 dbc.Col(
                     [
-                        html.Label("Filtrar por Operação (Produção):", className="fw-bold text-secondary"),
+                        html.Label("Filtrar Operações (opcional):", className="fw-bold text-secondary"),
                         dcc.Dropdown(
                             id="operacao-dropdown",
-                            placeholder="(Opcional) Selecione uma ou mais operações",
+                            placeholder="Selecione uma ou mais operações",
                             multi=True,
                             className="mb-2"
                         )
@@ -58,10 +69,12 @@ layout = dbc.Container(
             ],
             className="my-2"
         ),
+
+        # Armazenamento de dados de fato_producao
         dcc.Store(id="data-store"),
         html.Hr(),
 
-        # Tabelas de Movimentação
+        # 1) Tabelas de Movimentação
         dbc.Row(
             [
                 dbc.Col(
@@ -121,13 +134,13 @@ layout = dbc.Container(
         ),
         html.Hr(),
 
-        # Gráficos de Volume e Massa
+        # 2) Gráficos de Volume e Massa
         dbc.Row(
             [
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Gráfico de Volume")),
+                            dbc.CardHeader(html.H5("Gráfico de Volume", className="mb-0")),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-volume", config={"displayModeBar": False}),
@@ -147,7 +160,7 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Gráfico de Massa")),
+                            dbc.CardHeader(html.H5("Gráfico de Massa", className="mb-0")),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-massa", config={"displayModeBar": False}),
@@ -163,13 +176,13 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # Gráfico de Viagens por Hora Trabalhada (Último Dia)
+        # 3) Gráfico de Viagens por Hora Trabalhada (Último Dia)
         dbc.Row(
             [
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Último Dia)")),
+                            dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Último Dia)", className="mb-0")),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-viagens-hora", config={"displayModeBar": False}),
@@ -186,7 +199,7 @@ layout = dbc.Container(
         ),
         html.Hr(),
 
-        # Filtro de Modelo para Indicadores
+        # 4) Filtro de Modelo para Indicadores
         dbc.Row(
             dbc.Col(
                 [
@@ -204,13 +217,13 @@ layout = dbc.Container(
         dcc.Store(id="data-store-hora"),
         html.Hr(),
 
-        # Tabelas de Indicadores (apenas indicadores percentuais) – Último Dia e Acumulado
+        # 5) Tabelas de Indicadores – Último Dia e Acumulado
         dbc.Row(
             [
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Indicadores - Último Dia")),
+                            dbc.CardHeader(html.H5("Indicadores - Último Dia", className="mb-0")),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -236,7 +249,7 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Indicadores - Acumulado")),
+                            dbc.CardHeader(html.H5("Indicadores - Acumulado", className="mb-0")),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -276,10 +289,9 @@ layout = dbc.Container(
     fluid=True
 )
 
+# ==================== CALLBACKS ====================
 
-# -------------------- Callbacks --------------------
-
-# Callback para carregar dados de fato_producao
+# 1) Callback para carregar dados de fato_producao
 @callback(
     Output("data-store", "data"),
     Input("apply-button", "n_clicks"),
@@ -308,22 +320,21 @@ def apply_filter(n_clicks, start_date, end_date):
     if df.empty:
         return {}
 
-    # Converte dt_registro_turno para datetime, se existir
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         df.dropna(subset=["dt_registro_turno"], inplace=True)
 
-    # Filtra dentro do range
-    df = df[(df["dt_registro_turno"] >= start_date_obj) & (df["dt_registro_turno"] <= end_date_obj)]
+        # Filtra dentro do range
+        df = df[(df["dt_registro_turno"] >= start_date_obj) & (df["dt_registro_turno"] <= end_date_obj)]
 
     # Remove linhas sem nome_operacao
-    df.dropna(subset=["nome_operacao"], inplace=True)
-    df.reset_index(drop=True, inplace=True)
+    if "nome_operacao" in df.columns:
+        df.dropna(subset=["nome_operacao"], inplace=True)
 
+    df.reset_index(drop=True, inplace=True)
     return df.to_json(date_format="iso", orient="records")
 
-
-# Callback para atualizar o dropdown de operação
+# 2) Callback para atualizar o dropdown de operação
 @callback(
     Output("operacao-dropdown", "options"),
     Input("data-store", "data")
@@ -339,8 +350,7 @@ def update_operacoes_options(json_data):
     ops_unicas = sorted(df["nome_operacao"].unique())
     return [{"label": op, "value": op} for op in ops_unicas]
 
-
-# Callback para as Tabelas de Movimentação (Último dia e Acumulado)
+# 3) Callbacks para as Tabelas de Movimentação
 @callback(
     Output("tabela-1", "data"),
     Output("tabela-1", "columns"),
@@ -363,7 +373,6 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     if df.empty:
         return [], [], [], [], [], []
 
-    # Garante que dt_registro_turno esteja em formato datetime
     if "dt_registro_turno" not in df.columns:
         return [], [], [], [], [], []
     if not pd.api.types.is_datetime64_any_dtype(df["dt_registro_turno"]):
@@ -372,12 +381,13 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     if df.empty:
         return [], [], [], [], [], []
 
+    # Filtro por operação
     if operacoes_selecionadas:
         df = df[df["nome_operacao"].isin(operacoes_selecionadas)]
     if df.empty:
         return [], [], [], [], [], []
 
-    # Movimentação (Último dia)
+    # Último dia
     ultimo_dia = df["dt_registro_turno"].dt.date.max()
     df_last_day = df[df["dt_registro_turno"].dt.date == ultimo_dia]
 
@@ -394,7 +404,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     })
     df_t1 = pd.concat([df_t1, total_t1], ignore_index=True)
 
-    # Movimentação (Acumulado)
+    # Acumulado
     df_t2 = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum"),
@@ -408,33 +418,47 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     })
     df_t2 = pd.concat([df_t2, total_t2], ignore_index=True)
 
-    # Formatação condicional para tabela-1 (último dia)
+    # Formatação condicional da tabela 1 (ultimo dia)
     meta_total_last = META_MINERIO + META_ESTERIL
     style_cond_t1 = [
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total_last),
-                "column_id": "volume"},
-         "color": "rgb(0,55,158)"},
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total_last),
-                "column_id": "volume"},
-         "color": "red"},
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL"'},
-         "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total_last),
+                   "column_id": "volume"},
+            "color": "rgb(0,55,158)"
+        },
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total_last),
+                   "column_id": "volume"},
+            "color": "red"
+        },
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL"'},
+            "backgroundColor": "#fff9c4",
+            "fontWeight": "bold"
+        }
     ]
 
-    # Formatação condicional para tabela-2 (acumulado)
+    # Formatação condicional da tabela 2 (acumulado)
     start_date_obj = datetime.fromisoformat(start_date)
     end_date_obj = datetime.fromisoformat(end_date)
     n_days = (end_date_obj - start_date_obj).days + 1
     meta_total_acc = n_days * (META_MINERIO + META_ESTERIL)
     style_cond_t2 = [
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total_acc),
-                "column_id": "volume"},
-         "color": "rgb(0,55,158)"},
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total_acc),
-                "column_id": "volume"},
-         "color": "red"},
-        {"if": {"filter_query": '{nome_operacao} = "TOTAL"'},
-         "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} >= ' + str(meta_total_acc),
+                   "column_id": "volume"},
+            "color": "rgb(0,55,158)"
+        },
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL" && {volume} < ' + str(meta_total_acc),
+                   "column_id": "volume"},
+            "color": "red"
+        },
+        {
+            "if": {"filter_query": '{nome_operacao} = "TOTAL"'},
+            "backgroundColor": "#fff9c4",
+            "fontWeight": "bold"
+        }
     ]
 
     data_t1 = df_t1.to_dict("records")
@@ -447,8 +471,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     ]
     return data_t1, columns, style_cond_t1, data_t2, columns, style_cond_t2
 
-
-# Callback para os Gráficos de Volume e Massa
+# 4) Callback para os Gráficos de Volume e Massa
 @callback(
     Output("grafico-volume", "figure"),
     Output("grafico-massa", "figure"),
@@ -469,7 +492,6 @@ def update_graphs(json_data, operacoes_selecionadas):
         fig_empty = px.bar(title="Sem dados no período.", template="plotly_white")
         return fig_empty, fig_empty
 
-    # Converte dt_registro_turno para datetime, se ainda não estiver
     if "dt_registro_turno" in df.columns and not pd.api.types.is_datetime64_any_dtype(df["dt_registro_turno"]):
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
     if "dt_registro_turno" not in df.columns:
@@ -484,10 +506,8 @@ def update_graphs(json_data, operacoes_selecionadas):
         return fig_empty, fig_empty
 
     df["dia"] = df["dt_registro_turno"].dt.date
-
     df_grouped = df.groupby("dia", as_index=False).agg(volume=("volume", "sum"), massa=("massa", "sum")).sort_values("dia")
 
-    # Meta total diária
     meta_total = META_MINERIO + META_ESTERIL
     df_grouped["bar_color"] = df_grouped["volume"].apply(lambda x: "rgb(149,211,36)" if x >= meta_total else "red")
 
@@ -541,8 +561,7 @@ def update_graphs(json_data, operacoes_selecionadas):
 
     return fig_volume, fig_massa
 
-
-# Callback para o Gráfico de Viagens por Hora Trabalhada (Último Dia)
+# 5) Callback para o Gráfico de Viagens por Hora Trabalhada (Último Dia)
 @callback(
     Output("grafico-viagens-hora", "figure"),
     Input("data-store", "data"),
@@ -560,14 +579,12 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     except Exception as e:
         return px.bar(title=f"Erro ao carregar dados: {str(e)}", template="plotly_white")
 
-    # Converter dt_registro_turno para datetime (produção)
     if "dt_registro_turno" not in df_prod.columns:
         return px.bar(title="dt_registro_turno ausente em Produção.", template="plotly_white")
     if not pd.api.types.is_datetime64_any_dtype(df_prod["dt_registro_turno"]):
         df_prod["dt_registro_turno"] = pd.to_datetime(df_prod["dt_registro_turno"], errors="coerce")
     df_prod.dropna(subset=["dt_registro_turno"], inplace=True)
 
-    # Converter dt_registro_turno para datetime (hora)
     if "dt_registro_turno" not in df_hora.columns:
         return px.bar(title="dt_registro_turno ausente em Hora.", template="plotly_white")
     if not pd.api.types.is_datetime64_any_dtype(df_hora["dt_registro_turno"]):
@@ -580,7 +597,6 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
 
     if operacoes_selecionadas:
         df_prod = df_prod[df_prod["nome_operacao"].isin(operacoes_selecionadas)]
-
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
@@ -588,19 +604,19 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
         viagens=("nome_equipamento_utilizado", "count")
     )
 
-    # Estados considerados "horas trabalhadas"
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
     df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
-
     df_merged = pd.merge(
         df_viagens, df_horas,
         left_on="nome_equipamento_utilizado",
         right_on="nome_equipamento",
         how="inner"
     )
+    if df_merged.empty:
+        return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
     df_merged["viagens_por_hora"] = df_merged.apply(
         lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
@@ -628,8 +644,7 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     )
     return fig
 
-
-# Callback para carregar dados de fato_hora
+# 6) Callback para carregar dados de fato_hora
 @callback(
     Output("data-store-hora", "data"),
     Output("modelo-dropdown", "options"),
@@ -668,8 +683,7 @@ def query_fato_hora(n_clicks, start_date, end_date):
 
     return df_h.to_json(date_format="iso", orient="records"), op_modelos
 
-
-# Callback para as Tabelas de Indicadores (Último Dia e Acumulado)
+# 7) Callback para as Tabelas de Indicadores (Último Dia e Acumulado)
 @callback(
     Output("tabela-ind-ultimo", "data"),
     Output("tabela-ind-ultimo", "columns"),
@@ -689,7 +703,6 @@ def update_tabelas_indicadores(json_data_hora, lista_modelos, end_date):
     if df_h.empty:
         return [], [], [], [], [], []
 
-    # Converter dt_registro_turno se existir
     if "dt_registro_turno" in df_h.columns and not pd.api.types.is_datetime64_any_dtype(df_h["dt_registro_turno"]):
         df_h["dt_registro_turno"] = pd.to_datetime(df_h["dt_registro_turno"], errors="coerce")
 
@@ -704,13 +717,14 @@ def update_tabelas_indicadores(json_data_hora, lista_modelos, end_date):
         horas_totais = subdf["tempo_hora"].sum()
         horas_fora = subdf.loc[subdf["nome_tipo_estado"] == "Fora de Frota", "tempo_hora"].sum()
         horas_cal = horas_totais - horas_fora
-        horas_manut = subdf.loc[subdf["nome_tipo_estado"].isin(
-            ["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"]
-        ), "tempo_hora"].sum()
+        horas_manut = subdf.loc[subdf["nome_tipo_estado"].isin([
+            "Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"
+        ]), "tempo_hora"].sum()
         horas_disp = horas_cal - horas_manut
-        horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin(
-            ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
-        ), "tempo_hora"].sum()
+        horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin([
+            "Operando", "Serviço Auxiliar", "Atraso Operacional"
+        ]), "tempo_hora"].sum()
+
         disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
         util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
         rend = (disp * util) / 100.0
