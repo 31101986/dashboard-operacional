@@ -4,7 +4,7 @@ from dash import html, dcc, Input, Output
 
 # Import das páginas (relatórios)
 # import pages.relatorio1 as rel1
-# import pages.relatorio2 as rel2
+import pages.relatorio2 as rel2
 # import pages.relatorio3 as rel3
 import pages.relatorio4 as rel4  # Import do Relatório 4
 
@@ -30,7 +30,7 @@ navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dcc.Link("Portal", href="/", className="nav-link")),
         # dbc.NavItem(dcc.Link("Relatório 1", href="/relatorio1", className="nav-link")),
-        # dbc.NavItem(dcc.Link("Relatório 2", href="/relatorio2", className="nav-link")),
+        dbc.NavItem(dcc.Link("Informativo de Produção", href="/relatorio2", className="nav-link")),
         # dbc.NavItem(dcc.Link("Relatório 3", href="/relatorio3", className="nav-link")),
         dbc.NavItem(dcc.Link("Produção - Indicadores", href="/relatorio4", className="nav-link")),  # Link do Relatório 4
     ],
@@ -78,27 +78,27 @@ home_layout = dbc.Container(
                 # ),
 
                 # Card Relatório 2
-                # dbc.Col(
-                #     dbc.Card(
-                #         [
-                #             dbc.CardImg(
-                #                 src="/assets/mining2.jpg",
-                #                 top=True,
-                #                 style={"height": "180px", "objectFit": "cover"},
-                #             ),
-                #             dbc.CardBody(
-                #                 [
-                #                     html.H4("Relatório 2", className="card-title"),
-                #                     html.P("Análise de Produção", className="card-text"),
-                #                     dcc.Link("Visualizar", href="/relatorio2", className="btn btn-primary"),
-                #                 ]
-                #             ),
-                #         ],
-                #         style={"width": "18rem", "margin": "auto"},
-                #     ),
-                #     width=12,
-                #     md=3,
-                # ),
+                dbc.Col(
+                     dbc.Card(
+                         [
+                             dbc.CardImg(
+                                 src="/assets/mining2.jpg",
+                                 top=True,
+                                 style={"height": "180px", "objectFit": "cover"},
+                             ),
+                             dbc.CardBody(
+                                 [
+                                     html.H4("Informativo de Produção", className="card-title"),
+                                     html.P("Análise de Produção", className="card-text"),
+                                     dcc.Link("Visualizar", href="/relatorio2", className="btn btn-primary"),
+                                 ]
+                             ),
+                         ],
+                         style={"width": "18rem", "margin": "auto"},
+                     ),
+                     width=12,
+                     md=3,
+                 ),
 
                 # Card Relatório 3
                 # dbc.Col(
