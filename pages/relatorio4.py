@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 import dash
-from dash import dcc, html, callback, Input, Output
+from dash import dcc, html, callback, Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
 import plotly.express as px
@@ -16,7 +16,6 @@ from dash.dash_table import FormatTemplate
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
 
-# ==================== CONFIGURAÇÃO DE LOGGING ====================
 logging.basicConfig(
     level=logging.INFO,
     filename="relatorio4.log",
@@ -24,10 +23,9 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# ==================== FORMATAÇÃO NUMÉRICA ====================
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 
-# ==================== MODELOS PARA INDICADORES ====================
+# Modelos para indicadores
 ESCAVACAO_MODELOS = [
     "ESCAVADEIRA HIDRAULICA SANY SY750H",
     "ESCAVADEIRA HIDRÁULICA CAT 352",
@@ -46,7 +44,6 @@ PERFURACAO_MODELOS = [
 # ==================== LAYOUT ====================
 layout = dbc.Container(
     [
-        # Título Principal
         dbc.Row(
             dbc.Col(
                 html.H1("Relatório 4 - Produção e Indicadores", className="text-center my-4 text-primary"),
@@ -54,7 +51,6 @@ layout = dbc.Container(
             )
         ),
 
-        # Descrição e Seletor
         dbc.Row(
             [
                 dbc.Col(
@@ -83,7 +79,11 @@ layout = dbc.Container(
             className="mb-4"
         ),
 
-        # 1) TABELA DE MOVIMENTAÇÃO
+        # Stores para armazenar dados de produção e hora
+        dcc.Store(id="rel4-producao-store"),
+        dcc.Store(id="rel4-hora-store"),
+
+        # 1) Tabela de Movimentação
         dbc.Row(
             dbc.Col(
                 dbc.Card(
@@ -121,7 +121,7 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # 2) GRÁFICO DE VIAGENS POR HORA TRABALHADA
+        # 2) Gráfico de Viagens por Hora Trabalhada
         dbc.Row(
             dbc.Col(
                 dbc.Card(
@@ -141,7 +141,7 @@ layout = dbc.Container(
             className="mt-2"
         ),
 
-        # 3) TABELAS DE INDICADORES (Escavação, Transporte, Perfuração)
+        # 3) Tabelas de Indicadores
         dbc.Row([
             dbc.Col(
                 dbc.Card([
@@ -208,7 +208,6 @@ layout = dbc.Container(
             ),
         ], className="mt-2"),
 
-        # Botão Voltar
         dbc.Row(
             dbc.Col(
                 dcc.Link("Voltar para o Portal", href="/", className="btn btn-secondary"),
@@ -221,61 +220,50 @@ layout = dbc.Container(
 )
 
 # ==================== FUNÇÕES AUXILIARES ====================
-def get_datestr(day_choice):
-    """
-    Retorna a data no formato DD/MM/YYYY:
-      - day_choice = "hoje": data atual
-      - day_choice = "ontem": data atual - 1 dia
-    """
-    now = datetime.now()
-    if day_choice == "ontem":
-        now -= timedelta(days=1)
-    return now.strftime("%d/%m/%Y")
 
-def get_producao_dia(day_choice):
-    """
-    Consulta 'usp_fato_producao' para a data (dia atual ou dia anterior) e filtra dt_registro_turno.
-    """
-    data_str = get_datestr(day_choice)
-    query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{data_str}', '{data_str}'"
+def consulta_producao(dia_str):
+    """Executa usp_fato_producao para (dia_str, dia_str). Retorna DataFrame filtrado."""
+    query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{dia_str}', '{dia_str}'"
     try:
         df = query_to_df(query)
     except Exception as e:
-        logging.error(f"Erro ao consultar fato_producao (rel4) - day={day_choice}: {e}")
+        logging.error(f"[Rel4] Erro ao consultar fato_producao: {e}")
         return pd.DataFrame()
     if df.empty:
         return df
 
+    # Converter colunas de data
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        filtro_data = datetime.strptime(data_str, "%d/%m/%Y").date()
+        filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filtro_data]
+
     return df
 
-def get_hora_dia(day_choice):
-    """
-    Consulta 'usp_fato_hora' para a data (dia atual ou dia anterior) e filtra dt_registro_turno.
-    """
-    data_str = get_datestr(day_choice)
-    query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{data_str}', '{data_str}'"
+
+def consulta_hora(dia_str):
+    """Executa usp_fato_hora para (dia_str, dia_str). Retorna DataFrame filtrado."""
+    query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{dia_str}', '{dia_str}'"
     try:
         df = query_to_df(query)
     except Exception as e:
-        logging.error(f"Erro ao consultar fato_hora (rel4) - day={day_choice}: {e}")
+        logging.error(f"[Rel4] Erro ao consultar fato_hora: {e}")
         return pd.DataFrame()
     if df.empty:
         return df
 
+    # Converter colunas de data
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        filtro_data = datetime.strptime(data_str, "%d/%m/%Y").date()
+        filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filtro_data]
+
     return df
 
 def calcular_horas_desde_7h(day_choice):
     """
-    - Se 'ontem', retorna 24h (dia anterior finalizado)
-    - Se 'hoje', calcula as horas decorridas desde 07:00 do dia atual e retorna no mínimo 0.01.
+    - Se 'ontem', retorna 24.0 (dia anterior completo).
+    - Se 'hoje', calcula horas decorridas desde 07:00 do dia atual, mínimo 0.01.
     """
     if day_choice == "ontem":
         return 24.0
@@ -289,13 +277,18 @@ def calcular_horas_desde_7h(day_choice):
 
 def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     """
-    Filtra df_hora para certos modelos, agrupa e calcula disponibilidade, utilização, rendimento.
+    Recebe df (fato_hora) e lista de modelos.  
+    Retorna (data, columns, style_data_conditional) para DataTable.
     """
-    if any(col not in df.columns for col in ["nome_modelo", "nome_tipo_estado", "tempo_hora"]):
+    # Verifica se colunas necessárias existem
+    needed_cols = {"nome_modelo", "nome_tipo_estado", "tempo_hora"}
+    if not needed_cols.issubset(df.columns):
         return [], [], []
+
     df_f = df[df["nome_modelo"].isin(modelos_lista)].copy()
     if df_f.empty:
         return [], [], []
+
     df_f["tempo_hora"] = pd.to_numeric(df_f["tempo_hora"], errors="coerce").fillna(0)
 
     def calc_indicadores(subdf):
@@ -309,11 +302,13 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin(
             ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
         ), "tempo_hora"].sum()
+
         disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
         util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
         rend = (disp * util) / 100.0
         return disp, util, rend
 
+    # Agrupamento por modelo
     rows = []
     for modelo, df_grp in df_f.groupby("nome_modelo"):
         disp, util, rend = calc_indicadores(df_grp)
@@ -323,7 +318,7 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
             "utilizacao": util,
             "rendimento": rend
         })
-    df_ind = pd.DataFrame(rows)
+    # Linha TOTAL
     disp_all, util_all, rend_all = calc_indicadores(df_f)
     total_row = pd.DataFrame([{
         "nome_modelo": "TOTAL",
@@ -331,7 +326,7 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         "utilizacao": util_all,
         "rendimento": rend_all
     }])
-    df_ind = pd.concat([df_ind, total_row], ignore_index=True)
+    df_ind = pd.concat([pd.DataFrame(rows), total_row], ignore_index=True)
 
     data = df_ind.to_dict("records")
     columns = [
@@ -351,21 +346,50 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     ]
     return data, columns, style_cond
 
+
 # ===================== CALLBACKS =====================
 
-###############################################################################
-# 1) Tabela de Movimentação
-###############################################################################
+# 1) Callback único para buscar Produção e Hora (dia atual ou anterior)
+@callback(
+    Output("rel4-producao-store", "data"),
+    Output("rel4-hora-store", "data"),
+    Input("rel4-day-selector", "value")
+)
+def fetch_data_dia_escolhido(day_choice):
+    """
+    Ao alterar o RadioItems (dia atual ou anterior), busca:
+      1) Produção (fato_producao)
+      2) Hora (fato_hora)
+    e armazena em dcc.Store para que os demais callbacks usem localmente.
+    """
+    if day_choice == "ontem":
+        data_str = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+    else:
+        data_str = datetime.now().strftime("%d/%m/%Y")
+
+    df_prod = consulta_producao(data_str)
+    df_hora = consulta_hora(data_str)
+
+    return (
+        df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {},
+        df_hora.to_json(date_format="iso", orient="records") if not df_hora.empty else {}
+    )
+
+# 2) Tabela de Movimentação
 @callback(
     Output("rel4-tabela-movimentacao", "data"),
     Output("rel4-tabela-movimentacao", "style_data_conditional"),
-    Input("rel4-tabela-movimentacao", "id"),
+    Input("rel4-producao-store", "data"),
     Input("rel4-day-selector", "value")
 )
-def update_tabela_movimentacao(_, day_choice):
-    df = get_producao_dia(day_choice)
+def update_tabela_movimentacao(json_prod, day_choice):
+    if not json_prod or isinstance(json_prod, dict):
+        return [], []
+
+    df = pd.read_json(json_prod, orient="records")
     if df.empty:
         return [], []
+
     # Filtra apenas Minério e Estéril
     df = df[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df.empty:
@@ -411,21 +435,23 @@ def update_tabela_movimentacao(_, day_choice):
     data = df_grp.to_dict("records")
     return data, style_data_conditional
 
-###############################################################################
-# 2) Gráfico de Viagens por Hora Trabalhada
-###############################################################################
+# 3) Gráfico de Viagens por Hora Trabalhada
 @callback(
     Output("rel4-grafico-viagens-hora", "figure"),
-    Input("rel4-grafico-viagens-hora", "id"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-producao-store", "data"),
+    Input("rel4-hora-store", "data")
 )
-def update_grafico_viagens_hora(_, day_choice):
-    df_prod = get_producao_dia(day_choice)
-    df_hora = get_hora_dia(day_choice)
+def update_grafico_viagens_hora(json_prod, json_hora):
+    if (not json_prod or isinstance(json_prod, dict)) or (not json_hora or isinstance(json_hora, dict)):
+        return px.bar(title="Sem dados para o período.", template="plotly_white")
+
+    df_prod = pd.read_json(json_prod, orient="records")
+    df_hora = pd.read_json(json_hora, orient="records")
+
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para o período.", template="plotly_white")
 
-    # Filtra as operações de interesse
+    # Filtra Minério e Estéril
     df_prod = df_prod[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df_prod.empty:
         return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
@@ -478,18 +504,17 @@ def update_grafico_viagens_hora(_, day_choice):
     )
     return fig
 
-###############################################################################
-# 3) Tabelas de Indicadores (Escavação, Transporte, Perfuração)
-###############################################################################
+# 4) Tabelas de Indicadores (Escavação, Transporte, Perfuração)
 @callback(
     Output("rel4-tabela-ind-escavacao", "data"),
     Output("rel4-tabela-ind-escavacao", "columns"),
     Output("rel4-tabela-ind-escavacao", "style_data_conditional"),
-    Input("rel4-tabela-ind-escavacao", "id"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-hora-store", "data")
 )
-def update_tabela_ind_escavacao(_, day_choice):
-    df_h = get_hora_dia(day_choice)
+def update_tabela_ind_escavacao(json_hora):
+    if not json_hora or isinstance(json_hora, dict):
+        return [], [], []
+    df_h = pd.read_json(json_hora, orient="records")
     if df_h.empty:
         return [], [], []
     return calc_indicadores_agrupados_por_modelo(df_h, ESCAVACAO_MODELOS)
@@ -498,11 +523,12 @@ def update_tabela_ind_escavacao(_, day_choice):
     Output("rel4-tabela-ind-transporte", "data"),
     Output("rel4-tabela-ind-transporte", "columns"),
     Output("rel4-tabela-ind-transporte", "style_data_conditional"),
-    Input("rel4-tabela-ind-transporte", "id"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-hora-store", "data")
 )
-def update_tabela_ind_transporte(_, day_choice):
-    df_h = get_hora_dia(day_choice)
+def update_tabela_ind_transporte(json_hora):
+    if not json_hora or isinstance(json_hora, dict):
+        return [], [], []
+    df_h = pd.read_json(json_hora, orient="records")
     if df_h.empty:
         return [], [], []
     return calc_indicadores_agrupados_por_modelo(df_h, TRANSPORTE_MODELOS)
@@ -511,11 +537,12 @@ def update_tabela_ind_transporte(_, day_choice):
     Output("rel4-tabela-ind-perfuracao", "data"),
     Output("rel4-tabela-ind-perfuracao", "columns"),
     Output("rel4-tabela-ind-perfuracao", "style_data_conditional"),
-    Input("rel4-tabela-ind-perfuracao", "id"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-hora-store", "data")
 )
-def update_tabela_ind_perfuracao(_, day_choice):
-    df_h = get_hora_dia(day_choice)
+def update_tabela_ind_perfuracao(json_hora):
+    if not json_hora or isinstance(json_hora, dict):
+        return [], [], []
+    df_h = pd.read_json(json_hora, orient="records")
     if df_h.empty:
         return [], [], []
     return calc_indicadores_agrupados_por_modelo(df_h, PERFURACAO_MODELOS)

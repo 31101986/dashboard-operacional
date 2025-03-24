@@ -70,8 +70,10 @@ layout = dbc.Container(
             className="my-2"
         ),
 
-        # Armazenamento de dados de fato_producao
-        dcc.Store(id="data-store"),
+        # Armazenamento dos dados (Produção e Hora) em Stores distintos
+        dcc.Store(id="data-store"),       # Produção
+        dcc.Store(id="data-store-hora"),  # Hora
+
         html.Hr(),
 
         # 1) Tabelas de Movimentação
@@ -214,7 +216,7 @@ layout = dbc.Container(
             ),
             className="mt-2"
         ),
-        dcc.Store(id="data-store-hora"),
+
         html.Hr(),
 
         # 5) Tabelas de Indicadores – Último Dia e Acumulado
@@ -291,66 +293,88 @@ layout = dbc.Container(
 
 # ==================== CALLBACKS ====================
 
-# 1) Callback para carregar dados de fato_producao
+# 1) Um único callback para buscar Produção e Hora e armazenar nos Stores
 @callback(
-    Output("data-store", "data"),
+    Output("data-store", "data"),       # Produção
+    Output("data-store-hora", "data"),  # Hora
     Input("apply-button", "n_clicks"),
     State("date-picker-range", "start_date"),
     State("date-picker-range", "end_date"),
     prevent_initial_call=True
 )
 def apply_filter(n_clicks, start_date, end_date):
+    """Quando o usuário clica em 'Aplicar Filtro', consultamos as duas SPs (Produção e Hora) 
+       e armazenamos o resultado em dois dcc.Store distintos."""
     if not start_date or not end_date:
-        return {}
+        return {}, {}
+
     start_date_obj = datetime.fromisoformat(start_date)
     end_date_obj = datetime.fromisoformat(end_date)
     start_date_str = start_date_obj.strftime("%d/%m/%Y")
     end_date_str = end_date_obj.strftime("%d/%m/%Y")
 
-    query = f"""
-    EXEC dw_sdp_mt_fas..usp_fato_producao
+    # ---------- Consulta Produção ----------
+    query_prod = f"""
+        EXEC dw_sdp_mt_fas..usp_fato_producao
         '{start_date_str}',
         '{end_date_str}'
     """
     try:
-        df = query_to_df(query)
+        df_prod = query_to_df(query_prod)
     except Exception as e:
-        return {"error": str(e)}
+        return (
+            {"error": f"Erro ao consultar Produção: {str(e)}"},
+            {}  # data-store-hora vazio
+        )
 
-    if df.empty:
-        return {}
+    # Ajusta datas e remove linhas inválidas
+    if not df_prod.empty and "dt_registro_turno" in df_prod.columns:
+        df_prod["dt_registro_turno"] = pd.to_datetime(df_prod["dt_registro_turno"], errors="coerce")
+        df_prod.dropna(subset=["dt_registro_turno"], inplace=True)
+        df_prod = df_prod[
+            (df_prod["dt_registro_turno"] >= start_date_obj) & (df_prod["dt_registro_turno"] <= end_date_obj)
+        ]
+        # Remove linhas sem nome_operacao
+        if "nome_operacao" in df_prod.columns:
+            df_prod.dropna(subset=["nome_operacao"], inplace=True)
+    data_prod_json = df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {}
 
-    if "dt_registro_turno" in df.columns:
-        df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        df.dropna(subset=["dt_registro_turno"], inplace=True)
+    # ---------- Consulta Hora ----------
+    query_hora = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{start_date_str}', '{end_date_str}'"
+    try:
+        df_h = query_to_df(query_hora)
+    except Exception as e:
+        # Se Hora falhou mas Produção foi bem-sucedido, retornamos Produção e erro p/ Hora.
+        return (
+            data_prod_json,
+            {"error": f"Erro ao consultar Hora: {str(e)}"}
+        )
 
-        # Filtra dentro do range
-        df = df[(df["dt_registro_turno"] >= start_date_obj) & (df["dt_registro_turno"] <= end_date_obj)]
+    # Ajusta datas e remove linhas inválidas
+    if not df_h.empty:
+        if "dt_registro" in df_h.columns:
+            df_h["dt_registro"] = pd.to_datetime(df_h["dt_registro"], errors="coerce")
+        if "dt_registro_turno" in df_h.columns:
+            df_h["dt_registro_turno"] = pd.to_datetime(df_h["dt_registro_turno"], errors="coerce")
+    data_hora_json = df_h.to_json(date_format="iso", orient="records") if not df_h.empty else {}
 
-    # Remove linhas sem nome_operacao
-    if "nome_operacao" in df.columns:
-        df.dropna(subset=["nome_operacao"], inplace=True)
+    return data_prod_json, data_hora_json
 
-    df.reset_index(drop=True, inplace=True)
-    return df.to_json(date_format="iso", orient="records")
-
-# 2) Callback para atualizar o dropdown de operação
+# 2) Callback para atualizar o dropdown de operação com base em data-store (Produção)
 @callback(
     Output("operacao-dropdown", "options"),
     Input("data-store", "data")
 )
 def update_operacoes_options(json_data):
-    if not json_data:
-        return []
-    if isinstance(json_data, dict) and "error" in json_data:
+    if not json_data or isinstance(json_data, dict):
         return []
     df = pd.read_json(json_data, orient="records")
     if df.empty:
         return []
-    ops_unicas = sorted(df["nome_operacao"].unique())
+    ops_unicas = sorted(df["nome_operacao"].dropna().unique())
     return [{"label": op, "value": op} for op in ops_unicas]
 
-# 3) Callbacks para as Tabelas de Movimentação
+# 3) Tabelas de Movimentação (Último dia + Acumulado)
 @callback(
     Output("tabela-1", "data"),
     Output("tabela-1", "columns"),
@@ -364,17 +388,18 @@ def update_operacoes_options(json_data):
     State("date-picker-range", "end_date")
 )
 def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
+    """Atualiza as Tabelas de Movimentação (Último dia e Acumulado)."""
     if not json_data:
         return [], [], [], [], [], []
     if isinstance(json_data, dict) and "error" in json_data:
+        # Se houve erro ao consultar Produção, retorna vazio
         return [], [], [], [], [], []
 
     df = pd.read_json(json_data, orient="records")
-    if df.empty:
+    if df.empty or "dt_registro_turno" not in df.columns:
         return [], [], [], [], [], []
 
-    if "dt_registro_turno" not in df.columns:
-        return [], [], [], [], [], []
+    # Converter dt_registro_turno para datetime, se necessário
     if not pd.api.types.is_datetime64_any_dtype(df["dt_registro_turno"]):
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
     df.dropna(subset=["dt_registro_turno"], inplace=True)
@@ -387,7 +412,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     if df.empty:
         return [], [], [], [], [], []
 
-    # Último dia
+    # Último dia -> df_last_day
     ultimo_dia = df["dt_registro_turno"].dt.date.max()
     df_last_day = df[df["dt_registro_turno"].dt.date == ultimo_dia]
 
@@ -396,6 +421,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
         volume=("volume", "sum"),
         massa=("massa", "sum")
     )
+    # TOTAL (último dia)
     total_t1 = pd.DataFrame({
         "nome_operacao": ["TOTAL"],
         "viagens": [df_t1["viagens"].sum()],
@@ -404,7 +430,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     })
     df_t1 = pd.concat([df_t1, total_t1], ignore_index=True)
 
-    # Acumulado
+    # Acumulado -> df_t2
     df_t2 = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum"),
@@ -418,7 +444,7 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     })
     df_t2 = pd.concat([df_t2, total_t2], ignore_index=True)
 
-    # Formatação condicional da tabela 1 (ultimo dia)
+    # Formatação condicional da tabela 1 (último dia)
     meta_total_last = META_MINERIO + META_ESTERIL
     style_cond_t1 = [
         {
@@ -469,9 +495,10 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
         {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
         {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
     ]
+
     return data_t1, columns, style_cond_t1, data_t2, columns, style_cond_t2
 
-# 4) Callback para os Gráficos de Volume e Massa
+# 4) Gráficos de Volume e Massa (lendo só Produção)
 @callback(
     Output("grafico-volume", "figure"),
     Output("grafico-massa", "figure"),
@@ -561,7 +588,7 @@ def update_graphs(json_data, operacoes_selecionadas):
 
     return fig_volume, fig_massa
 
-# 5) Callback para o Gráfico de Viagens por Hora Trabalhada (Último Dia)
+# 5) Gráfico de Viagens por Hora Trabalhada (Último Dia) - precisa Produção e Hora
 @callback(
     Output("grafico-viagens-hora", "figure"),
     Input("data-store", "data"),
@@ -573,24 +600,36 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     if not json_prod or not json_hora or not end_date:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
+    # Se houve erro em Produção ou Hora, retorna figura vazia
+    if isinstance(json_prod, dict) and "error" in json_prod:
+        return px.bar(title=json_prod["error"], template="plotly_white")
+    if isinstance(json_hora, dict) and "error" in json_hora:
+        return px.bar(title=json_hora["error"], template="plotly_white")
+
     try:
         df_prod = pd.read_json(json_prod, orient="records")
         df_hora = pd.read_json(json_hora, orient="records")
     except Exception as e:
         return px.bar(title=f"Erro ao carregar dados: {str(e)}", template="plotly_white")
 
+    if df_prod.empty or df_hora.empty:
+        return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
+
+    # Converter datas de Produção
     if "dt_registro_turno" not in df_prod.columns:
         return px.bar(title="dt_registro_turno ausente em Produção.", template="plotly_white")
     if not pd.api.types.is_datetime64_any_dtype(df_prod["dt_registro_turno"]):
         df_prod["dt_registro_turno"] = pd.to_datetime(df_prod["dt_registro_turno"], errors="coerce")
     df_prod.dropna(subset=["dt_registro_turno"], inplace=True)
 
+    # Converter datas de Hora
     if "dt_registro_turno" not in df_hora.columns:
         return px.bar(title="dt_registro_turno ausente em Hora.", template="plotly_white")
     if not pd.api.types.is_datetime64_any_dtype(df_hora["dt_registro_turno"]):
         df_hora["dt_registro_turno"] = pd.to_datetime(df_hora["dt_registro_turno"], errors="coerce")
     df_hora.dropna(subset=["dt_registro_turno"], inplace=True)
 
+    # Filtro do último dia selecionado no DatePickerRange
     filtro_dia = datetime.fromisoformat(end_date).date()
     df_prod = df_prod[df_prod["dt_registro_turno"].dt.date == filtro_dia]
     df_hora = df_hora[df_hora["dt_registro_turno"].dt.date == filtro_dia]
@@ -600,15 +639,19 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
+    # Agrupa Produção para contar viagens
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
         viagens=("nome_equipamento_utilizado", "count")
     )
 
+    # Filtra Estados de trabalho (Hora)
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
     df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
+
+    # Merge para calcular viagens/hora
     df_merged = pd.merge(
         df_viagens, df_horas,
         left_on="nome_equipamento_utilizado",
@@ -644,46 +687,23 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     )
     return fig
 
-# 6) Callback para carregar dados de fato_hora
+# 6) Callback para popular o dropdown de Modelo a partir do data-store-hora
 @callback(
-    Output("data-store-hora", "data"),
     Output("modelo-dropdown", "options"),
-    Input("apply-button", "n_clicks"),
-    State("date-picker-range", "start_date"),
-    State("date-picker-range", "end_date"),
-    prevent_initial_call=True
+    Input("data-store-hora", "data")
 )
-def query_fato_hora(n_clicks, start_date, end_date):
-    if not start_date or not end_date:
-        return {}, []
-    start_dt = datetime.fromisoformat(start_date)
-    end_dt = datetime.fromisoformat(end_date)
-    s_start = start_dt.strftime("%d/%m/%Y")
-    s_end = end_dt.strftime("%d/%m/%Y")
+def load_modelos_options(json_data_hora):
+    """Carrega as opções de Modelo usando o DataFrame de Hora, que agora já vem do callback único."""
+    if not json_data_hora or isinstance(json_data_hora, dict):
+        return []
 
-    query_hora = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{s_start}', '{s_end}'"
-    try:
-        df_h = query_to_df(query_hora)
-    except Exception as e:
-        return {"error": str(e)}, []
-
-    if df_h.empty:
-        return {}, []
-
-    if "dt_registro" in df_h.columns:
-        df_h["dt_registro"] = pd.to_datetime(df_h["dt_registro"], errors="coerce")
-
-    # Verificar colunas necessárias
-    for col in ["nome_modelo", "nome_tipo_equipamento", "nome_tipo_estado", "tempo_hora"]:
-        if col not in df_h.columns:
-            return ({"error": f"Coluna '{col}' não existe em fato_hora"}, [])
-
+    df_h = pd.read_json(json_data_hora, orient="records")
+    if df_h.empty or "nome_modelo" not in df_h.columns:
+        return []
     modelos_unicos = sorted(df_h["nome_modelo"].dropna().unique())
-    op_modelos = [{"label": m, "value": m} for m in modelos_unicos]
+    return [{"label": m, "value": m} for m in modelos_unicos]
 
-    return df_h.to_json(date_format="iso", orient="records"), op_modelos
-
-# 7) Callback para as Tabelas de Indicadores (Último Dia e Acumulado)
+# 7) Callback para as Tabelas de Indicadores (Último Dia e Acumulado), usando data-store-hora
 @callback(
     Output("tabela-ind-ultimo", "data"),
     Output("tabela-ind-ultimo", "columns"),

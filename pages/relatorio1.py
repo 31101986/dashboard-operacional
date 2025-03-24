@@ -17,18 +17,29 @@ logging.basicConfig(
 )
 
 from db import query_to_df
-SEARCH_PERIOD_HOURS = 2  
-MAPBOX_TOKEN = ""
+
+SEARCH_PERIOD_HOURS = 2
+MAPBOX_TOKEN = ""  # Se tiver token, coloque aqui
+
+# =============== FUNÇÕES AUXILIARES ===============
 
 def get_search_period():
+    """
+    Retorna a data/hora inicial e final para busca (últimas X horas).
+    """
     now = datetime.now()
     period_start = now - timedelta(hours=SEARCH_PERIOD_HOURS)
     return period_start, now
 
 def no_data_fig(title):
+    """
+    Retorna um gráfico vazio com a mensagem 'Sem dados...' com layout modernizado.
+    """
     df_empty = pd.DataFrame({"x": [], "y": []})
     fig = px.bar(df_empty, x="x", y="y", title=title)
     fig.update_layout(
+        template="plotly_white",
+        title_x=0.5,
         xaxis={'visible': False},
         yaxis={'visible': False},
         annotations=[{
@@ -38,14 +49,21 @@ def no_data_fig(title):
             "showarrow": False,
             "font": {"size": 16}
         }],
-        margin=dict(l=50, r=50, t=50, b=120)
+        margin=dict(l=30, r=30, t=60, b=60),
+        font=dict(family="Arial, sans-serif", size=14)
     )
     return fig
 
 def no_data_table():
+    """
+    Retorna uma linha de tabela avisando que não há dados.
+    """
     return [{"Mensagem": "Sem dados para o período selecionado"}]
 
 def execute_query(query):
+    """
+    Chama o banco via query_to_df, tratando eventuais exceções.
+    """
     try:
         return query_to_df(query)
     except Exception as e:
@@ -53,7 +71,11 @@ def execute_query(query):
         return pd.DataFrame()
 
 def common_map_layout(center_lat, center_lon, map_style):
+    """
+    Layout comum para mapas, com melhorias de template e fonte.
+    """
     return {
+        "template": "plotly_white",
         "mapbox_style": map_style,
         "mapbox_accesstoken": MAPBOX_TOKEN if MAPBOX_TOKEN else None,
         "mapbox": {
@@ -62,6 +84,7 @@ def common_map_layout(center_lat, center_lon, map_style):
             "pitch": 30
         },
         "uirevision": "constant",
+        "title_x": 0.5,
         "margin": {"r": 0, "t": 60, "l": 0, "b": 0},
         "title_font": {"size": 20, "color": "black"},
         "legend": {
@@ -71,15 +94,18 @@ def common_map_layout(center_lat, center_lon, map_style):
             "xanchor": "right",
             "x": 0.99,
             "title": ""
-        }
+        },
+        "font": {"family": "Arial, sans-serif", "size": 14}
     }
 
 def get_filtered_data_producao(period_start, period_end, operacao_filter=None, only_today=True, df=None):
     """
-    Se df for None, faz a query; se df vier de um store, filtra localmente.
+    Filtra dados de Produção localmente ou consulta a query se df for None.
+    Mantém a mesma lógica original.
     """
     if df is None:
-        query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
+        query = (f"EXEC dw_sdp_mt_fas..usp_fato_producao "
+                 f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'")
         df = execute_query(query)
     if df.empty:
         return df
@@ -96,13 +122,17 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, o
     return df
 
 def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
+    """
+    Filtra dados de 'Hora' localmente ou consulta a query se df for None.
+    Mantém a mesma lógica original.
+    """
     if df is None:
-        query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
+        query = (f"EXEC dw_sdp_mt_fas..usp_fato_hora "
+                 f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'")
         df = execute_query(query)
     if df.empty:
         return df
 
-    # Ajusta colunas de data
     date_col = None
     if "dt_registro_turno" in df.columns:
         date_col = "dt_registro_turno"
@@ -119,8 +149,21 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
     return df
 
 def compute_truck_stats(df_prod_period, df_hora):
+    """
+    Calcula estatísticas de ciclo e estimativa de caminhões necessários.
+    Mantém a lógica original com leve reorganização.
+
+    **Nova lógica:** Se o tempo de ciclo do equipamento (tempo_ciclo_minuto)
+    for superior a 120 minutos, consideramos 60 minutos.
+    """
     if df_prod_period.empty:
-        return pd.DataFrame(columns=["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"])
+        cols = ["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"]
+        return pd.DataFrame(columns=cols)
+
+    # Aplicar a nova regra: se tempo_ciclo_minuto > 120, considerar 60
+    if "tempo_ciclo_minuto" in df_prod_period.columns:
+        df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
+        df_prod_period.loc[df_prod_period["tempo_ciclo_minuto"] > 120, "tempo_ciclo_minuto"] = 60
 
     prod_grp = df_prod_period.groupby("nome_equipamento_utilizado", as_index=False).agg(
         avg_cycle=("tempo_ciclo_minuto", "mean")
@@ -128,6 +171,7 @@ def compute_truck_stats(df_prod_period, df_hora):
     prod_grp["avg_cycle"] = prod_grp["avg_cycle"].round(2)
 
     base = df_prod_period[["cod_viagem", "nome_equipamento_utilizado"]].drop_duplicates()
+
     if df_hora.empty:
         prod_grp["avg_carregando"] = 3.5
         prod_grp["avg_manobra"] = 1
@@ -161,11 +205,13 @@ def compute_truck_stats(df_prod_period, df_hora):
             op_grp["avg_carregando"] = op_grp["avg_carregando"].round(2)
             op_grp["avg_manobra"] = op_grp["avg_manobra"].round(2)
         else:
+            eq_list = base["nome_equipamento_utilizado"].unique()
             op_grp = pd.DataFrame({
-                "nome_equipamento_utilizado": base["nome_equipamento_utilizado"].unique(),
-                "avg_carregando": [3.5]*len(base["nome_equipamento_utilizado"].unique()),
-                "avg_manobra": [1]*len(base["nome_equipamento_utilizado"].unique())
+                "nome_equipamento_utilizado": eq_list,
+                "avg_carregando": [3.5] * len(eq_list),
+                "avg_manobra": [1] * len(eq_list)
             })
+
         prod_grp = pd.merge(prod_grp, op_grp, on="nome_equipamento_utilizado", how="left")
 
     if "avg_carregando" not in prod_grp.columns:
@@ -180,7 +226,8 @@ def compute_truck_stats(df_prod_period, df_hora):
     prod_grp["trucks_needed"] = prod_grp.apply(calc_trucks, axis=1)
     return prod_grp
 
-# Layout principal
+# =============== LAYOUT ===============
+
 navbar = dbc.NavbarSimple(
     brand="Dashboard Operacional",
     color="primary",
@@ -203,7 +250,7 @@ map_style_selector = html.Div([
 
 layout = dbc.Container([
     navbar,
-    html.H3("Relatório 1 - Ciclo Operacional", className="text-center mt-4 mb-4"),  # Título adicional
+    html.H3("Relatório 1 - Ciclo Operacional", className="text-center mt-4 mb-4"),
 
     dbc.Row([
         dbc.Col(
@@ -219,7 +266,8 @@ layout = dbc.Container([
             width=8
         ),
         dbc.Col(
-            dbc.Button("Atualizar", id="btn-atualizar", color="primary", className="w-100", style={"fontSize": "16px"}),
+            dbc.Button("Atualizar", id="btn-atualizar", color="primary",
+                       className="w-100", style={"fontSize": "16px"}),
             width=2
         ),
         dbc.Col(map_style_selector, width=2)
@@ -382,22 +430,46 @@ layout = dbc.Container([
         )
     ]),
 
-    # Intervalo de atualização a cada 25 minutos
-    dcc.Interval(id="interval-update", interval=25*60*1000, n_intervals=0)
+    dcc.Interval(id="interval-update", interval=25*60*1000, n_intervals=0),
+
+    dcc.Store(id="store-producao"),
+    dcc.Store(id="store-hora"),
+
 ], fluid=True)
 
-# ==================== CALLBACKS ====================
+# =============== CALLBACKS ===============
 
+# 1) Callback para buscar e armazenar dados PRODUÇÃO e HORA
+@dash.callback(
+    Output("store-producao", "data"),
+    Output("store-hora", "data"),
+    Input("interval-update", "n_intervals"),
+    Input("btn-atualizar", "n_clicks"),
+    prevent_initial_call=False
+)
+def fetch_data(n_intervals, n_clicks):
+    period_start, period_end = get_search_period()
+
+    query_prod = (f"EXEC dw_sdp_mt_fas..usp_fato_producao "
+                  f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'")
+    df_producao = execute_query(query_prod)
+
+    query_hora = (f"EXEC dw_sdp_mt_fas..usp_fato_hora "
+                  f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'")
+    df_hora = execute_query(query_hora)
+
+    return df_producao.to_dict("records"), df_hora.to_dict("records")
+
+# 2) Atualiza dropdown de operações
 @dash.callback(
     Output("operacao-filter", "options"),
-    Input("interval-update", "n_intervals")
+    Input("store-producao", "data")
 )
-def update_dropdown(n_intervals):
-    now = datetime.now()
-    query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{now:%d/%m/%Y}', '{now:%d/%m/%Y}'"
-    df = execute_query(query)
-    if df.empty:
+def update_dropdown(df_producao_records):
+    if not df_producao_records:
         return []
+    df = pd.DataFrame(df_producao_records)
+    now = datetime.now()
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         df = df[df["dt_registro_turno"].dt.date == now.date()]
@@ -406,6 +478,7 @@ def update_dropdown(n_intervals):
         return [{"label": op, "value": op} for op in ops]
     return []
 
+# 3) Força o "interval-update" a voltar para zero quando clica no botão
 @dash.callback(
     Output("interval-update", "n_intervals"),
     Input("btn-atualizar", "n_clicks"),
@@ -414,16 +487,24 @@ def update_dropdown(n_intervals):
 def manual_update(n_clicks):
     return 0
 
+# 4) Callback do primeiro gráfico: Caminhões Necessários por Escavadeira
 @dash.callback(
     Output("truck-cards", "figure"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value")]
+    Input("store-producao", "data"),
+    Input("store-hora", "data"),
+    Input("operacao-filter", "value")
 )
-def update_truck_chart(n_intervals, operacao_filter):
+def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
     period_start, period_end = get_search_period()
-    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter)
+
+    df_prod_period = pd.DataFrame(df_producao_records or [])
+    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
     if df_prod_period.empty:
         return no_data_fig("Caminhões Necessários por Escavadeira")
-    df_hora = get_filtered_data_hora(period_start, period_end)
+
+    df_hora = pd.DataFrame(df_hora_records or [])
+    df_hora = get_filtered_data_hora(period_start, period_end, df=df_hora)
+
     merged_data = compute_truck_stats(df_prod_period, df_hora)
     if merged_data.empty:
         return no_data_fig("Caminhões Necessários por Escavadeira")
@@ -446,19 +527,25 @@ def update_truck_chart(n_intervals, operacao_filter):
     fig.update_layout(xaxis_tickangle=-45, margin=dict(l=50, r=50, t=50, b=120))
     return fig
 
+# 5) Mapa de Carregamento
 @dash.callback(
     Output("map-carregamento", "figure"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value"), Input("map-style-selector", "value")]
+    Input("store-producao", "data"),
+    Input("operacao-filter", "value"),
+    Input("map-style-selector", "value")
 )
-def update_map_carregamento_detalhado(n_intervals, operacao_filter, map_style):
+def update_map_carregamento_detalhado(df_producao_records, operacao_filter, map_style):
     if map_style == "satellite-streets" and not MAPBOX_TOKEN:
         logging.info("Token Mapbox ausente; usando open-street-map.")
         map_style = "open-street-map"
 
     period_start, period_end = get_search_period()
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df = pd.DataFrame(df_producao_records or [])
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
+
     df = df.dropna(subset=["latitude_carregamento", "longitude_carregamento"])
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
@@ -483,19 +570,24 @@ def update_map_carregamento_detalhado(n_intervals, operacao_filter, map_style):
     fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
+# 6) Mapa de Basculamento
 @dash.callback(
     Output("map-basculamento", "figure"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value"), Input("map-style-selector", "value")]
+    Input("store-producao", "data"),
+    Input("operacao-filter", "value"),
+    Input("map-style-selector", "value")
 )
-def update_map_basculamento_detalhado(n_intervals, operacao_filter, map_style):
+def update_map_basculamento_detalhado(df_producao_records, operacao_filter, map_style):
     if map_style == "satellite-streets" and not MAPBOX_TOKEN:
         logging.info("Token Mapbox ausente; usando open-street-map.")
         map_style = "open-street-map"
 
     period_start, period_end = get_search_period()
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df = pd.DataFrame(df_producao_records or [])
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
+
     df = df.dropna(subset=["latitude_basculamento", "longitude_basculamento"])
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
@@ -517,13 +609,17 @@ def update_map_basculamento_detalhado(n_intervals, operacao_filter, map_style):
     fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
+# 7) Gráfico 3D
 @dash.callback(
     Output("scatter-3d", "figure"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value")]
+    Input("store-producao", "data"),
+    Input("operacao-filter", "value")
 )
-def update_scatter_3d(n_intervals, operacao_filter):
+def update_scatter_3d(df_producao_records, operacao_filter):
     period_start, period_end = get_search_period()
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df = pd.DataFrame(df_producao_records or [])
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+
     if df.empty:
         return no_data_fig("Gráfico 3D: Sem dados")
 
@@ -540,19 +636,35 @@ def update_scatter_3d(n_intervals, operacao_filter):
         y="longitude_carregamento",
         z="tempo_ciclo_minuto",
         color="nome_operacao" if "nome_operacao" in df.columns else None,
-        hover_data=["nome_origem", "nome_destino"] if ("nome_origem" in df.columns and "nome_destino" in df.columns) else [],
+        hover_data=["nome_origem", "nome_destino"]
+        if ("nome_origem" in df.columns and "nome_destino" in df.columns)
+        else [],
         title="Gráfico de Dispersão 3D: Carregamento e Tempo de Ciclo"
     )
-    fig.update_layout(margin=dict(l=0, r=0, t=50, b=0))
+    fig.update_layout(
+        template="plotly_white",
+        margin=dict(l=0, r=0, t=50, b=0),
+        title_x=0.5,
+        font=dict(family="Arial, sans-serif", size=14),
+        scene=dict(
+            xaxis_title="Latitude Carregamento",
+            yaxis_title="Longitude Carregamento",
+            zaxis_title="Tempo de Ciclo (min)"
+        )
+    )
     return fig
 
+# 8) Gráfico de Barras (Volume)
 @dash.callback(
     Output("volume-bar", "figure"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value")]
+    Input("store-producao", "data"),
+    Input("operacao-filter", "value")
 )
-def update_volume_bar(n_intervals, operacao_filter):
+def update_volume_bar(df_producao_records, operacao_filter):
     period_start, period_end = get_search_period()
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df = pd.DataFrame(df_producao_records or [])
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+
     if df.empty:
         return no_data_fig("Volume: Sem dados")
 
@@ -574,16 +686,26 @@ def update_volume_bar(n_intervals, operacao_filter):
         title="Volume Total por Escavadeira",
         labels={"nome_equipamento_utilizado": "Escavadeira", "volume": "Volume Total"}
     )
-    fig.update_layout(margin=dict(l=50, r=50, t=50, b=120))
+    fig.update_layout(
+        template="plotly_white",
+        title_x=0.5,
+        margin=dict(l=40, r=40, t=60, b=80),
+        font=dict(family="Arial, sans-serif", size=14),
+        xaxis_tickangle=-45
+    )
     return fig
 
+# 9) Tabela
 @dash.callback(
     Output("table-data", "data"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value")]
+    Input("store-producao", "data"),
+    Input("operacao-filter", "value")
 )
-def update_table(n_intervals, operacao_filter):
+def update_table(df_producao_records, operacao_filter):
     period_start, period_end = get_search_period()
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df = pd.DataFrame(df_producao_records or [])
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+
     if df.empty:
         return no_data_table()
 
@@ -618,17 +740,24 @@ def update_table(n_intervals, operacao_filter):
 
     return grouped.to_dict("records")
 
+# 10) Informativo de Caminhões
 @dash.callback(
     Output("truck-info", "children"),
-    [Input("interval-update", "n_intervals"), Input("operacao-filter", "value")]
+    Input("store-producao", "data"),
+    Input("store-hora", "data"),
+    Input("operacao-filter", "value")
 )
-def update_truck_info(n_intervals, operacao_filter):
+def update_truck_info(df_producao_records, df_hora_records, operacao_filter):
     period_start, period_end = get_search_period()
-    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter)
+    df_prod_period = pd.DataFrame(df_producao_records or [])
+    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
+
     if df_prod_period.empty:
         return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
 
-    df_hora = get_filtered_data_hora(period_start, period_end)
+    df_hora = pd.DataFrame(df_hora_records or [])
+    df_hora = get_filtered_data_hora(period_start, period_end, df=df_hora)
+
     merged_data = compute_truck_stats(df_prod_period, df_hora)
     if merged_data.empty:
         return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
@@ -636,9 +765,11 @@ def update_truck_info(n_intervals, operacao_filter):
     total_trucks = merged_data["trucks_needed"].sum()
     return f"Total Caminhões Indicados: {total_trucks} / Máximo em Operação: 48"
 
-# Se quiser rodar standalone
+# =============== EXECUÇÃO STANDALONE ===============
+"""
 if __name__ == "__main__":
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
     app.title = "Relatório 1 - Ciclo"
     app.layout = layout
     app.run_server(debug=True)
+"""
