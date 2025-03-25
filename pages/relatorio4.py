@@ -16,6 +16,7 @@ from dash.dash_table import FormatTemplate
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
 
+# Configuração do log
 logging.basicConfig(
     level=logging.INFO,
     filename="relatorio4.log",
@@ -23,6 +24,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# Formato numérico para tabelas
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 
 # Modelos para indicadores
@@ -46,17 +48,23 @@ layout = dbc.Container(
     [
         dbc.Row(
             dbc.Col(
-                html.H1("Relatório 4 - Produção e Indicadores", className="text-center my-4 text-primary"),
+                html.H1(
+                    "Produção e Indicadores",
+                    className="text-center my-4 text-primary",
+                    style={"fontFamily": "Arial, sans-serif"}
+                ),
                 width=12
             )
         ),
-
         dbc.Row(
             [
                 dbc.Col(
                     html.Div(
                         [
-                            html.P("Escolha se deseja visualizar o dia atual ou o dia anterior."),
+                            html.P(
+                                "Escolha se deseja visualizar o dia atual ou o dia anterior.",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.RadioItems(
                                 id="rel4-day-selector",
                                 className="btn-group",
@@ -78,17 +86,22 @@ layout = dbc.Container(
             ],
             className="mb-4"
         ),
-
         # Stores para armazenar dados de produção e hora
         dcc.Store(id="rel4-producao-store"),
         dcc.Store(id="rel4-hora-store"),
-
         # 1) Tabela de Movimentação
         dbc.Row(
             dbc.Col(
                 dbc.Card(
                     [
-                        dbc.CardHeader(html.H5("Movimentação (Dia Atual ou Dia Anterior)", className="mb-0")),
+                        dbc.CardHeader(
+                            html.H5(
+                                "Movimentação (Dia Atual ou Dia Anterior)",
+                                className="mb-0",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
+                            className="bg-light"
+                        ),
                         dbc.CardBody(
                             dcc.Loading(
                                 dash_table.DataTable(
@@ -105,47 +118,68 @@ layout = dbc.Container(
                                         },
                                     ],
                                     style_table={"overflowX": "auto"},
-                                    style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                    style_cell={"textAlign": "center", "whiteSpace": "normal"},
-                                    style_data_conditional=[],
+                                    style_header={
+                                        "backgroundColor": "#f8f9fa",
+                                        "fontWeight": "bold",
+                                        "textAlign": "center"
+                                    },
+                                    style_cell={
+                                        "textAlign": "center",
+                                        "whiteSpace": "normal",
+                                        "fontFamily": "Arial, sans-serif"
+                                    },
                                     page_size=10
                                 ),
                                 type="default"
                             )
                         )
                     ],
-                    className="mb-4 shadow"
+                    className="mb-4 shadow animate__animated animate__fadeInUp"
                 ),
                 width=12
             ),
             className="mt-2"
         ),
-
         # 2) Gráfico de Viagens por Hora Trabalhada
         dbc.Row(
             dbc.Col(
                 dbc.Card(
                     [
-                        dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Dia Atual ou Dia Anterior)")),
+                        dbc.CardHeader(
+                            html.H5(
+                                "Viagens por Hora Trabalhada (Dia Atual ou Dia Anterior)",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
+                            className="bg-light"
+                        ),
                         dbc.CardBody(
                             dcc.Loading(
-                                dcc.Graph(id="rel4-grafico-viagens-hora", config={"displayModeBar": False}),
+                                dcc.Graph(
+                                    id="rel4-grafico-viagens-hora",
+                                    config={"displayModeBar": False}
+                                ),
                                 type="default"
                             )
                         )
                     ],
-                    className="mb-4 shadow"
+                    className="mb-4 shadow animate__animated animate__fadeInUp"
                 ),
                 width=12
             ),
             className="mt-2"
         ),
-
         # 3) Tabelas de Indicadores
         dbc.Row([
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Escavação", className="mb-0")),
+                    dbc.CardHeader(
+                        html.H5(
+                            "Indicadores - Escavação",
+                            className="mb-0",
+                            style={"fontFamily": "Arial, sans-serif"}
+                        ),
+                        className="bg-light"
+                    ),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -153,20 +187,33 @@ layout = dbc.Container(
                                 columns=[],
                                 data=[],
                                 style_table={"overflowX": "auto"},
-                                style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                style_cell={"textAlign": "center"},
-                                style_data_conditional=[],
+                                style_header={
+                                    "backgroundColor": "#f8f9fa",
+                                    "fontWeight": "bold",
+                                    "textAlign": "center"
+                                },
+                                style_cell={
+                                    "textAlign": "center",
+                                    "fontFamily": "Arial, sans-serif"
+                                },
                                 page_size=10
                             ),
                             type="default"
                         )
                     )
-                ], className="mb-4 shadow"),
+                ], className="mb-4 shadow animate__animated animate__fadeInUp"),
                 md=4
             ),
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Transporte", className="mb-0")),
+                    dbc.CardHeader(
+                        html.H5(
+                            "Indicadores - Transporte",
+                            className="mb-0",
+                            style={"fontFamily": "Arial, sans-serif"}
+                        ),
+                        className="bg-light"
+                    ),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -174,20 +221,33 @@ layout = dbc.Container(
                                 columns=[],
                                 data=[],
                                 style_table={"overflowX": "auto"},
-                                style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                style_cell={"textAlign": "center"},
-                                style_data_conditional=[],
+                                style_header={
+                                    "backgroundColor": "#f8f9fa",
+                                    "fontWeight": "bold",
+                                    "textAlign": "center"
+                                },
+                                style_cell={
+                                    "textAlign": "center",
+                                    "fontFamily": "Arial, sans-serif"
+                                },
                                 page_size=10
                             ),
                             type="default"
                         )
                     )
-                ], className="mb-4 shadow"),
+                ], className="mb-4 shadow animate__animated animate__fadeInUp"),
                 md=4
             ),
             dbc.Col(
                 dbc.Card([
-                    dbc.CardHeader(html.H5("Indicadores - Perfuração", className="mb-0")),
+                    dbc.CardHeader(
+                        html.H5(
+                            "Indicadores - Perfuração",
+                            className="mb-0",
+                            style={"fontFamily": "Arial, sans-serif"}
+                        ),
+                        className="bg-light"
+                    ),
                     dbc.CardBody(
                         dcc.Loading(
                             dash_table.DataTable(
@@ -195,22 +255,32 @@ layout = dbc.Container(
                                 columns=[],
                                 data=[],
                                 style_table={"overflowX": "auto"},
-                                style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                style_cell={"textAlign": "center"},
-                                style_data_conditional=[],
+                                style_header={
+                                    "backgroundColor": "#f8f9fa",
+                                    "fontWeight": "bold",
+                                    "textAlign": "center"
+                                },
+                                style_cell={
+                                    "textAlign": "center",
+                                    "fontFamily": "Arial, sans-serif"
+                                },
                                 page_size=10
                             ),
                             type="default"
                         )
                     )
-                ], className="mb-4 shadow"),
+                ], className="mb-4 shadow animate__animated animate__fadeInUp"),
                 md=4
             ),
         ], className="mt-2"),
-
         dbc.Row(
             dbc.Col(
-                dcc.Link("Voltar para o Portal", href="/", className="btn btn-secondary"),
+                dcc.Link(
+                    "Voltar para o Portal",
+                    href="/",
+                    className="btn btn-secondary",
+                    style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                ),
                 width=12,
                 className="text-center my-4"
             )
@@ -222,7 +292,7 @@ layout = dbc.Container(
 # ==================== FUNÇÕES AUXILIARES ====================
 
 def consulta_producao(dia_str):
-    """Executa usp_fato_producao para (dia_str, dia_str). Retorna DataFrame filtrado."""
+    """Executa usp_fato_producao para (dia_str, dia_str) e retorna o DataFrame filtrado."""
     query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{dia_str}', '{dia_str}'"
     try:
         df = query_to_df(query)
@@ -232,17 +302,14 @@ def consulta_producao(dia_str):
     if df.empty:
         return df
 
-    # Converter colunas de data
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filtro_data]
-
     return df
 
-
 def consulta_hora(dia_str):
-    """Executa usp_fato_hora para (dia_str, dia_str). Retorna DataFrame filtrado."""
+    """Executa usp_fato_hora para (dia_str, dia_str) e retorna o DataFrame filtrado."""
     query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{dia_str}', '{dia_str}'"
     try:
         df = query_to_df(query)
@@ -252,35 +319,31 @@ def consulta_hora(dia_str):
     if df.empty:
         return df
 
-    # Converter colunas de data
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
         df = df[df["dt_registro_turno"].dt.date == filtro_data]
-
     return df
 
 def calcular_horas_desde_7h(day_choice):
     """
     - Se 'ontem', retorna 24.0 (dia anterior completo).
-    - Se 'hoje', calcula horas decorridas desde 07:00 do dia atual, mínimo 0.01.
+    - Se 'hoje', calcula as horas decorridas desde as 07:00 do dia atual (mínimo 0.01).
     """
     if day_choice == "ontem":
         return 24.0
     now = datetime.now()
     start_7h = now.replace(hour=7, minute=0, second=0, microsecond=0)
     if now < start_7h:
-        # Se ainda não for 07:00, subtrai 1 dia
         start_7h -= timedelta(days=1)
     horas_passadas = (now - start_7h).total_seconds() / 3600.0
     return max(horas_passadas, 0.01)
 
 def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     """
-    Recebe df (fato_hora) e lista de modelos.  
-    Retorna (data, columns, style_data_conditional) para DataTable.
+    Agrupa os dados (do fato_hora) por modelo, calculando Disponibilidade, Utilização e Rendimento.
+    Retorna (data, columns, style_data_conditional) para o DataTable.
     """
-    # Verifica se colunas necessárias existem
     needed_cols = {"nome_modelo", "nome_tipo_estado", "tempo_hora"}
     if not needed_cols.issubset(df.columns):
         return [], [], []
@@ -302,13 +365,11 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin(
             ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
         ), "tempo_hora"].sum()
-
         disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
         util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
         rend = (disp * util) / 100.0
         return disp, util, rend
 
-    # Agrupamento por modelo
     rows = []
     for modelo, df_grp in df_f.groupby("nome_modelo"):
         disp, util, rend = calc_indicadores(df_grp)
@@ -318,7 +379,6 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
             "utilizacao": util,
             "rendimento": rend
         })
-    # Linha TOTAL
     disp_all, util_all, rend_all = calc_indicadores(df_f)
     total_row = pd.DataFrame([{
         "nome_modelo": "TOTAL",
@@ -327,7 +387,6 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
         "rendimento": rend_all
     }])
     df_ind = pd.concat([pd.DataFrame(rows), total_row], ignore_index=True)
-
     data = df_ind.to_dict("records")
     columns = [
         {"name": "Modelo", "id": "nome_modelo", "type": "text"},
@@ -346,7 +405,6 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     ]
     return data, columns, style_cond
 
-
 # ===================== CALLBACKS =====================
 
 # 1) Callback único para buscar Produção e Hora (dia atual ou anterior)
@@ -356,20 +414,12 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     Input("rel4-day-selector", "value")
 )
 def fetch_data_dia_escolhido(day_choice):
-    """
-    Ao alterar o RadioItems (dia atual ou anterior), busca:
-      1) Produção (fato_producao)
-      2) Hora (fato_hora)
-    e armazena em dcc.Store para que os demais callbacks usem localmente.
-    """
     if day_choice == "ontem":
         data_str = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
     else:
         data_str = datetime.now().strftime("%d/%m/%Y")
-
     df_prod = consulta_producao(data_str)
     df_hora = consulta_hora(data_str)
-
     return (
         df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {},
         df_hora.to_json(date_format="iso", orient="records") if not df_hora.empty else {}
@@ -385,35 +435,24 @@ def fetch_data_dia_escolhido(day_choice):
 def update_tabela_movimentacao(json_prod, day_choice):
     if not json_prod or isinstance(json_prod, dict):
         return [], []
-
     df = pd.read_json(json_prod, orient="records")
     if df.empty:
         return [], []
-
-    # Filtra apenas Minério e Estéril
     df = df[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df.empty:
         return [], []
-
-    # Agrupa
     df_grp = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum")
     )
-
-    # Linha TOTAL
     total_line = pd.DataFrame({
         "nome_operacao": ["TOTAL"],
         "viagens": [df_grp["viagens"].sum()],
         "volume": [df_grp["volume"].sum()]
     })
     df_grp = pd.concat([df_grp, total_line], ignore_index=True)
-
-    # Cálculo de Ritmo => (volume / horas_decorridas_desde_7h) * 24
     horas_decorridas = calcular_horas_desde_7h(day_choice)
     df_grp["ritmo_volume"] = (df_grp["volume"] / horas_decorridas) * 24.0
-
-    # Formatação condicional p/ volume (meta)
     meta_total = META_MINERIO + META_ESTERIL
     style_data_conditional = [
         {
@@ -444,30 +483,21 @@ def update_tabela_movimentacao(json_prod, day_choice):
 def update_grafico_viagens_hora(json_prod, json_hora):
     if (not json_prod or isinstance(json_prod, dict)) or (not json_hora or isinstance(json_hora, dict)):
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-
     df_prod = pd.read_json(json_prod, orient="records")
     df_hora = pd.read_json(json_hora, orient="records")
-
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-
-    # Filtra Minério e Estéril
     df_prod = df_prod[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df_prod.empty:
         return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
-
-    # Agrupa viagens por equipamento
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
         viagens=("nome_equipamento_utilizado", "count")
     )
-
-    # Filtra df_hora para estados de trabalho
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
     df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
-
     df_merged = pd.merge(
         df_viagens, df_horas,
         left_on="nome_equipamento_utilizado",
@@ -476,14 +506,11 @@ def update_grafico_viagens_hora(json_prod, json_hora):
     )
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar Viagens/Hora.", template="plotly_white")
-
-    # Cálculo de viagens/hora
     df_merged["viagens_por_hora"] = df_merged.apply(
         lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
         axis=1
     )
     df_merged.sort_values("viagens_por_hora", inplace=True)
-
     fig = px.bar(
         df_merged,
         x="nome_equipamento_utilizado",

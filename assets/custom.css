@@ -1,0 +1,12 @@
+.card-hover {
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+.card-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.footer-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}

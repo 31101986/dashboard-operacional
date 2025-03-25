@@ -9,6 +9,7 @@ import dash_table
 import plotly.express as px
 import pandas as pd
 
+# Configuração do log
 logging.basicConfig(
     level=logging.INFO,
     filename="dashboard.log",
@@ -18,8 +19,9 @@ logging.basicConfig(
 
 from db import query_to_df
 
+# Constantes
 SEARCH_PERIOD_HOURS = 2
-MAPBOX_TOKEN = ""  # Se tiver token, coloque aqui
+MAPBOX_TOKEN = ""  # Informe seu token Mapbox, se disponível
 
 # =============== FUNÇÕES AUXILIARES ===============
 
@@ -33,7 +35,7 @@ def get_search_period():
 
 def no_data_fig(title):
     """
-    Retorna um gráfico vazio com a mensagem 'Sem dados...' com layout modernizado.
+    Retorna um gráfico vazio com mensagem 'Sem dados...' e layout modernizado.
     """
     df_empty = pd.DataFrame({"x": [], "y": []})
     fig = px.bar(df_empty, x="x", y="y", title=title)
@@ -56,13 +58,13 @@ def no_data_fig(title):
 
 def no_data_table():
     """
-    Retorna uma linha de tabela avisando que não há dados.
+    Retorna uma linha de tabela informando que não há dados.
     """
     return [{"Mensagem": "Sem dados para o período selecionado"}]
 
 def execute_query(query):
     """
-    Chama o banco via query_to_df, tratando eventuais exceções.
+    Executa a query usando query_to_df, tratando exceções.
     """
     try:
         return query_to_df(query)
@@ -72,7 +74,7 @@ def execute_query(query):
 
 def common_map_layout(center_lat, center_lon, map_style):
     """
-    Layout comum para mapas, com melhorias de template e fonte.
+    Layout padrão para mapas, com template, centralização e configurações de fonte.
     """
     return {
         "template": "plotly_white",
@@ -100,8 +102,7 @@ def common_map_layout(center_lat, center_lon, map_style):
 
 def get_filtered_data_producao(period_start, period_end, operacao_filter=None, only_today=True, df=None):
     """
-    Filtra dados de Produção localmente ou consulta a query se df for None.
-    Mantém a mesma lógica original.
+    Filtra os dados de Produção localmente ou executa a query se df for None.
     """
     if df is None:
         query = (f"EXEC dw_sdp_mt_fas..usp_fato_producao "
@@ -123,8 +124,7 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, o
 
 def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
     """
-    Filtra dados de 'Hora' localmente ou consulta a query se df for None.
-    Mantém a mesma lógica original.
+    Filtra os dados de 'Hora' localmente ou executa a query se df for None.
     """
     if df is None:
         query = (f"EXEC dw_sdp_mt_fas..usp_fato_hora "
@@ -150,17 +150,14 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
 
 def compute_truck_stats(df_prod_period, df_hora):
     """
-    Calcula estatísticas de ciclo e estimativa de caminhões necessários.
-    Mantém a lógica original com leve reorganização.
-
-    **Nova lógica:** Se o tempo de ciclo do equipamento (tempo_ciclo_minuto)
-    for superior a 120 minutos, consideramos 60 minutos.
+    Calcula estatísticas de ciclo e estimativa de caminhões necessários.  
+    Regra adicional: se tempo_ciclo_minuto > 120, considera 60.
     """
     if df_prod_period.empty:
         cols = ["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"]
         return pd.DataFrame(columns=cols)
 
-    # Aplicar a nova regra: se tempo_ciclo_minuto > 120, considerar 60
+    # Aplicar regra: se tempo_ciclo_minuto > 120, considerar 60
     if "tempo_ciclo_minuto" in df_prod_period.columns:
         df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
         df_prod_period.loc[df_prod_period["tempo_ciclo_minuto"] > 120, "tempo_ciclo_minuto"] = 60
@@ -228,6 +225,7 @@ def compute_truck_stats(df_prod_period, df_hora):
 
 # =============== LAYOUT ===============
 
+# Navbar simples com título centralizado
 navbar = dbc.NavbarSimple(
     brand="Dashboard Operacional",
     color="primary",
@@ -235,6 +233,7 @@ navbar = dbc.NavbarSimple(
     fluid=True,
 )
 
+# Seletor de estilo do mapa com label em destaque
 map_style_selector = html.Div([
     dbc.Label("Estilo do Mapa", className="mb-1", style={"fontWeight": "bold", "fontSize": "16px"}),
     dbc.RadioItems(
@@ -248,10 +247,12 @@ map_style_selector = html.Div([
     ),
 ], style={"padding": "10px", "backgroundColor": "#f8f9fa", "borderRadius": "5px"})
 
+# Layout principal com cabeçalho, controles e cards para gráficos e tabela
 layout = dbc.Container([
     navbar,
-    html.H3("Relatório 1 - Ciclo Operacional", className="text-center mt-4 mb-4"),
+    html.H3("Ciclo Operacional", className="text-center mt-4 mb-4", style={"fontFamily": "Arial, sans-serif"}),
 
+    # Linha de filtros e botão de atualização
     dbc.Row([
         dbc.Col(
             dcc.Dropdown(
@@ -267,12 +268,13 @@ layout = dbc.Container([
         ),
         dbc.Col(
             dbc.Button("Atualizar", id="btn-atualizar", color="primary",
-                       className="w-100", style={"fontSize": "16px"}),
+                       className="w-100", style={"fontSize": "16px"}, title="Clique para atualizar os dados"),
             width=2
         ),
         dbc.Col(map_style_selector, width=2)
     ], className="mb-4 align-items-center"),
 
+    # Informativo de Caminhões
     dbc.Row([
         dbc.Col(
             html.Div(
@@ -290,6 +292,7 @@ layout = dbc.Container([
         )
     ], className="mb-4"),
 
+    # Gráfico: Caminhões Necessários por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -300,10 +303,11 @@ layout = dbc.Container([
                         type="default"
                     )
                 )
-            ], className="shadow mb-4")
+            ], className="shadow mb-4 animate__animated animate__fadeInUp")
         )
     ]),
 
+    # Linha com dois gráficos lado a lado: Gráfico 3D e Volume por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -314,7 +318,7 @@ layout = dbc.Container([
                         type="default"
                     )
                 )
-            ], className="shadow mb-4"),
+            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
             width=6
         ),
         dbc.Col(
@@ -326,11 +330,12 @@ layout = dbc.Container([
                         type="default"
                     )
                 )
-            ], className="shadow mb-4"),
+            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
             width=6
         )
     ]),
 
+    # Linha com dois mapas lado a lado: Mapa de Carregamento e Mapa de Basculamento
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -341,7 +346,7 @@ layout = dbc.Container([
                         type="default"
                     )
                 )
-            ], className="shadow mb-4"),
+            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
             width=6
         ),
         dbc.Col(
@@ -353,11 +358,12 @@ layout = dbc.Container([
                         type="default"
                     )
                 )
-            ], className="shadow mb-4"),
+            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
             width=6
         )
     ]),
 
+    # Linha com a tabela de detalhamento operacional
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -426,12 +432,14 @@ layout = dbc.Container([
                         style_table={'overflowX': 'auto', 'border': '1px solid #ddd', 'borderRadius': '5px'}
                     )
                 )
-            ], className="shadow mb-4")
+            ], className="shadow mb-4 animate__animated animate__fadeInUp")
         )
     ]),
 
+    # Atualização automática dos dados
     dcc.Interval(id="interval-update", interval=25*60*1000, n_intervals=0),
 
+    # Armazenamento dos dados para produção e hora
     dcc.Store(id="store-producao"),
     dcc.Store(id="store-hora"),
 
@@ -439,7 +447,7 @@ layout = dbc.Container([
 
 # =============== CALLBACKS ===============
 
-# 1) Callback para buscar e armazenar dados PRODUÇÃO e HORA
+# 1) Callback para buscar e armazenar dados de Produção e Hora
 @dash.callback(
     Output("store-producao", "data"),
     Output("store-hora", "data"),
@@ -460,7 +468,7 @@ def fetch_data(n_intervals, n_clicks):
 
     return df_producao.to_dict("records"), df_hora.to_dict("records")
 
-# 2) Atualiza dropdown de operações
+# 2) Atualiza o dropdown de operações com os dados filtrados
 @dash.callback(
     Output("operacao-filter", "options"),
     Input("store-producao", "data")
@@ -478,7 +486,7 @@ def update_dropdown(df_producao_records):
         return [{"label": op, "value": op} for op in ops]
     return []
 
-# 3) Força o "interval-update" a voltar para zero quando clica no botão
+# 3) Reseta o intervalo de atualização manualmente ao clicar no botão
 @dash.callback(
     Output("interval-update", "n_intervals"),
     Input("btn-atualizar", "n_clicks"),
@@ -487,7 +495,7 @@ def update_dropdown(df_producao_records):
 def manual_update(n_clicks):
     return 0
 
-# 4) Callback do primeiro gráfico: Caminhões Necessários por Escavadeira
+# 4) Callback para o gráfico: Caminhões Necessários por Escavadeira
 @dash.callback(
     Output("truck-cards", "figure"),
     Input("store-producao", "data"),
@@ -527,7 +535,7 @@ def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
     fig.update_layout(xaxis_tickangle=-45, margin=dict(l=50, r=50, t=50, b=120))
     return fig
 
-# 5) Mapa de Carregamento
+# 5) Callback para o Mapa de Carregamento Detalhado
 @dash.callback(
     Output("map-carregamento", "figure"),
     Input("store-producao", "data"),
@@ -570,7 +578,7 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter, map_
     fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
-# 6) Mapa de Basculamento
+# 6) Callback para o Mapa de Basculamento
 @dash.callback(
     Output("map-basculamento", "figure"),
     Input("store-producao", "data"),
@@ -609,7 +617,7 @@ def update_map_basculamento_detalhado(df_producao_records, operacao_filter, map_
     fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
-# 7) Gráfico 3D
+# 7) Callback para o Gráfico 3D
 @dash.callback(
     Output("scatter-3d", "figure"),
     Input("store-producao", "data"),
@@ -654,7 +662,7 @@ def update_scatter_3d(df_producao_records, operacao_filter):
     )
     return fig
 
-# 8) Gráfico de Barras (Volume)
+# 8) Callback para o Gráfico de Barras (Volume)
 @dash.callback(
     Output("volume-bar", "figure"),
     Input("store-producao", "data"),
@@ -695,7 +703,7 @@ def update_volume_bar(df_producao_records, operacao_filter):
     )
     return fig
 
-# 9) Tabela
+# 9) Callback para atualizar a tabela de detalhamento operacional
 @dash.callback(
     Output("table-data", "data"),
     Input("store-producao", "data"),
@@ -740,7 +748,7 @@ def update_table(df_producao_records, operacao_filter):
 
     return grouped.to_dict("records")
 
-# 10) Informativo de Caminhões
+# 10) Callback para atualizar o informativo de caminhões
 @dash.callback(
     Output("truck-info", "children"),
     Input("store-producao", "data"),
@@ -767,9 +775,10 @@ def update_truck_info(df_producao_records, df_hora_records, operacao_filter):
 
 # =============== EXECUÇÃO STANDALONE ===============
 """
+# Para testar este relatório de forma independente, descomente o bloco abaixo:
 if __name__ == "__main__":
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
-    app.title = "Relatório 1 - Ciclo"
+    app.title = "Relatório 1 - Ciclo Operacional"
     app.layout = layout
     app.run_server(debug=True)
 """

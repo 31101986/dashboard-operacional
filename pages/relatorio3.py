@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from io import BytesIO
 
 import dash
 from dash import dcc, html, callback, Input, Output, State
@@ -12,6 +13,7 @@ from pandas.api.types import CategoricalDtype
 
 from db import query_to_df
 
+# Configuração do log
 logging.basicConfig(
     level=logging.INFO,
     filename="relatorio3.log",
@@ -19,10 +21,12 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+# Variáveis de datas padrão
 today = datetime.today().date()
 start_default = today - timedelta(days=45)
 end_default = today
 
+# Mapas de custo e preço
 CUSTO_MINERO_MAP = {
     "0-500": 10.9517831011859,
     "501-1000": 11.4656811042058,
@@ -68,16 +72,10 @@ PRECO_60_MAP = {
     "ESCAVADEIRA HIDRÁULICA CAT 336NGX": 299.927964967103,
     "ESCAVADEIRA HIDRÁULICA CAT 320": 229.356679092491,
     "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)": 395.19920089783,
-    #"PÁ CARREGADEIRA CAT 966L": 292.870836379642,
-    #"MOTONIVELADORA CAT 140K": 257.585193442336,
     "MERCEDES BENZ AROCS 4851/45 8X4": 201.128164742646,
     "VOLVO FMX 500 8X4": 201.128164742646,
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": 165.842521805339,
-    #"RETRO ESCAVADEIRA CAT 416F2": 151.728264630417,
-    #"TRATOR DE ESTEIRAS CAT D7": 504.58469400348,
-    #"TRATOR DE ESTEIRAS CAT D6T": 335.21360790441,
     "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": 1030.5313162412,
-    #"PERFURATRIZ HIDRAULICA SANDVIK DX800": 808.111794550188,
     "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": 839.916000000000
 }
 
@@ -158,17 +156,163 @@ def calc_faturamento_hora_60(df_hora):
     df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
     return df_group["custo_total"].sum()
 
+def build_export_excel_single_sheet(json_producao, json_hora):
+    """
+    Em vez de exportar a tabela base, essa função recria as seções exibidas no relatório:
+    - Custos de Movimentação (Minério e Estéril)
+    - Custos Adicionais
+    - Horas Paradas por Modelo
+    - Faturamento Final
+    Tudo em uma única aba, com títulos separando cada seção.
+    """
+    df_prod = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
+    df_hora = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
+    
+    # Seção 1: Custos de Movimentação - Minério
+    if not df_prod.empty:
+        df_minero = calc_custo_por_faixa(df_prod, "Movimentação Minério", CUSTO_MINERO_MAP)
+        if not df_minero.empty:
+            total_vol = df_minero["total_volume"].sum()
+            total_custo = df_minero["custo_total"].sum()
+            df_total_minero = pd.DataFrame([{
+                "dmt_bin": "TOTAL",
+                "total_volume": total_vol,
+                "custo_unitario": "",
+                "custo_total": total_custo
+            }])
+            df_minero = pd.concat([df_minero, df_total_minero], ignore_index=True)
+        else:
+            df_minero = pd.DataFrame()
+    else:
+        df_minero = pd.DataFrame()
+    
+    # Seção 2: Custos de Movimentação - Estéril
+    if not df_prod.empty:
+        df_esteril = calc_custo_por_faixa(df_prod, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
+        if not df_esteril.empty:
+            total_vol = df_esteril["total_volume"].sum()
+            total_custo = df_esteril["custo_total"].sum()
+            df_total_esteril = pd.DataFrame([{
+                "dmt_bin": "TOTAL",
+                "total_volume": total_vol,
+                "custo_unitario": "",
+                "custo_total": total_custo
+            }])
+            df_esteril = pd.concat([df_esteril, df_total_esteril], ignore_index=True)
+        else:
+            df_esteril = pd.DataFrame()
+    else:
+        df_esteril = pd.DataFrame()
+    
+    # Seção 3: Custos Adicionais
+    if not df_prod.empty:
+        df_adic = calc_custo_adicional(df_prod)
+    else:
+        df_adic = pd.DataFrame()
+    
+    # Seção 4: Horas Paradas por Modelo
+    if not df_hora.empty:
+        df_parada = df_hora[df_hora["nome_estado"].isin(ESTADOS_PARADA)]
+        if not df_parada.empty and "nome_modelo" in df_parada.columns:
+            df_group = df_parada.groupby("nome_modelo", as_index=False).agg(horas_paradas=("tempo_hora", "sum"))
+            df_group["preco_60"] = df_group["nome_modelo"].map(PRECO_60_MAP).fillna(0)
+            df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
+            total_horas = df_group["horas_paradas"].sum()
+            total_custo = df_group["custo_total"].sum()
+            df_total_horas = pd.DataFrame([{
+                "nome_modelo": "TOTAL",
+                "horas_paradas": total_horas,
+                "preco_60": "",
+                "custo_total": total_custo
+            }])
+            df_horas = pd.concat([df_group, df_total_horas], ignore_index=True)
+        else:
+            df_horas = pd.DataFrame()
+    else:
+        df_horas = pd.DataFrame()
+    
+    # Seção 5: Faturamento Final
+    faturamento_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
+    faturamento_hora = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
+    faturamento_total = faturamento_transporte + faturamento_hora
+    df_faturamento = pd.DataFrame({
+         "Descrição": ["Faturamento (Escavação e Transporte)", "Faturamento Hora 60%", "Faturamento Total"],
+         "Valor": [faturamento_transporte, faturamento_hora, faturamento_total]
+    })
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        sheet_name = "Dados"
+        current_row = 0
+        worksheet = writer.book.add_worksheet(sheet_name)
+        writer.sheets[sheet_name] = worksheet
+        
+        # Seção 1: Custos de Movimentação - Minério
+        worksheet.write(current_row, 0, "Custos de Movimentação - Minério")
+        current_row += 1
+        if not df_minero.empty:
+            df_minero.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
+            current_row += len(df_minero.index) + 3
+        else:
+            worksheet.write(current_row, 0, "Sem dados")
+            current_row += 3
+        
+        # Seção 2: Custos de Movimentação - Estéril
+        worksheet.write(current_row, 0, "Custos de Movimentação - Estéril")
+        current_row += 1
+        if not df_esteril.empty:
+            df_esteril.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
+            current_row += len(df_esteril.index) + 3
+        else:
+            worksheet.write(current_row, 0, "Sem dados")
+            current_row += 3
+        
+        # Seção 3: Custos Adicionais
+        worksheet.write(current_row, 0, "Custos Adicionais")
+        current_row += 1
+        if not df_adic.empty:
+            df_adic.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
+            current_row += len(df_adic.index) + 3
+        else:
+            worksheet.write(current_row, 0, "Sem dados")
+            current_row += 3
+        
+        # Seção 4: Horas Paradas por Modelo
+        worksheet.write(current_row, 0, "Horas Paradas por Modelo")
+        current_row += 1
+        if not df_horas.empty:
+            df_horas.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
+            current_row += len(df_horas.index) + 3
+        else:
+            worksheet.write(current_row, 0, "Sem dados")
+            current_row += 3
+        
+        # Seção 5: Faturamento Final
+        worksheet.write(current_row, 0, "Faturamento Final")
+        current_row += 1
+        df_faturamento.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
+    processed_data = output.getvalue()
+    return processed_data
+
 # ===================== LAYOUT =====================
 layout = dbc.Container([
     dbc.Row(
         dbc.Col(
-            html.H2("Boletim de Medição - Relatório 3", className="text-center my-4 text-primary"),
+            html.H2(
+                "Boletim de Medição",
+                className="text-center my-4 text-primary",
+                style={"fontFamily": "Arial, sans-serif"}
+            ),
             width=12
         )
     ),
     dbc.Row([
         dbc.Col([
-            html.Label("Selecione o Período:", className="fw-bold text-secondary mb-1"),
+            html.Label(
+                "Selecione o Período:",
+                className="fw-bold text-secondary mb-1",
+                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+            ),
             dcc.DatePickerRange(
                 id="rel3-date-picker-range",
                 min_date_allowed=datetime(2020, 1, 1).date(),
@@ -180,22 +324,31 @@ layout = dbc.Container([
             )
         ], md=4),
         dbc.Col(
-            dbc.Button("Aplicar Filtro", id="rel3-apply-button", n_clicks=0,
-                       color="primary", className="mt-4 w-100"),
+            dbc.Button(
+                "Aplicar Filtro",
+                id="rel3-apply-button",
+                n_clicks=0,
+                color="primary",
+                className="mt-4 w-100",
+                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+            ),
             md=2
         ),
         dbc.Col(html.Div(), md=6)
     ], className="align-items-end mb-4"),
 
-    # Stores
+    # Stores para os dados de Produção e Hora
     dcc.Store(id="rel3-data-store"),
     dcc.Store(id="rel3-fato-hora-store"),
 
     # (2) Custos de Movimentação
     dbc.Card([
-        dbc.CardHeader(html.H5("Custos de Movimentação", className="mb-0")),
+        dbc.CardHeader(
+            html.H5("Custos de Movimentação", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
+            className="bg-light"
+        ),
         dbc.CardBody([
-            html.H6("Movimentação Minério", className="text-secondary mt-2"),
+            html.H6("Movimentação Minério", className="text-secondary mt-2", style={"fontFamily": "Arial, sans-serif"}),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-minero",
@@ -206,7 +359,7 @@ layout = dbc.Container([
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
-                        "fontFamily": "Arial",
+                        "fontFamily": "Arial, sans-serif",
                         "fontSize": "10px",
                         "whiteSpace": "normal"
                     },
@@ -222,7 +375,7 @@ layout = dbc.Container([
                 type="default"
             ),
             html.Hr(),
-            html.H6("Movimentação Estéril", className="text-secondary mt-2"),
+            html.H6("Movimentação Estéril", className="text-secondary mt-2", style={"fontFamily": "Arial, sans-serif"}),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-esteril",
@@ -233,7 +386,7 @@ layout = dbc.Container([
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
-                        "fontFamily": "Arial",
+                        "fontFamily": "Arial, sans-serif",
                         "fontSize": "10px",
                         "whiteSpace": "normal"
                     },
@@ -249,11 +402,14 @@ layout = dbc.Container([
                 type="default"
             )
         ])
-    ], className="shadow mb-4"),
+    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
 
     # (3) Custos Adicionais
     dbc.Card([
-        dbc.CardHeader(html.H5("Custos Adicionais", className="mb-0")),
+        dbc.CardHeader(
+            html.H5("Custos Adicionais", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
+            className="bg-light"
+        ),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -265,7 +421,7 @@ layout = dbc.Container([
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
-                        "fontFamily": "Arial",
+                        "fontFamily": "Arial, sans-serif",
                         "fontSize": "10px",
                         "whiteSpace": "normal"
                     },
@@ -274,11 +430,14 @@ layout = dbc.Container([
                 type="default"
             )
         )
-    ], className="shadow mb-4"),
+    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
 
     # (5) Custo de Horas Paradas por Modelo (Preço 60%)
     dbc.Card([
-        dbc.CardHeader(html.H5("Custo de Horas Paradas por Modelo (Preço 60%)", className="mb-0")),
+        dbc.CardHeader(
+            html.H5("Custo de Horas Paradas por Modelo (Preço 60%)", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
+            className="bg-light"
+        ),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -290,7 +449,7 @@ layout = dbc.Container([
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
-                        "fontFamily": "Arial",
+                        "fontFamily": "Arial, sans-serif",
                         "fontSize": "10px",
                         "whiteSpace": "normal"
                     },
@@ -306,27 +465,37 @@ layout = dbc.Container([
                 type="default"
             )
         )
-    ], className="shadow mb-4"),
+    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
 
     # (6) Faturamento Final
     dbc.Card([
-        dbc.CardHeader(html.H5("Faturamento Final", className="mb-0")),
+        dbc.CardHeader(
+            html.H5("Faturamento Final", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
+            className="bg-light"
+        ),
         dbc.CardBody(
             html.Div(id="rel3-total-geral", style={
                 "fontSize": "20px",
                 "fontWeight": "bold",
                 "padding": "10px",
                 "backgroundColor": "#fff9c4",
-                "borderRadius": "5px"
+                "borderRadius": "5px",
+                "fontFamily": "Arial, sans-serif"
             })
         )
-    ], className="shadow mb-4"),
+    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
 
     dbc.Card([
         dbc.CardBody(
-            dbc.Button("Exportar para Excel (1 Aba)", id="export-excel-button", color="success", className="w-100")
+            dbc.Button(
+                "Exportar para Excel (1 Aba)",
+                id="export-excel-button",
+                color="success",
+                className="w-100",
+                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+            )
         )
-    ], className="shadow mb-4"),
+    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
 
     dcc.Download(id="download-excel")
 
@@ -540,11 +709,11 @@ def update_faturamento_final(json_producao, json_hora):
     faturamento_total = faturamento_transporte + faturamento_hora
     return html.Div([
         html.Div(f"Faturamento (Escavação e Transporte): R$ {faturamento_transporte:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px"}),
+                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"}),
         html.Div(f"Faturamento Hora 60%: R$ {faturamento_hora:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px"}),
+                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"}),
         html.Div(f"Faturamento Total: R$ {faturamento_total:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px"})
+                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"})
     ])
 
 @dash.callback(
@@ -559,5 +728,3 @@ def export_to_excel(n_clicks, json_producao, json_hora):
         processed_data = build_export_excel_single_sheet(json_producao, json_hora)
         return dcc.send_bytes(lambda file: file.write(processed_data), "relatorio3.xlsx")
     return dash.no_update
-
-layout = layout

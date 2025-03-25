@@ -1,17 +1,18 @@
-import dash
+import dash 
 import dash_bootstrap_components as dbc
 from dash import html, dcc, Input, Output  # type: ignore
 import logging
 
-# Import das páginas (relatórios) – ajusta conforme necessidade
+# Import das páginas (relatórios)
 import pages.relatorio1 as rel1
 import pages.relatorio2 as rel2
 import pages.relatorio3 as rel3
-import pages.relatorio4 as rel4  # Relatório 4
+import pages.relatorio4 as rel4
+import pages.relatorio5 as rel5
 
-# -----------------------------------------------------------------------------
-# Configuração de log (opcional)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Configuração de log
+# ---------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -22,65 +23,66 @@ logger.addHandler(console_handler)
 
 logger.info("Iniciando a aplicação Dash...")
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Configurações de estilo externas – tema LUX, Font Awesome e animate.css
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 external_stylesheets = [
     dbc.themes.LUX,
     "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
     "https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css",
 ]
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Criação do app Dash
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 app = dash.Dash(
     __name__,
     suppress_callback_exceptions=True,
     external_stylesheets=external_stylesheets
 )
 
-# Definimos o título da aba do navegador
 app.title = "Portal de Relatórios - Mineração"
-
-# Servidor WSGI para uso em produção (Gunicorn, etc.)
 server = app.server
 
-# -----------------------------------------------------------------------------
-# Navbar – Menu de navegação
-# -----------------------------------------------------------------------------
-navbar = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(dcc.Link("Portal", href="/", className="nav-link")),
-        dbc.NavItem(dcc.Link("Ciclo", href="/relatorio1", className="nav-link")),
-        dbc.NavItem(dcc.Link("Informativo de Produção", href="/relatorio2", className="nav-link")),
-        dbc.NavItem(dcc.Link("Avanço Financeiro", href="/relatorio3", className="nav-link")),
-        dbc.NavItem(dcc.Link("Produção", href="/relatorio4", className="nav-link")),
-    ],
-    brand="Mineração",
-    brand_href="/",
+# ---------------------------------------------------------------------------
+# Navbar aprimorada com destaque da página ativa
+# ---------------------------------------------------------------------------
+navbar = dbc.Navbar(
+    dbc.Container([
+        dbc.NavbarBrand("Mineração", href="/", className="ms-2"),
+        dbc.Nav(
+            [
+                dbc.NavLink("Portal", href="/", active="exact"),
+                dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
+                dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
+                dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
+                dbc.NavLink("Produção", href="/relatorio4", active="exact"),
+                dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
+            ],
+            pills=True,
+            className="ms-auto",
+            navbar=True
+        )
+    ]),
     color="dark",
     dark=True,
-    sticky="top"
+    sticky="top",
 )
 
-# -----------------------------------------------------------------------------
-# Layout da página inicial (Portal)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Layout da página inicial (Portal) com cards aprimorados
+# ---------------------------------------------------------------------------
 home_layout = dbc.Container(
     [
         dbc.Row(
             dbc.Col(
-                html.H1(
-                    "Portal de Relatórios para Mineração",
-                    className="text-center my-4"
-                ),
+                html.H1("Portal de Relatórios para Mineração", className="text-center my-4"),
                 width=12
             )
         ),
+        # Linha com os 4 primeiros cards
         dbc.Row(
             [
-                # Card Relatório 1
                 dbc.Col(
                     dbc.Card(
                         [
@@ -97,11 +99,11 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"}
+                        style={"width": "18rem", "margin": "auto"},
+                        className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
                 ),
-                # Card Relatório 2
                 dbc.Col(
                     dbc.Card(
                         [
@@ -118,11 +120,11 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"}
+                        style={"width": "18rem", "margin": "auto"},
+                        className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
                 ),
-                # Card Relatório 3
                 dbc.Col(
                     dbc.Card(
                         [
@@ -139,11 +141,11 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"}
+                        style={"width": "18rem", "margin": "auto"},
+                        className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
                 ),
-                # Card Relatório 4
                 dbc.Col(
                     dbc.Card(
                         [
@@ -160,16 +162,44 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"}
+                        style={"width": "18rem", "margin": "auto"},
+                        className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
                 ),
             ],
             className="my-4 justify-content-center"
         ),
+        # Linha com o card do Relatório 5
         dbc.Row(
             dbc.Col(
-                html.Footer("© 2025 Mineração XYZ", className="text-center text-muted my-4"),
+                dbc.Card(
+                    [
+                        dbc.CardImg(
+                            src="/assets/mining5.jpg",
+                            top=True,
+                            style={"height": "180px", "objectFit": "cover"}
+                        ),
+                        dbc.CardBody(
+                            [
+                                html.H4("Timeline Apontamentos", className="card-title"),
+                                html.P("Equipamentos de Produção", className="card-text"),
+                                dcc.Link("Visualizar", href="/relatorio5", className="btn btn-primary")
+                            ]
+                        )
+                    ],
+                    style={"width": "18rem", "margin": "auto"},
+                    className="card-hover animate__animated animate__fadeInUp"
+                ),
+                width=12, md=3,
+                className="mt-4"
+            ),
+            className="justify-content-center"
+        ),
+        # Rodapé
+        dbc.Row(
+            dbc.Col(
+                html.Footer("© 2025 Mineração XYZ", className="text-center footer-text my-4"),
                 width=12
             )
         ),
@@ -177,9 +207,9 @@ home_layout = dbc.Container(
     fluid=True
 )
 
-# -----------------------------------------------------------------------------
-# Layout principal com Location + Spinner (feedback visual de carregamento)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Layout principal com dcc.Location e Spinner (feedback de carregamento)
+# ---------------------------------------------------------------------------
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
@@ -193,11 +223,12 @@ app.layout = html.Div(
     ]
 )
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Callback para trocar conteúdo da página com base na URL
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
+    logger.info(f"Navegando para {pathname}")
     if pathname == "/relatorio1":
         return rel1.layout
     elif pathname == "/relatorio2":
@@ -206,12 +237,14 @@ def display_page(pathname):
         return rel3.layout
     elif pathname == "/relatorio4":
         return rel4.layout
+    elif pathname == "/relatorio5":
+        return rel5.layout
     else:
         return home_layout
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Execução do servidor local
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logger.info("Executando o servidor no modo debug...")
     app.run_server(debug=True, host="0.0.0.0", port=8050)

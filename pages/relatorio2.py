@@ -22,7 +22,11 @@ layout = dbc.Container(
     [
         dbc.Row(
             dbc.Col(
-                html.H1("Relatório 2 - Fato Produção", className="text-center my-4 text-primary"),
+                html.H1(
+                    "Informativo de Produção",
+                    className="text-center my-4 text-primary",
+                    style={"fontFamily": "Arial, sans-serif"}
+                ),
                 width=12
             )
         ),
@@ -30,7 +34,11 @@ layout = dbc.Container(
         # Subtítulo ou breve descrição
         dbc.Row(
             dbc.Col(
-                html.H5("Análise de Produção e Indicadores no Período Selecionado", className="text-center text-muted"),
+                html.H5(
+                    "Análise de Produção e Indicadores no Período Selecionado",
+                    className="text-center text-muted",
+                    style={"fontFamily": "Arial, sans-serif"}
+                ),
                 width=12
             ),
             className="mb-4"
@@ -40,7 +48,11 @@ layout = dbc.Container(
             [
                 dbc.Col(
                     [
-                        html.Label("Selecione o Período:", className="fw-bold text-secondary"),
+                        html.Label(
+                            "Selecione o Período:",
+                            className="fw-bold text-secondary",
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                        ),
                         dcc.DatePickerRange(
                             id="date-picker-range",
                             min_date_allowed=datetime(2020, 1, 1),
@@ -50,18 +62,29 @@ layout = dbc.Container(
                             display_format="DD/MM/YYYY",
                             className="mb-2"
                         ),
-                        dbc.Button("Aplicar Filtro", id="apply-button", n_clicks=0, className="btn btn-primary mt-2")
+                        dbc.Button(
+                            "Aplicar Filtro",
+                            id="apply-button",
+                            n_clicks=0,
+                            className="btn btn-primary mt-2",
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                        )
                     ],
                     md=4
                 ),
                 dbc.Col(
                     [
-                        html.Label("Filtrar Operações (opcional):", className="fw-bold text-secondary"),
+                        html.Label(
+                            "Filtrar Operações (opcional):",
+                            className="fw-bold text-secondary",
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                        ),
                         dcc.Dropdown(
                             id="operacao-dropdown",
                             placeholder="Selecione uma ou mais operações",
                             multi=True,
-                            className="mb-2"
+                            className="mb-2",
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
                         )
                     ],
                     md=8
@@ -82,7 +105,11 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Movimentação (Último dia)", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Movimentação (Último dia)", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -94,21 +121,33 @@ layout = dbc.Container(
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
                                         style_table={"overflowX": "auto"},
-                                        style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                        style_cell={"textAlign": "center", "whiteSpace": "normal"}
+                                        style_header={
+                                            "backgroundColor": "#f8f9fa",
+                                            "fontWeight": "bold",
+                                            "textAlign": "center"
+                                        },
+                                        style_cell={
+                                            "textAlign": "center",
+                                            "whiteSpace": "normal",
+                                            "fontFamily": "Arial, sans-serif"
+                                        }
                                     ),
                                     type="default"
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=6
                 ),
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Movimentação (Acumulado)", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Movimentação (Acumulado)", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -120,14 +159,22 @@ layout = dbc.Container(
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
                                         style_table={"overflowX": "auto"},
-                                        style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                        style_cell={"textAlign": "center", "whiteSpace": "normal"}
+                                        style_header={
+                                            "backgroundColor": "#f8f9fa",
+                                            "fontWeight": "bold",
+                                            "textAlign": "center"
+                                        },
+                                        style_cell={
+                                            "textAlign": "center",
+                                            "whiteSpace": "normal",
+                                            "fontFamily": "Arial, sans-serif"
+                                        }
                                     ),
                                     type="default"
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=6
                 )
@@ -142,7 +189,11 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Gráfico de Volume", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Gráfico de Volume", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-volume", config={"displayModeBar": False}),
@@ -150,7 +201,7 @@ layout = dbc.Container(
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=12
                 )
@@ -162,7 +213,11 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Gráfico de Massa", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Gráfico de Massa", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-massa", config={"displayModeBar": False}),
@@ -170,7 +225,7 @@ layout = dbc.Container(
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=12
                 )
@@ -184,7 +239,11 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Viagens por Hora Trabalhada (Último Dia)", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Viagens por Hora Trabalhada (Último Dia)", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(id="grafico-viagens-hora", config={"displayModeBar": False}),
@@ -192,7 +251,7 @@ layout = dbc.Container(
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=12
                 )
@@ -205,11 +264,16 @@ layout = dbc.Container(
         dbc.Row(
             dbc.Col(
                 [
-                    html.Label("Filtrar por Modelo (Indicadores):", className="fw-bold text-secondary"),
+                    html.Label(
+                        "Filtrar por Modelo (Indicadores):",
+                        className="fw-bold text-secondary",
+                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                    ),
                     dcc.Dropdown(
                         id="modelo-dropdown",
                         placeholder="(Opcional) Selecione um ou mais modelos (Equipamento)",
-                        multi=True
+                        multi=True,
+                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
                     )
                 ],
                 md=12
@@ -225,7 +289,11 @@ layout = dbc.Container(
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Indicadores - Último Dia", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Indicadores - Último Dia", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -237,21 +305,32 @@ layout = dbc.Container(
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
                                         style_table={"overflowX": "auto"},
-                                        style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                        style_cell={"textAlign": "center"}
+                                        style_header={
+                                            "backgroundColor": "#f8f9fa",
+                                            "fontWeight": "bold",
+                                            "textAlign": "center"
+                                        },
+                                        style_cell={
+                                            "textAlign": "center",
+                                            "fontFamily": "Arial, sans-serif"
+                                        }
                                     ),
                                     type="default"
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=6
                 ),
                 dbc.Col(
                     dbc.Card(
                         [
-                            dbc.CardHeader(html.H5("Indicadores - Acumulado", className="mb-0")),
+                            dbc.CardHeader(
+                                html.H5("Indicadores - Acumulado", className="mb-0"),
+                                className="bg-light",
+                                style={"fontFamily": "Arial, sans-serif"}
+                            ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     DataTable(
@@ -263,14 +342,21 @@ layout = dbc.Container(
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
                                         style_table={"overflowX": "auto"},
-                                        style_header={"backgroundColor": "#f8f9fa", "fontWeight": "bold"},
-                                        style_cell={"textAlign": "center"}
+                                        style_header={
+                                            "backgroundColor": "#f8f9fa",
+                                            "fontWeight": "bold",
+                                            "textAlign": "center"
+                                        },
+                                        style_cell={
+                                            "textAlign": "center",
+                                            "fontFamily": "Arial, sans-serif"
+                                        }
                                     ),
                                     type="default"
                                 )
                             )
                         ],
-                        className="mb-4 shadow"
+                        className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
                     md=6
                 )
@@ -600,7 +686,7 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     if not json_prod or not json_hora or not end_date:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
-    # Se houve erro em Produção ou Hora, retorna figura vazia
+    # Se houve erro em Produção ou Hora, retorna figura com mensagem de erro
     if isinstance(json_prod, dict) and "error" in json_prod:
         return px.bar(title=json_prod["error"], template="plotly_white")
     if isinstance(json_hora, dict) and "error" in json_hora:
@@ -693,10 +779,9 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     Input("data-store-hora", "data")
 )
 def load_modelos_options(json_data_hora):
-    """Carrega as opções de Modelo usando o DataFrame de Hora, que agora já vem do callback único."""
+    """Carrega as opções de Modelo usando o DataFrame de Hora."""
     if not json_data_hora or isinstance(json_data_hora, dict):
         return []
-
     df_h = pd.read_json(json_data_hora, orient="records")
     if df_h.empty or "nome_modelo" not in df_h.columns:
         return []
