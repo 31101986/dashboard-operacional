@@ -9,6 +9,9 @@ import dash_table
 import plotly.express as px
 import pandas as pd
 
+# Importa o fuso horário definido em config.py
+from config import TIMEZONE
+
 # Configuração do log (utilize seu gerenciador de logs conforme necessário)
 logging.basicConfig(
     level=logging.INFO,
@@ -30,7 +33,7 @@ MAPBOX_TOKEN = ""  # Informe seu token Mapbox, se disponível
 # =============================================================================
 def get_search_period():
     """Retorna o período de busca (data/hora inicial e final) com base na constante definida."""
-    now = datetime.now()
+    now = datetime.now(TIMEZONE)
     period_start = now - timedelta(hours=SEARCH_PERIOD_HOURS)
     return period_start, now
 
@@ -109,6 +112,9 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, d
 
     if "dt_registro_fim" in df.columns:
         df["dt_registro_fim"] = pd.to_datetime(df["dt_registro_fim"], errors="coerce")
+        # Se os valores forem tz-naive, localize para TIMEZONE
+        if df["dt_registro_fim"].dt.tz is None:
+            df["dt_registro_fim"] = df["dt_registro_fim"].dt.tz_localize(TIMEZONE)
         df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] <= period_end)]
     
     if operacao_filter and "nome_operacao" in df.columns:
@@ -481,7 +487,7 @@ def update_dropdown(df_producao_records):
     if not df_producao_records:
         return []
     df = pd.DataFrame(df_producao_records)
-    now = datetime.now()
+    now = datetime.now(TIMEZONE)
     if "dt_registro_turno" in df.columns:
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
         df = df[df["dt_registro_turno"].dt.date == now.date()]

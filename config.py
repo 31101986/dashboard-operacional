@@ -3,6 +3,7 @@ import json
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo  # Disponível a partir do Python 3.9
 
 def setup_logger():
     """
@@ -80,3 +81,7 @@ metas = load_metas()
 # Definição das metas com valores padrão caso não estejam presentes no JSON
 META_MINERIO = metas.get("meta_minerio", 1901)
 META_ESTERIL = metas.get("meta_esteril", 21555)
+
+# Definição do fuso horário padrão para a aplicação.
+# Exemplo: "America/Sao_Paulo" para horário de Brasília.
+TIMEZONE = ZoneInfo("America/Sao_Paulo")

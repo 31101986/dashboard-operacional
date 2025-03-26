@@ -1,4 +1,4 @@
-import math
+import math 
 import logging
 from datetime import datetime, timedelta
 
@@ -12,9 +12,9 @@ from dash.dash_table.Format import Format, Scheme
 from dash.dash_table import FormatTemplate
 from pandas.api.types import CategoricalDtype
 
-# Import da função para consultar o banco e das variáveis de meta
+# Import da função para consultar o banco e das variáveis de meta, incluindo o fuso horário
 from db import query_to_df
-from config import META_MINERIO, META_ESTERIL
+from config import META_MINERIO, META_ESTERIL, TIMEZONE
 
 # Configuração do log
 logging.basicConfig(
@@ -56,7 +56,9 @@ def consulta_producao(dia_str):
     if df.empty or "dt_registro_turno" not in df.columns:
         return df
     df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-    filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
+    if df["dt_registro_turno"].dt.tz is None:
+        df["dt_registro_turno"] = df["dt_registro_turno"].dt.tz_localize(TIMEZONE)
+    filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").replace(tzinfo=TIMEZONE).date()
     df = df[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
@@ -71,7 +73,9 @@ def consulta_hora(dia_str):
     if df.empty or "dt_registro_turno" not in df.columns:
         return df
     df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-    filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").date()
+    if df["dt_registro_turno"].dt.tz is None:
+        df["dt_registro_turno"] = df["dt_registro_turno"].dt.tz_localize(TIMEZONE)
+    filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").replace(tzinfo=TIMEZONE).date()
     df = df[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
@@ -83,7 +87,7 @@ def calcular_horas_desde_7h(day_choice):
     """
     if day_choice == "ontem":
         return 24.0
-    now = datetime.now()
+    now = datetime.now(TIMEZONE)
     start_7h = now.replace(hour=7, minute=0, second=0, microsecond=0)
     if now < start_7h:
         start_7h -= timedelta(days=1)
@@ -396,18 +400,18 @@ layout = dbc.Container(
     fluid=True
 )
 
-# ===================== Callbacks =====================
+# ===================== CALLBACKS =====================
 
-@callback(
+@dash.callback(
     Output("rel4-producao-store", "data"),
     Output("rel4-hora-store", "data"),
     Input("rel4-day-selector", "value")
 )
 def fetch_data_dia_escolhido(day_choice):
     if day_choice == "ontem":
-        data_str = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+        data_str = (datetime.now(TIMEZONE) - timedelta(days=1)).strftime("%d/%m/%Y")
     else:
-        data_str = datetime.now().strftime("%d/%m/%Y")
+        data_str = datetime.now(TIMEZONE).strftime("%d/%m/%Y")
     df_prod = consulta_producao(data_str)
     df_hora = consulta_hora(data_str)
     return (
@@ -415,7 +419,7 @@ def fetch_data_dia_escolhido(day_choice):
         df_hora.to_json(date_format="iso", orient="records") if not df_hora.empty else {}
     )
 
-@callback(
+@dash.callback(
     Output("rel4-tabela-movimentacao", "data"),
     Output("rel4-tabela-movimentacao", "style_data_conditional"),
     Input("rel4-producao-store", "data"),
@@ -463,7 +467,7 @@ def update_tabela_movimentacao(json_prod, day_choice):
     data = df_grp.to_dict("records")
     return data, style_data_conditional
 
-@callback(
+@dash.callback(
     Output("rel4-grafico-viagens-hora", "figure"),
     Input("rel4-producao-store", "data"),
     Input("rel4-hora-store", "data")
@@ -519,7 +523,7 @@ def update_grafico_viagens_hora(json_prod, json_hora):
     )
     return fig
 
-@callback(
+@dash.callback(
     Output("rel4-tabela-ind-escavacao", "data"),
     Output("rel4-tabela-ind-escavacao", "columns"),
     Output("rel4-tabela-ind-escavacao", "style_data_conditional"),
@@ -534,7 +538,7 @@ def update_tabela_ind_escavacao(json_hora):
     data, columns, style_cond = calc_indicadores_agrupados_por_modelo(df_h, ESCAVACAO_MODELOS)
     return data, columns, style_cond
 
-@callback(
+@dash.callback(
     Output("rel4-tabela-ind-transporte", "data"),
     Output("rel4-tabela-ind-transporte", "columns"),
     Output("rel4-tabela-ind-transporte", "style_data_conditional"),
@@ -549,7 +553,7 @@ def update_tabela_ind_transporte(json_hora):
     data, columns, style_cond = calc_indicadores_agrupados_por_modelo(df_h, TRANSPORTE_MODELOS)
     return data, columns, style_cond
 
-@callback(
+@dash.callback(
     Output("rel4-tabela-ind-perfuracao", "data"),
     Output("rel4-tabela-ind-perfuracao", "columns"),
     Output("rel4-tabela-ind-perfuracao", "style_data_conditional"),
