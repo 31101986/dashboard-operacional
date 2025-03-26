@@ -8,7 +8,7 @@ import plotly.express as px
 
 from db import query_to_df
 
-# Configuração de log
+# Configuração do log
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,7 @@ COLOR_MAP = {
 def get_fato_hora(start_dt, end_dt):
     """
     Consulta os dados da tabela fato_hora para o período especificado.
-    Utiliza a procedure 'usp_fato_hora' e espera que os dados retornados contenham:
-      - dt_registro_turno, dt_registro, nome_estado, nome_equipamento,
-        nome_modelo e nome_tipo_estado.
+    Utiliza a procedure 'usp_fato_hora'.
     """
     query = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
@@ -50,11 +48,11 @@ def get_fato_hora(start_dt, end_dt):
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
     return df
 
-def compute_segments(df, day_end):
+def compute_segments(df, end_dt):
     """
     Divide os registros de cada equipamento em segmentos contínuos onde o estado e
-    o tipo de estado permanecem inalterados. Para o último registro, o segmento vai até day_end.
-    Acrescenta a coluna 'duration' (em minutos) para facilitar a interpretação.
+    o tipo de estado permanecem inalterados. Para o último registro, o segmento vai até end_dt.
+    Acrescenta a coluna 'duration' (em minutos) para cada segmento.
     """
     segments = []
     for equip, group in df.groupby("nome_equipamento"):
@@ -81,13 +79,14 @@ def compute_segments(df, day_end):
                 current_state = row["nome_estado"]
                 current_tipo = row["nome_tipo_estado"]
                 start_time = row["dt_registro"]
-        duration = (day_end - start_time).total_seconds() / 60.0
+        # Para o último segmento, a data final é end_dt (que para "hoje" é a hora atual)
+        duration = (end_dt - start_time).total_seconds() / 60.0
         segments.append({
             "nome_equipamento": equip,
             "nome_estado": current_state,
             "nome_tipo_estado": current_tipo,
             "start": start_time,
-            "end": day_end,
+            "end": end_dt,
             "duration": round(duration, 1)
         })
     return pd.DataFrame(segments)
@@ -95,14 +94,15 @@ def compute_segments(df, day_end):
 def create_timeline_graph(selected_day, equipment_filter=None):
     """
     Cria um gráfico de timeline (estilo Gantt) com:
-      - Tooltips enriquecidos com informações de início, fim e duração (em minutos) formatadas
-      - Range slider com botões de zoom
-      - Filtro por equipamento (se informado)
-      - Divisão visual clara: barras com borda espessa e linhas de grade no eixo y
+      - Tooltips enriquecidos com informações de início, fim e duração (em minutos)
+      - Range slider com botões de zoom para facilitar a navegação
+      - Filtro por equipamento, se informado
+      - Layout responsivo e barras com borda para melhor visualização
     """
     if selected_day == "hoje":
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day_start + timedelta(days=1)
+        # Para "hoje", use o horário atual para o último registro
+        day_end = datetime.now()
         title = "Timeline de Apontamentos - Hoje"
     elif selected_day == "ontem":
         day_end = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -122,7 +122,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
     df = df[(df["dt_registro_turno"] >= pd.Timestamp(day_start)) &
             (df["dt_registro_turno"] < pd.Timestamp(day_end))]
     
-    # Padroniza os textos
+    # Padroniza os textos e converte para uppercase onde necessário
     df["nome_modelo"] = df["nome_modelo"].astype(str).str.strip()
     df["nome_equipamento"] = df["nome_equipamento"].astype(str).str.strip()
     df["nome_tipo_estado"] = df["nome_tipo_estado"].astype(str).str.strip().str.upper()
@@ -141,7 +141,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
     
     seg_df = compute_segments(df, day_end)
     
-    # Cria colunas com os horários formatados para tooltip
+    # Cria colunas formatadas para tooltip
     seg_df["start_str"] = seg_df["start"].dt.strftime("%H:%M:%S")
     seg_df["end_str"] = seg_df["end"].dt.strftime("%H:%M:%S")
     
@@ -159,7 +159,6 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         custom_data=["nome_estado", "duration", "start_str", "end_str"]
     )
     
-    # Configuração personalizada do tooltip com informações organizadas
     fig.update_traces(
         hovertemplate=(
             "<b>Equipamento:</b> %{y}<br>" +
@@ -203,7 +202,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
     fig.update_xaxes(tickformat="%H:%M:%S")
     return fig
 
-# ==================== LAYOUT ====================
+# ===================== LAYOUT PRINCIPAL =====================
 layout = dbc.Container([
     dbc.Row(
         dbc.Col(
@@ -243,7 +242,6 @@ layout = dbc.Container([
                     id="rel5-graph",
                     config={"displayModeBar": False, "responsive": True}
                 ),
-                # Altura responsiva para melhor visualização em dispositivos móveis
                 style={"height": "calc(100vh - 200px)", "overflowY": "auto"}
             )
         )
@@ -257,7 +255,7 @@ layout = dbc.Container([
 def update_equipment_options(selected_day):
     if selected_day == "hoje":
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day_start + timedelta(days=1)
+        day_end = datetime.now()
     elif selected_day == "ontem":
         day_end = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_start = day_end - timedelta(days=1)
@@ -267,7 +265,6 @@ def update_equipment_options(selected_day):
     df = get_fato_hora(day_start, day_end)
     if df.empty:
         return []
-    # Filtrar apenas os registros dos modelos permitidos
     df = df[df["nome_modelo"].isin(ALLOWED_MODELS)]
     equips = sorted(df["nome_equipamento"].dropna().unique())
     return [{"label": equip, "value": equip} for equip in equips]

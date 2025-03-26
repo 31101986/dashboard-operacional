@@ -4,25 +4,26 @@ import urllib.parse
 from sqlalchemy import create_engine
 from config import db_config
 
-# -----------------------------------------------------------------------------
-# Configuração básica de logs (opcional, mas recomendado)
-# -----------------------------------------------------------------------------
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+def setup_logger():
+    """
+    Configura e retorna um logger para a aplicação.
+    Garante que não sejam adicionados múltiplos handlers em execuções repetidas.
+    """
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    if not logger.handlers:
+        console_handler = logging.StreamHandler()
+        console_format = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+        console_handler.setFormatter(console_format)
+        logger.addHandler(console_handler)
+    return logger
 
-# Se preferir, configure um StreamHandler para ver logs no console
-console_handler = logging.StreamHandler()
-console_format = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
-console_handler.setFormatter(console_format)
-logger.addHandler(console_handler)
+logger = setup_logger()
 
-# -----------------------------------------------------------------------------
-# Criação do engine e reuso ao longo da aplicação
-# -----------------------------------------------------------------------------
 def create_db_engine():
     """
     Cria e retorna um engine SQLAlchemy com base nas configurações fornecidas.
-    Em caso de falha, registra erro nos logs e relança a exceção.
+    Em caso de falha, registra o erro e relança a exceção.
     """
     try:
         connection_string = (
@@ -42,47 +43,38 @@ def create_db_engine():
         logger.error(f"Erro ao criar engine: {e}")
         raise
 
-# -----------------------------------------------------------------------------
-# Inicializa o engine de forma global
-# -----------------------------------------------------------------------------
+# Inicializa o engine de forma global para reuso na aplicação
 engine = create_db_engine()
 
-# -----------------------------------------------------------------------------
-# Função de consulta com suporte a DataFrame e “chunking”
-# -----------------------------------------------------------------------------
 def query_to_df(query, params=None, chunksize=None):
     """
-    Executa uma query SQL e retorna um DataFrame.
-    
+    Executa uma query SQL e retorna um DataFrame ou um iterador de DataFrames.
+
     Parâmetros:
       - query (str): instrução SQL a ser executada.
-      - params (dict|list|tuple, opcional): parâmetros para substituir na query.
-      - chunksize (int, opcional): se fornecido, retorna um iterador de DataFrames 
-                                   com esse tamanho de chunk; caso contrário,
-                                   retorna apenas um DataFrame único.
+      - params (dict|list|tuple, opcional): parâmetros para a query.
+      - chunksize (int, opcional): se fornecido, retorna um iterador de DataFrames com o tamanho do chunk;
+                                   caso contrário, retorna um único DataFrame.
 
-    Exemplo de uso:
+    Exemplo:
       - df = query_to_df("SELECT * FROM Tabela")
       - df_iter = query_to_df("SELECT * FROM Tabela", chunksize=5000)
     """
     try:
         if chunksize:
-            # Retorna um iterador de chunks (DataFrames) para lidar com muitos dados
-            df_iter = pd.read_sql(query, engine, params=params, chunksize=chunksize)
-            return df_iter
+            # Utiliza chunksize para processar grandes volumes de dados sem sobrecarregar a memória
+            return pd.read_sql(query, engine, params=params, chunksize=chunksize)
         else:
-            # Retorna um único DataFrame
-            df = pd.read_sql(query, engine, params=params)
-            return df
+            return pd.read_sql(query, engine, params=params)
     except Exception as e:
         logger.error(f"Erro ao executar query:\n{query}\nParâmetros: {params}\n{e}")
         raise
 
-# -----------------------------------------------------------------------------
-# Função para finalizar/descartar conexões, se necessário
-# (Normalmente utilizada ao encerrar a aplicação)
-# -----------------------------------------------------------------------------
 def close_engine():
+    """
+    Finaliza (descarta) o engine, liberando conexões.
+    Normalmente chamado ao encerrar a aplicação.
+    """
     try:
         if engine:
             engine.dispose()

@@ -160,14 +160,6 @@ def calc_faturamento_hora_60(df_hora):
     return df_group["custo_total"].sum()
 
 def build_export_excel_single_sheet(json_producao, json_hora):
-    """
-    Em vez de exportar a tabela base, essa função recria as seções exibidas no relatório:
-    - Custos de Movimentação (Minério e Estéril)
-    - Custos Adicionais
-    - Horas Paradas por Modelo
-    - Faturamento Final
-    Tudo em uma única aba, com títulos separando cada seção.
-    """
     df_prod = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
     df_hora = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
     
@@ -297,7 +289,7 @@ def build_export_excel_single_sheet(json_producao, json_hora):
     processed_data = output.getvalue()
     return processed_data
 
-# ===================== LAYOUT =====================
+# ===================== LAYOUT PRINCIPAL =====================
 layout = dbc.Container([
     dbc.Row(
         dbc.Col(
@@ -340,11 +332,11 @@ layout = dbc.Container([
         ),
         dbc.Col(html.Div(), xs=12, md=6)
     ], className="align-items-end mb-4"),
-
+    
     # Stores para os dados de Produção e Hora
     dcc.Store(id="rel3-data-store"),
     dcc.Store(id="rel3-fato-hora-store"),
-
+    
     # (2) Custos de Movimentação
     dbc.Card([
         dbc.CardHeader(
@@ -368,11 +360,7 @@ layout = dbc.Container([
                         "whiteSpace": "normal"
                     },
                     style_data_conditional=[
-                        {
-                            'if': {'filter_query': '{dmt_bin} = "TOTAL"'},
-                            'backgroundColor': '#fff9c4',
-                            'fontWeight': 'bold'
-                        }
+                        {"if": {"filter_query": '{dmt_bin} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
                     export_format="csv"
                 ),
@@ -395,19 +383,15 @@ layout = dbc.Container([
                         "whiteSpace": "normal"
                     },
                     style_data_conditional=[
-                        {
-                            'if': {'filter_query': '{dmt_bin} = "TOTAL"'},
-                            'backgroundColor': '#fff9c4',
-                            'fontWeight': 'bold'
-                        }
+                        {"if": {"filter_query": '{dmt_bin} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
                     export_format="csv"
                 ),
                 type="default"
             )
         ])
-    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-
+    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
+    
     # (3) Custos Adicionais
     dbc.Card([
         dbc.CardHeader(
@@ -434,8 +418,8 @@ layout = dbc.Container([
                 type="default"
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-
+    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
+    
     # (5) Custo de Horas Paradas por Modelo (Preço 60%)
     dbc.Card([
         dbc.CardHeader(
@@ -458,19 +442,15 @@ layout = dbc.Container([
                         "whiteSpace": "normal"
                     },
                     style_data_conditional=[
-                        {
-                            'if': {'filter_query': '{nome_modelo} = "TOTAL"'},
-                            'backgroundColor': '#fff9c4',
-                            'fontWeight': 'bold'
-                        }
+                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
                     export_format="csv"
                 ),
                 type="default"
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-
+    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
+    
     # (6) Faturamento Final
     dbc.Card([
         dbc.CardHeader(
@@ -487,8 +467,8 @@ layout = dbc.Container([
                 "fontFamily": "Arial, sans-serif"
             })
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-
+    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
+    
     dbc.Card([
         dbc.CardBody(
             dbc.Button(
@@ -499,10 +479,9 @@ layout = dbc.Container([
                 style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-
+    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
+    
     dcc.Download(id="download-excel")
-
 ], fluid=True)
 
 # ===================== Callbacks =====================
