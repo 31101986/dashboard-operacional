@@ -7,7 +7,6 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from db import query_to_df
-from config import TIMEZONE  # Importa TIMEZONE juntamente com outras variáveis, se necessário
 
 # Configuração do log
 logging.basicConfig(level=logging.INFO)
@@ -47,11 +46,6 @@ def get_fato_hora(start_dt, end_dt):
     if not df.empty:
         df["dt_registro"] = pd.to_datetime(df["dt_registro"], errors="coerce")
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        # Se as datas forem tz-naive, localize para TIMEZONE
-        if df["dt_registro"].dt.tz is None:
-            df["dt_registro"] = df["dt_registro"].dt.tz_localize(TIMEZONE)
-        if df["dt_registro_turno"].dt.tz is None:
-            df["dt_registro_turno"] = df["dt_registro_turno"].dt.tz_localize(TIMEZONE)
     return df
 
 def compute_segments(df, end_dt):
@@ -106,16 +100,16 @@ def create_timeline_graph(selected_day, equipment_filter=None):
       - Layout responsivo e barras com borda para melhor visualização
     """
     if selected_day == "hoje":
-        day_start = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
-        # Para "hoje", use o horário atual com TIMEZONE para o último registro
-        day_end = datetime.now(TIMEZONE)
+        day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        # Para "hoje", use o horário atual para o último registro
+        day_end = datetime.now()
         title = "Timeline de Apontamentos - Hoje"
     elif selected_day == "ontem":
-        day_end = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_start = day_end - timedelta(days=1)
         title = "Timeline de Apontamentos - Ontem"
     else:
-        day_start = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
         title = "Timeline de Apontamentos"
     
@@ -260,18 +254,17 @@ layout = dbc.Container([
 )
 def update_equipment_options(selected_day):
     if selected_day == "hoje":
-        day_start = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = datetime.now(TIMEZONE)
+        day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = datetime.now()
     elif selected_day == "ontem":
-        day_end = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_start = day_end - timedelta(days=1)
     else:
-        day_start = datetime.now(TIMEZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
     df = get_fato_hora(day_start, day_end)
     if df.empty:
         return []
-    # Filtra apenas os registros dos modelos permitidos
     df = df[df["nome_modelo"].isin(ALLOWED_MODELS)]
     equips = sorted(df["nome_equipamento"].dropna().unique())
     return [{"label": equip, "value": equip} for equip in equips]
