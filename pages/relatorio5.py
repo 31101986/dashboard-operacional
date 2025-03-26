@@ -241,9 +241,10 @@ layout = dbc.Container([
             html.Div(
                 dcc.Graph(
                     id="rel5-graph",
-                    config={"displayModeBar": False}
+                    config={"displayModeBar": False, "responsive": True}
                 ),
-                style={"height": "800px", "overflowY": "auto"}
+                # Altura responsiva para melhor visualização em dispositivos móveis
+                style={"height": "calc(100vh - 200px)", "overflowY": "auto"}
             )
         )
     )

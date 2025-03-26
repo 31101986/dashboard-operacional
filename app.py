@@ -45,29 +45,46 @@ app.title = "Portal de Relatórios - Mineração"
 server = app.server
 
 # ---------------------------------------------------------------------------
-# Navbar aprimorada com destaque da página ativa
+# Navbar responsiva com toggler para dispositivos móveis
 # ---------------------------------------------------------------------------
 navbar = dbc.Navbar(
     dbc.Container([
         dbc.NavbarBrand("Mineração", href="/", className="ms-2"),
-        dbc.Nav(
-            [
-                dbc.NavLink("Portal", href="/", active="exact"),
-                dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
-                dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
-                dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
-                dbc.NavLink("Produção", href="/relatorio4", active="exact"),
-                dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
-            ],
-            pills=True,
-            className="ms-auto",
-            navbar=True
+        dbc.NavbarToggler(id="navbar-toggler"),
+        dbc.Collapse(
+            dbc.Nav(
+                [
+                    dbc.NavLink("Portal", href="/", active="exact"),
+                    dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
+                    dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
+                    dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
+                    dbc.NavLink("Produção", href="/relatorio4", active="exact"),
+                    dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
+                ],
+                pills=True,
+                className="ms-auto",
+                navbar=True
+            ),
+            id="navbar-collapse",
+            navbar=True,
+            is_open=False
         )
     ]),
     color="dark",
     dark=True,
     sticky="top",
 )
+
+# Callback para abrir/fechar a navbar em telas pequenas
+@app.callback(
+    Output("navbar-collapse", "is_open"),
+    [Input("navbar-toggler", "n_clicks")],
+    [dash.State("navbar-collapse", "is_open")],
+)
+def toggle_navbar(n_clicks, is_open):
+    if n_clicks:
+        return not is_open
+    return is_open
 
 # ---------------------------------------------------------------------------
 # Layout da página inicial (Portal) com cards aprimorados
@@ -99,7 +116,7 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"},
+                        style={"maxWidth": "18rem", "width": "100%", "margin": "auto"},
                         className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
@@ -120,7 +137,7 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"},
+                        style={"maxWidth": "18rem", "width": "100%", "margin": "auto"},
                         className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
@@ -141,7 +158,7 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"},
+                        style={"maxWidth": "18rem", "width": "100%", "margin": "auto"},
                         className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
@@ -162,7 +179,7 @@ home_layout = dbc.Container(
                                 ]
                             )
                         ],
-                        style={"width": "18rem", "margin": "auto"},
+                        style={"maxWidth": "18rem", "width": "100%", "margin": "auto"},
                         className="card-hover animate__animated animate__fadeInUp"
                     ),
                     width=12, md=3
@@ -188,7 +205,7 @@ home_layout = dbc.Container(
                             ]
                         )
                     ],
-                    style={"width": "18rem", "margin": "auto"},
+                    style={"maxWidth": "18rem", "width": "100%", "margin": "auto"},
                     className="card-hover animate__animated animate__fadeInUp"
                 ),
                 width=12, md=3,
@@ -199,7 +216,7 @@ home_layout = dbc.Container(
         # Rodapé
         dbc.Row(
             dbc.Col(
-                html.Footer("© 2025 Mineração XYZ", className="text-center footer-text my-4"),
+                html.Footer("© 2025 Raphael Leal Consultoria", className="text-center footer-text my-4"),
                 width=12
             )
         ),

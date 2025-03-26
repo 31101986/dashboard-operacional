@@ -847,3 +847,133 @@
 2025-03-25 15:38:28,297 - INFO - Iniciando a aplicação Dash...
 2025-03-25 15:38:28,310 - INFO - Executando o servidor no modo debug...
 2025-03-25 15:38:28,476 - INFO - Navegando para /relatorio5
+2025-03-25 15:42:38,004 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 15:42:38,005 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 15:42:38,023 - INFO - Engine criado com sucesso.
+2025-03-25 15:42:38,036 - INFO - Iniciando a aplicação Dash...
+2025-03-25 15:42:38,045 - INFO - Executando o servidor no modo debug...
+2025-03-25 15:42:38,048 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-03-25 15:42:39,449 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 15:42:39,450 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 15:42:39,475 - INFO - Engine criado com sucesso.
+2025-03-25 15:42:39,495 - INFO - Iniciando a aplicação Dash...
+2025-03-25 15:42:39,509 - INFO - Executando o servidor no modo debug...
+2025-03-25 15:42:39,725 - INFO - Navegando para /relatorio5
+2025-03-25 15:54:50,776 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 15:54:50,777 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 15:54:50,799 - INFO - Engine criado com sucesso.
+2025-03-25 15:54:50,820 - INFO - Iniciando a aplicação Dash...
+2025-03-25 15:54:50,831 - INFO - Executando o servidor no modo debug...
+2025-03-25 15:54:51,486 - INFO - Navegando para /relatorio5
+2025-03-25 16:18:27,257 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:18:27,258 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:18:27,284 - INFO - Engine criado com sucesso.
+2025-03-25 16:18:27,302 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:18:27,315 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:18:27,495 - INFO - Navegando para /relatorio5
+2025-03-25 16:18:30,927 - INFO - Navegando para /relatorio1
+2025-03-25 16:22:38,608 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:22:38,609 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:22:38,624 - INFO - Engine criado com sucesso.
+2025-03-25 16:22:38,637 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:22:38,646 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:22:38,852 - INFO - Navegando para /relatorio1
+2025-03-25 16:22:47,795 - INFO - Navegando para /
+2025-03-25 16:25:09,332 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:25:09,333 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:25:09,349 - INFO - Engine criado com sucesso.
+2025-03-25 16:25:09,363 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:25:09,371 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:25:09,563 - INFO - Navegando para /
+2025-03-25 16:26:37,989 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:26:37,990 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:26:38,006 - INFO - Engine criado com sucesso.
+2025-03-25 16:26:38,019 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:26:38,029 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:26:39,541 - INFO - Navegando para /
+2025-03-25 16:26:41,651 - INFO - Navegando para /relatorio1
+2025-03-25 16:31:09,599 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:31:09,600 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:31:09,621 - INFO - Engine criado com sucesso.
+2025-03-25 16:31:09,641 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:31:09,651 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:31:09,863 - INFO - Navegando para /relatorio1
+2025-03-25 16:31:16,970 - INFO - Navegando para /relatorio2
+2025-03-25 16:37:39,638 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:37:39,639 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:37:39,660 - INFO - Engine criado com sucesso.
+2025-03-25 16:37:39,682 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:37:39,693 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:38:13,741 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:38:13,742 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:38:13,762 - INFO - Engine criado com sucesso.
+2025-03-25 16:38:13,786 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:38:13,798 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:38:13,979 - INFO - Navegando para /relatorio2
+2025-03-25 16:38:16,529 - INFO - Navegando para /relatorio3
+2025-03-25 16:38:18,584 - INFO - Navegando para /relatorio4
+2025-03-25 16:38:26,336 - INFO - Navegando para /relatorio2
+2025-03-25 16:43:25,807 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:43:25,808 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:43:25,826 - INFO - Engine criado com sucesso.
+2025-03-25 16:44:29,030 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:44:29,031 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:44:29,048 - INFO - Engine criado com sucesso.
+2025-03-25 16:44:29,068 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:44:29,078 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:44:29,080 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-03-25 16:44:30,189 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:44:30,189 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:44:30,207 - INFO - Engine criado com sucesso.
+2025-03-25 16:44:30,220 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:44:30,231 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:44:34,664 - INFO - Navegando para /relatorio2
+2025-03-25 16:44:36,858 - INFO - Navegando para /relatorio3
+2025-03-25 16:44:38,433 - INFO - Navegando para /relatorio2
+2025-03-25 16:44:43,284 - INFO - Navegando para /relatorio3
+2025-03-25 16:47:35,224 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:47:35,225 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:47:35,244 - INFO - Engine criado com sucesso.
+2025-03-25 16:47:35,277 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:47:35,288 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:47:37,282 - INFO - Navegando para /relatorio3
+2025-03-25 16:48:14,441 - INFO - Navegando para /relatorio3
+2025-03-25 16:55:54,210 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:55:54,211 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:55:54,229 - INFO - Engine criado com sucesso.
+2025-03-25 16:55:54,247 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:55:54,255 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:55:54,449 - INFO - Navegando para /relatorio3
+2025-03-25 16:55:55,504 - INFO - Navegando para /relatorio4
+2025-03-25 16:56:09,691 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:56:09,692 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:56:09,715 - INFO - Engine criado com sucesso.
+2025-03-25 16:56:09,753 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:56:09,777 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:56:09,996 - INFO - Navegando para /relatorio4
+2025-03-25 16:58:57,102 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:58:57,103 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:58:57,123 - INFO - Engine criado com sucesso.
+2025-03-25 16:58:57,150 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:58:57,162 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:58:57,403 - INFO - Navegando para /relatorio4
+2025-03-25 16:59:08,409 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 16:59:08,410 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 16:59:08,430 - INFO - Engine criado com sucesso.
+2025-03-25 16:59:08,448 - INFO - Iniciando a aplicação Dash...
+2025-03-25 16:59:08,457 - INFO - Executando o servidor no modo debug...
+2025-03-25 16:59:08,744 - INFO - Navegando para /relatorio4
+2025-03-25 17:03:10,777 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 17:03:10,778 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 17:03:10,804 - INFO - Engine criado com sucesso.
+2025-03-25 17:03:10,828 - INFO - Iniciando a aplicação Dash...
+2025-03-25 17:03:10,839 - INFO - Executando o servidor no modo debug...
+2025-03-25 17:03:11,027 - INFO - Navegando para /relatorio4
+2025-03-25 17:03:24,659 - INFO - Configurações de banco de dados carregadas com sucesso: {'server': 'www.minetrack.com.br,8112', 'database': 'DW_SDP_MT_FAS', 'user': 'SRV_FAS_CONSULTA', 'password': 'Sodep123!@#', 'driver': 'ODBC Driver 18 for SQL Server'}
+2025-03-25 17:03:24,660 - INFO - Métas carregadas de C:\DashboardMineracao\metas.json
+2025-03-25 17:03:24,677 - INFO - Engine criado com sucesso.
+2025-03-25 17:03:24,697 - INFO - Iniciando a aplicação Dash...
+2025-03-25 17:03:24,706 - INFO - Executando o servidor no modo debug...
+2025-03-25 17:03:24,856 - INFO - Navegando para /relatorio4

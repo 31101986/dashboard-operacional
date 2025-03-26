@@ -60,17 +60,18 @@ layout = dbc.Container(
                             start_date=(datetime.today().date() - timedelta(days=7)),
                             end_date=datetime.today().date(),
                             display_format="DD/MM/YYYY",
-                            className="mb-2"
+                            className="mb-2",
+                            style={"width": "100%"}
                         ),
                         dbc.Button(
                             "Aplicar Filtro",
                             id="apply-button",
                             n_clicks=0,
                             className="btn btn-primary mt-2",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
                         )
                     ],
-                    md=4
+                    xs=12, md=4
                 ),
                 dbc.Col(
                     [
@@ -84,10 +85,10 @@ layout = dbc.Container(
                             placeholder="Selecione uma ou mais operações",
                             multi=True,
                             className="mb-2",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
                         )
                     ],
-                    md=8
+                    xs=12, md=8
                 )
             ],
             className="my-2"
@@ -120,7 +121,7 @@ layout = dbc.Container(
                                             {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto"},
+                                        style_table={"overflowX": "auto", "width": "100%"},
                                         style_header={
                                             "backgroundColor": "#f8f9fa",
                                             "fontWeight": "bold",
@@ -138,7 +139,7 @@ layout = dbc.Container(
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=6
+                    xs=12, md=6
                 ),
                 dbc.Col(
                     dbc.Card(
@@ -158,7 +159,7 @@ layout = dbc.Container(
                                             {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto"},
+                                        style_table={"overflowX": "auto", "width": "100%"},
                                         style_header={
                                             "backgroundColor": "#f8f9fa",
                                             "fontWeight": "bold",
@@ -176,7 +177,7 @@ layout = dbc.Container(
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=6
+                    xs=12, md=6
                 )
             ],
             className="mt-2"
@@ -196,14 +197,17 @@ layout = dbc.Container(
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
-                                    dcc.Graph(id="grafico-volume", config={"displayModeBar": False}),
+                                    dcc.Graph(
+                                        id="grafico-volume",
+                                        config={"displayModeBar": False, "responsive": True}
+                                    ),
                                     type="default"
                                 )
                             )
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=12
+                    xs=12, md=12
                 )
             ],
             className="mt-2"
@@ -220,14 +224,17 @@ layout = dbc.Container(
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
-                                    dcc.Graph(id="grafico-massa", config={"displayModeBar": False}),
+                                    dcc.Graph(
+                                        id="grafico-massa",
+                                        config={"displayModeBar": False, "responsive": True}
+                                    ),
                                     type="default"
                                 )
                             )
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=12
+                    xs=12, md=12
                 )
             ],
             className="mt-2"
@@ -246,14 +253,17 @@ layout = dbc.Container(
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
-                                    dcc.Graph(id="grafico-viagens-hora", config={"displayModeBar": False}),
+                                    dcc.Graph(
+                                        id="grafico-viagens-hora",
+                                        config={"displayModeBar": False, "responsive": True}
+                                    ),
                                     type="default"
                                 )
                             )
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=12
+                    xs=12, md=12
                 )
             ],
             className="mt-2"
@@ -273,10 +283,10 @@ layout = dbc.Container(
                         id="modelo-dropdown",
                         placeholder="(Opcional) Selecione um ou mais modelos (Equipamento)",
                         multi=True,
-                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
                     )
                 ],
-                md=12
+                xs=12
             ),
             className="mt-2"
         ),
@@ -304,7 +314,7 @@ layout = dbc.Container(
                                             {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto"},
+                                        style_table={"overflowX": "auto", "width": "100%"},
                                         style_header={
                                             "backgroundColor": "#f8f9fa",
                                             "fontWeight": "bold",
@@ -321,7 +331,7 @@ layout = dbc.Container(
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=6
+                    xs=12, md=6
                 ),
                 dbc.Col(
                     dbc.Card(
@@ -341,7 +351,7 @@ layout = dbc.Container(
                                             {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto"},
+                                        style_table={"overflowX": "auto", "width": "100%"},
                                         style_header={
                                             "backgroundColor": "#f8f9fa",
                                             "fontWeight": "bold",
@@ -358,7 +368,7 @@ layout = dbc.Container(
                         ],
                         className="mb-4 shadow animate__animated animate__fadeInUp"
                     ),
-                    md=6
+                    xs=12, md=6
                 )
             ],
             className="mt-4"
@@ -369,7 +379,7 @@ layout = dbc.Container(
         dbc.Row(
             dbc.Col(
                 dcc.Link("Voltar para o Portal", href="/", className="btn btn-secondary"),
-                width=12,
+                xs=12,
                 className="text-center my-4"
             )
         )
@@ -417,7 +427,7 @@ def apply_filter(n_clicks, start_date, end_date):
     if not df_prod.empty and "dt_registro_turno" in df_prod.columns:
         df_prod["dt_registro_turno"] = pd.to_datetime(df_prod["dt_registro_turno"], errors="coerce")
         df_prod.dropna(subset=["dt_registro_turno"], inplace=True)
-        df_prod = df_prod[
+        df_prod = df_prod[ 
             (df_prod["dt_registro_turno"] >= start_date_obj) & (df_prod["dt_registro_turno"] <= end_date_obj)
         ]
         # Remove linhas sem nome_operacao

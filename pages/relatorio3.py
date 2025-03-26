@@ -81,6 +81,9 @@ PRECO_60_MAP = {
 
 ESTADOS_PARADA = ["Falta de Frente", "Falta de Combustível", "Aguardando Geologia", "Detonação", "Poeira"]
 
+# Formato numérico com 2 casas e separador de milhar
+num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
+
 # ===================== Funções Auxiliares =====================
 
 def get_search_period(start_date, end_date):
@@ -320,9 +323,10 @@ layout = dbc.Container([
                 start_date=start_default,
                 end_date=end_default,
                 display_format="DD/MM/YYYY",
-                className="mb-2"
+                className="mb-2",
+                style={"width": "100%"}
             )
-        ], md=4),
+        ], xs=12, md=4),
         dbc.Col(
             dbc.Button(
                 "Aplicar Filtro",
@@ -332,9 +336,9 @@ layout = dbc.Container([
                 className="mt-4 w-100",
                 style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
             ),
-            md=2
+            xs=12, md=2
         ),
-        dbc.Col(html.Div(), md=6)
+        dbc.Col(html.Div(), xs=12, md=6)
     ], className="align-items-end mb-4"),
 
     # Stores para os dados de Produção e Hora
@@ -355,7 +359,7 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "margin": "auto"},
+                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
@@ -382,7 +386,7 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "margin": "auto"},
+                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
@@ -417,7 +421,7 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "margin": "auto"},
+                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
@@ -445,7 +449,7 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "margin": "auto"},
+                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
                     style_cell={
                         "textAlign": "center",
                         "padding": "5px",
@@ -557,6 +561,20 @@ def apply_filter_unified(n_clicks, start_date, end_date):
         df_hora = df_hora[df_hora["nome_tipo_estado"].isin(estados_filtro)]
     data_hora_json = df_hora.to_json(date_format="iso", orient="records") if not df_hora.empty else {}
     return data_prod_json, data_hora_json
+
+@dash.callback(
+    Output("operacao-dropdown", "options", allow_duplicate=True),
+    Input("rel3-data-store", "data"),
+    prevent_initial_call="initial_duplicate"
+)
+def update_operacoes_options(json_data):
+    if not json_data or isinstance(json_data, dict):
+        return []
+    df = pd.read_json(json_data, orient="records")
+    if df.empty:
+        return []
+    ops_unicas = sorted(df["nome_operacao"].dropna().unique())
+    return [{"label": op, "value": op} for op in ops_unicas]
 
 @dash.callback(
     Output("rel3-custo-minero", "data"),

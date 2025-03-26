@@ -114,9 +114,11 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, o
     if "dt_registro_fim" in df.columns:
         df["dt_registro_fim"] = pd.to_datetime(df["dt_registro_fim"], errors="coerce")
         df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] <= period_end)]
-    if only_today and "dt_registro_turno" in df.columns:
-        df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        df = df[df["dt_registro_turno"].dt.date == period_end.date()]
+    
+    # Removido o filtro que limitava os dados à data de period_end
+    # if only_today and "dt_registro_turno" in df.columns:
+    #     df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
+    #     df = df[df["dt_registro_turno"].dt.date == period_end.date()]
 
     if operacao_filter and "nome_operacao" in df.columns:
         df = df[df["nome_operacao"].isin(operacao_filter)]
@@ -141,8 +143,9 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
         date_col = "dt_registro"
         df["dt_registro"] = pd.to_datetime(df["dt_registro"], errors="coerce")
 
-    if only_today and date_col and not df.empty:
-        df = df[df[date_col].dt.date == period_end.date()]
+    # Removido o filtro que limitava os dados à data de period_end
+    # if only_today and date_col and not df.empty:
+    #     df = df[df[date_col].dt.date == period_end.date()]
 
     if "nome_estado" in df.columns:
         df = df[df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])]
@@ -299,7 +302,7 @@ layout = dbc.Container([
                 dbc.CardHeader(html.H5("Caminhões Necessários por Escavadeira", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="truck-cards", config={"displayModeBar": True}),
+                        dcc.Graph(id="truck-cards", config={"displayModeBar": True, "responsive": True}),
                         type="default"
                     )
                 )
@@ -314,24 +317,24 @@ layout = dbc.Container([
                 dbc.CardHeader(html.H5("Gráfico de Dispersão 3D", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="scatter-3d", config={"displayModeBar": True}),
+                        dcc.Graph(id="scatter-3d", config={"displayModeBar": True, "responsive": True}),
                         type="default"
                     )
                 )
             ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=6
+            width=12, md=6
         ),
         dbc.Col(
             dbc.Card([
                 dbc.CardHeader(html.H5("Volume por Escavadeira", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="volume-bar", config={"displayModeBar": True}),
+                        dcc.Graph(id="volume-bar", config={"displayModeBar": True, "responsive": True}),
                         type="default"
                     )
                 )
             ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=6
+            width=12, md=6
         )
     ]),
 
@@ -342,24 +345,24 @@ layout = dbc.Container([
                 dbc.CardHeader(html.H5("Mapa de Carregamento (Detalhado)", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="map-carregamento", config={"displayModeBar": True}),
+                        dcc.Graph(id="map-carregamento", config={"displayModeBar": True, "responsive": True}),
                         type="default"
                     )
                 )
             ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=6
+            width=12, md=6
         ),
         dbc.Col(
             dbc.Card([
                 dbc.CardHeader(html.H5("Mapa de Basculamento", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="map-basculamento", config={"displayModeBar": True}),
+                        dcc.Graph(id="map-basculamento", config={"displayModeBar": True, "responsive": True}),
                         type="default"
                     )
                 )
             ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=6
+            width=12, md=6
         )
     ]),
 
@@ -567,7 +570,7 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter, map_
         hover_data={"latitude_carregamento": True, "longitude_carregamento": True},
         title="Mapa de Carregamento (Detalhado)",
         zoom=15,
-        height=500
+        height=400
     )
     fig.update_traces(
         marker=dict(size=10, opacity=0.8),
@@ -609,7 +612,7 @@ def update_map_basculamento_detalhado(df_producao_records, operacao_filter, map_
         hover_data={"volume": True, "latitude_basculamento": False, "longitude_basculamento": False},
         title="Mapa de Basculamento",
         zoom=15,
-        height=500
+        height=400
     )
     fig.update_traces(marker=dict(size=8, opacity=0.8))
     center_lat = df["latitude_basculamento"].mean()
