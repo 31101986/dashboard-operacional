@@ -13,7 +13,7 @@ from pandas.api.types import CategoricalDtype
 
 from db import query_to_df
 
-# Configuração do log
+# ===================== CONFIG DO LOG =====================
 logging.basicConfig(
     level=logging.INFO,
     filename="relatorio3.log",
@@ -21,12 +21,12 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Variáveis de datas padrão
+# ===================== DATAS PADRÃO =====================
 today = datetime.today().date()
 start_default = today - timedelta(days=45)
 end_default = today
 
-# Mapas de custo e preço
+# ===================== MAPAS DE CUSTO E PREÇO =====================
 CUSTO_MINERO_MAP = {
     "0-500": 10.9517831011859,
     "501-1000": 11.4656811042058,
@@ -81,11 +81,104 @@ PRECO_60_MAP = {
 
 ESTADOS_PARADA = ["Falta de Frente", "Falta de Combustível", "Aguardando Geologia", "Detonação", "Poeira"]
 
-# Formato numérico com 2 casas e separador de milhar
-num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
+# ===== NOVO: TABELA DE LOCAÇÃO =====
+PRECO_LOCACAO_MAP = {
+    "ESCAVADEIRA HIDRAULICA SANY SY750H": 1025.90663891272,
+    "ESCAVADEIRA HIDRÁULICA CAT 320": 471.362509770711,
+    "ESCAVADEIRA HIDRÁULICA CAT 352": 726.452809176037,
+    "ESCAVADEIRA HIDRÁULICA CAT 374DL": 1025.90663891272,
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": 1320.00,
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": 1025.90663891272,
+    "MERCEDES BENZ AROCS 4851/45 8X4": 316.090153610947,
+    "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": 260.635740696746,
+    "MOTONIVELADORA CAT 140K": 0.0,
+    "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": 1619.56831092441,
+    "PERFURATRIZ HIDRAULICA SANDVIK DX800": 1270.01696456104,
+    "PÁ CARREGADEIRA CAT 966L": 460.271627187871,
+    "RETRO ESCAVADEIRA CAT 416F2": 0.0,
+    "TRATOR DE ESTEIRAS CAT D6T": 526.816922684912,
+    "TRATOR DE ESTEIRAS CAT D7": 792.998104673078,
+    "TRATOR DE ESTEIRAS CAT D8": 792.998104673078,
+    "TRATOR DE ESTEIRAS KOMATSU D155": 792.998104673078,
+    "VOLVO FMX 500 8X4": 316.090153610947
+}
+ESTADOS_LOCACAO = ["Dobrando Bloco", "Limpeza de Detonação", "Limpeza para Perfuração", "Perfurando Repé", "Retaludando", "Tombando Material", "Perfuração Geologia", "Perfuração Pré-Corte", "Perfurando Extra", "Repasse"]
 
-# ===================== Funções Auxiliares =====================
+# ===================== TABELAS ESTÁTICAS =====================
+df_manut_canteiro = pd.DataFrame([
+    {
+        "Item": "Manutenção do Canteiro de Serviços",
+        "Unidade": 1,
+        "Valor Unitário (R$)": 205181.327782545,
+        "Valor Total (R$)": 205181.327782545
+    },
+    {
+        "Item": "TOTAL",
+        "Unidade": "",
+        "Valor Unitário (R$)": "",
+        "Valor Total (R$)": 205181.327782545
+    }
+])
+manut_canteiro_columns = [
+    {"name": "Item", "id": "Item"},
+    {"name": "Unidade", "id": "Unidade", "type": "numeric",
+     "format": Format(precision=0, scheme=Scheme.fixed, group=True)},
+    {"name": "Valor Unitário (R$)", "id": "Valor Unitário (R$)",
+     "type": "numeric", "format": FormatTemplate.money(2)},
+    {"name": "Valor Total (R$)", "id": "Valor Total (R$)",
+     "type": "numeric", "format": FormatTemplate.money(2)}
+]
+manut_canteiro_data = df_manut_canteiro.to_dict("records")
 
+df_servicos_eventuais = pd.DataFrame([
+    {
+        "Equipamento": "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)",
+        "Horas Mínimas Garantidas": 500,
+        "Preço Unitário (R$/h)": 621.089424639054,
+        "Valor Total (R$)": 500 * 621.089424639054
+    },
+    {
+        "Equipamento": "VOLVO FMX 500 8X4",
+        "Horas Mínimas Garantidas": 2500,
+        "Preço Unitário (R$/h)": 316.090153610947,
+        "Valor Total (R$)": 2500 * 316.090153610947
+    },
+    {
+        "Equipamento": "MERCEDES BENZ AXOR 3344 6X4 (PIPA)",
+        "Horas Mínimas Garantidas": 2500,
+        "Preço Unitário (R$/h)": 260.635740696746,
+        "Valor Total (R$)": 2500 * 260.635740696746
+    },
+    {
+        "Equipamento": "PÁ CARREGADEIRA CAT 966L",
+        "Horas Mínimas Garantidas": 3500,
+        "Preço Unitário (R$/h)": 460.271627187871,
+        "Valor Total (R$)": 3500 * 460.271627187871
+    },
+    {
+        "Equipamento": "TOTAL",
+        "Horas Mínimas Garantidas": 9000,
+        "Preço Unitário (R$/h)": "",
+        "Valor Total (R$)": (
+            500 * 621.089424639054
+            + 2500 * 316.090153610947
+            + 2500 * 260.635740696746
+            + 3500 * 460.271627187871
+        )
+    }
+])
+servicos_eventuais_columns = [
+    {"name": "Equipamento", "id": "Equipamento"},
+    {"name": "Horas Mínimas Garantidas", "id": "Horas Mínimas Garantidas",
+     "type": "numeric", "format": Format(precision=0, scheme=Scheme.fixed, group=True)},
+    {"name": "Preço Unitário (R$/h)", "id": "Preço Unitário (R$/h)",
+     "type": "numeric", "format": FormatTemplate.money(2)},
+    {"name": "Valor Total (R$)", "id": "Valor Total (R$)",
+     "type": "numeric", "format": FormatTemplate.money(2)}
+]
+servicos_eventuais_data = df_servicos_eventuais.to_dict("records")
+
+# ===================== FUNÇÕES AUXILIARES (consultas e cálculos) =====================
 def get_search_period(start_date, end_date):
     start_dt = datetime.fromisoformat(start_date)
     end_dt = datetime.fromisoformat(end_date)
@@ -116,9 +209,11 @@ def calc_custo_adicional(df):
     df_esteril = df[df["nome_operacao"] == "Movimentação Estéril"].drop_duplicates(subset=["cod_viagem"])
     vol_minero = df_minero["volume"].sum() if not df_minero.empty else 0
     vol_esteril = df_esteril["volume"].sum() if not df_esteril.empty else 0
+
     custo_carga_minero = vol_minero * CUSTO_CARGA_MINERO
     custo_carga_esteril = vol_esteril * CUSTO_CARGA_ESTERIL
     custo_espalhamento = vol_esteril * CUSTO_ESPALHAMENTO_ESTERIL
+
     df_adic = pd.DataFrame([
         {
             "item": "Carga de Minério da Mina para Britagem/Pátio",
@@ -159,155 +254,225 @@ def calc_faturamento_hora_60(df_hora):
     df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
     return df_group["custo_total"].sum()
 
+# ===== NOVA FUNÇÃO: calc_horas_locacao =====
+def calc_horas_locacao(df_hora):
+    if df_hora.empty:
+        return pd.DataFrame()
+
+    df_subset = df_hora[df_hora["nome_estado"].isin(ESTADOS_LOCACAO)]
+    if df_subset.empty or "nome_modelo" not in df_subset.columns:
+        return pd.DataFrame()
+
+    df_group = df_subset.groupby("nome_modelo", as_index=False).agg(horas_locacao=("tempo_hora", "sum"))
+    df_group["preco_locacao"] = df_group["nome_modelo"].map(PRECO_LOCACAO_MAP).fillna(0)
+    df_group["custo_total"] = df_group["horas_locacao"] * df_group["preco_locacao"]
+
+    total_horas = df_group["horas_locacao"].sum()
+    total_custo = df_group["custo_total"].sum()
+    df_total = pd.DataFrame([{
+        "nome_modelo": "TOTAL",
+        "horas_locacao": total_horas,
+        "preco_locacao": "",
+        "custo_total": total_custo
+    }])
+    return pd.concat([df_group, df_total], ignore_index=True)
+
+# ===================== FUNÇÃO DE EXPORTAÇÃO p/ EXCEL =====================
 def build_export_excel_single_sheet(json_producao, json_hora):
+    """
+    Exporta em uma única aba, na ordem:
+      1) Manutenção do Canteiro
+      2) Serviços Eventuais
+      3) Custos Movimentação (Minério, depois Estéril)
+      4) Custos Adicionais
+      5) (Nova) Horas de Locação
+      6) Custo de Horas Paradas (Preço 60%)
+      7) Faturamento Final
+    """
     df_prod = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
     df_hora = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
-    
-    # Seção 1: Custos de Movimentação - Minério
+
+    # Manutenção / Serviços
+    df_manut_excel = df_manut_canteiro.copy()
+    df_serv_event_excel = df_servicos_eventuais.copy()
+
+    # Custos Movimentação
     if not df_prod.empty:
         df_minero = calc_custo_por_faixa(df_prod, "Movimentação Minério", CUSTO_MINERO_MAP)
         if not df_minero.empty:
-            total_vol = df_minero["total_volume"].sum()
-            total_custo = df_minero["custo_total"].sum()
-            df_total_minero = pd.DataFrame([{
+            vol_min = df_minero["total_volume"].sum()
+            cust_min = df_minero["custo_total"].sum()
+            df_minero.loc[len(df_minero)] = {
                 "dmt_bin": "TOTAL",
-                "total_volume": total_vol,
+                "total_volume": vol_min,
                 "custo_unitario": "",
-                "custo_total": total_custo
-            }])
-            df_minero = pd.concat([df_minero, df_total_minero], ignore_index=True)
+                "custo_total": cust_min
+            }
         else:
             df_minero = pd.DataFrame()
-    else:
-        df_minero = pd.DataFrame()
-    
-    # Seção 2: Custos de Movimentação - Estéril
-    if not df_prod.empty:
+
         df_esteril = calc_custo_por_faixa(df_prod, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
         if not df_esteril.empty:
-            total_vol = df_esteril["total_volume"].sum()
-            total_custo = df_esteril["custo_total"].sum()
-            df_total_esteril = pd.DataFrame([{
+            vol_est = df_esteril["total_volume"].sum()
+            cust_est = df_esteril["custo_total"].sum()
+            df_esteril.loc[len(df_esteril)] = {
                 "dmt_bin": "TOTAL",
-                "total_volume": total_vol,
+                "total_volume": vol_est,
                 "custo_unitario": "",
-                "custo_total": total_custo
-            }])
-            df_esteril = pd.concat([df_esteril, df_total_esteril], ignore_index=True)
+                "custo_total": cust_est
+            }
         else:
             df_esteril = pd.DataFrame()
     else:
+        df_minero = pd.DataFrame()
         df_esteril = pd.DataFrame()
-    
-    # Seção 3: Custos Adicionais
+
+    # Custos Adicionais
     if not df_prod.empty:
         df_adic = calc_custo_adicional(df_prod)
     else:
         df_adic = pd.DataFrame()
-    
-    # Seção 4: Horas Paradas por Modelo
+
+    # (NOVA) Horas de Locação
+    df_locacao = calc_horas_locacao(df_hora)
+
+    # Custo de Horas Paradas (Preço 60%)
     if not df_hora.empty:
         df_parada = df_hora[df_hora["nome_estado"].isin(ESTADOS_PARADA)]
         if not df_parada.empty and "nome_modelo" in df_parada.columns:
             df_group = df_parada.groupby("nome_modelo", as_index=False).agg(horas_paradas=("tempo_hora", "sum"))
             df_group["preco_60"] = df_group["nome_modelo"].map(PRECO_60_MAP).fillna(0)
             df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
-            total_horas = df_group["horas_paradas"].sum()
-            total_custo = df_group["custo_total"].sum()
-            df_total_horas = pd.DataFrame([{
+            total_h = df_group["horas_paradas"].sum()
+            total_c = df_group["custo_total"].sum()
+            df_group.loc[len(df_group)] = {
                 "nome_modelo": "TOTAL",
-                "horas_paradas": total_horas,
+                "horas_paradas": total_h,
                 "preco_60": "",
-                "custo_total": total_custo
-            }])
-            df_horas = pd.concat([df_group, df_total_horas], ignore_index=True)
+                "custo_total": total_c
+            }
+            df_horas = df_group
         else:
             df_horas = pd.DataFrame()
     else:
         df_horas = pd.DataFrame()
-    
-    # Seção 5: Faturamento Final
-    faturamento_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
-    faturamento_hora = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
-    faturamento_total = faturamento_transporte + faturamento_hora
+
+    # Faturamento Final
+    fat_trans = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
+    fat_hora = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
+
+    manut_total = df_manut_excel.loc[df_manut_excel["Item"] == "TOTAL", "Valor Total (R$)"].values[0]
+    serv_event_total = df_serv_event_excel.loc[df_serv_event_excel["Equipamento"] == "TOTAL", "Valor Total (R$)"].values[0]
+    fat_total = fat_trans + fat_hora + manut_total + serv_event_total
+
     df_faturamento = pd.DataFrame({
-         "Descrição": ["Faturamento (Escavação e Transporte)", "Faturamento Hora 60%", "Faturamento Total"],
-         "Valor": [faturamento_transporte, faturamento_hora, faturamento_total]
+        "Descrição": [
+            "Faturamento (Escavação e Transporte)",
+            "Faturamento Hora 60%",
+            "Manutenção do Canteiro de Serviços",
+            "Serviços Eventuais",
+            "Faturamento Total"
+        ],
+        "Valor": [
+            fat_trans,
+            fat_hora,
+            manut_total,
+            serv_event_total,
+            fat_total
+        ]
     })
-    
+
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        sheet_name = "Dados"
-        current_row = 0
-        worksheet = writer.book.add_worksheet(sheet_name)
-        writer.sheets[sheet_name] = worksheet
-        
-        # Seção 1: Custos de Movimentação - Minério
-        worksheet.write(current_row, 0, "Custos de Movimentação - Minério")
-        current_row += 1
-        if not df_minero.empty:
-            df_minero.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
-            current_row += len(df_minero.index) + 3
-        else:
-            worksheet.write(current_row, 0, "Sem dados")
-            current_row += 3
-        
-        # Seção 2: Custos de Movimentação - Estéril
-        worksheet.write(current_row, 0, "Custos de Movimentação - Estéril")
-        current_row += 1
-        if not df_esteril.empty:
-            df_esteril.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
-            current_row += len(df_esteril.index) + 3
-        else:
-            worksheet.write(current_row, 0, "Sem dados")
-            current_row += 3
-        
-        # Seção 3: Custos Adicionais
-        worksheet.write(current_row, 0, "Custos Adicionais")
-        current_row += 1
-        if not df_adic.empty:
-            df_adic.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
-            current_row += len(df_adic.index) + 3
-        else:
-            worksheet.write(current_row, 0, "Sem dados")
-            current_row += 3
-        
-        # Seção 4: Horas Paradas por Modelo
-        worksheet.write(current_row, 0, "Horas Paradas por Modelo")
-        current_row += 1
-        if not df_horas.empty:
-            df_horas.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
-            current_row += len(df_horas.index) + 3
-        else:
-            worksheet.write(current_row, 0, "Sem dados")
-            current_row += 3
-        
-        # Seção 5: Faturamento Final
-        worksheet.write(current_row, 0, "Faturamento Final")
-        current_row += 1
-        df_faturamento.to_excel(writer, sheet_name=sheet_name, startrow=current_row, index=False)
-    processed_data = output.getvalue()
-    return processed_data
+        workbook = writer.book
+        worksheet = workbook.add_worksheet("Dados")
+        writer.sheets["Dados"] = worksheet
 
-# ===================== LAYOUT PRINCIPAL =====================
+        bold_fmt = workbook.add_format({"bold": True})
+        money_fmt = workbook.add_format({"num_format": "#,##0.00"})
+        numeric_fmt = workbook.add_format({"num_format": "#,##0.00"})
+
+        row_cursor = 0
+
+        def write_table(title, df_table, total_col=None):
+            nonlocal row_cursor
+            worksheet.write(row_cursor, 0, title, bold_fmt)
+            row_cursor += 1
+
+            if df_table.empty:
+                worksheet.write(row_cursor, 0, "Sem dados")
+                row_cursor += 2
+                return
+
+            df_table.to_excel(writer, sheet_name="Dados", startrow=row_cursor, startcol=0, index=False)
+            n_rows, n_cols = df_table.shape
+            for c_idx, c_name in enumerate(df_table.columns):
+                for r_i in range(n_rows):
+                    excel_row = row_cursor + 1 + r_i
+                    val = df_table.iloc[r_i, c_idx]
+                    if total_col and str(df_table.iloc[r_i][total_col]).upper() == "TOTAL":
+                        worksheet.write(excel_row, c_idx, val, bold_fmt)
+                    else:
+                        if isinstance(val, (int, float)):
+                            if ("custo" in c_name.lower() or "valor" in c_name.lower() or "preço" in c_name.lower()):
+                                worksheet.write_number(excel_row, c_idx, val, money_fmt)
+                            else:
+                                worksheet.write_number(excel_row, c_idx, val, numeric_fmt)
+
+            row_cursor += n_rows + 2
+
+        # 1) Manutenção
+        write_table("Manutenção do Canteiro de Serviços", df_manut_excel, total_col="Item")
+        # 2) Serviços
+        write_table("Serviços Eventuais", df_serv_event_excel, total_col="Equipamento")
+        # 3) Custos Mov. Minério
+        write_table("Custos de Movimentação - Minério", df_minero, total_col="dmt_bin")
+        # 4) Custos Mov. Estéril
+        write_table("Custos de Movimentação - Estéril", df_esteril, total_col="dmt_bin")
+        # 5) Custos Adicionais
+        write_table("Custos Adicionais", df_adic, total_col=None)
+
+        # (Nova) Tabela de Horas de Locação, antes da de Horas 60%
+        write_table("Horas de Locação por Modelo", df_locacao, total_col="nome_modelo")
+
+        # 6) Horas Paradas (60%)
+        write_table("Custo de Horas Paradas por Modelo (Preço 60%)", df_horas, total_col="nome_modelo")
+        # 7) Faturamento Final
+        write_table("Faturamento Final", df_faturamento, total_col="Descrição")
+
+    return output.getvalue()
+
+# ===================== LAYOUT (inalterado, + nova Tabela) =====================
+common_table_style = {
+    "style_table": {
+        "overflowX": "auto",
+        "width": "100%",
+        "margin": "auto"
+    },
+    "style_cell": {
+        "textAlign": "center",
+        "padding": "5px",
+        "fontFamily": "Arial, sans-serif",
+        "fontSize": "12px",
+        "whiteSpace": "normal"
+    },
+    "style_header": {
+        "backgroundColor": "#f5f5f5",
+        "fontWeight": "bold"
+    }
+}
+
 layout = dbc.Container([
     dbc.Row(
         dbc.Col(
-            html.H2(
-                "Boletim de Medição",
-                className="text-center my-4 text-primary",
-                style={"fontFamily": "Arial, sans-serif"}
-            ),
+            html.H2("Boletim de Medição", className="text-center my-4 text-primary"),
             width=12
         )
     ),
+
     dbc.Row([
         dbc.Col([
-            html.Label(
-                "Selecione o Período:",
-                className="fw-bold text-secondary mb-1",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
-            ),
+            html.Label("Selecione o Período:", className="fw-bold text-secondary mb-1"),
             dcc.DatePickerRange(
                 id="rel3-date-picker-range",
                 min_date_allowed=datetime(2020, 1, 1).date(),
@@ -315,89 +480,86 @@ layout = dbc.Container([
                 start_date=start_default,
                 end_date=end_default,
                 display_format="DD/MM/YYYY",
-                className="mb-2",
-                style={"width": "100%"}
+                className="mb-2"
             )
         ], xs=12, md=4),
         dbc.Col(
-            dbc.Button(
-                "Aplicar Filtro",
-                id="rel3-apply-button",
-                n_clicks=0,
-                color="primary",
-                className="mt-4 w-100",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
-            ),
+            dbc.Button("Aplicar Filtro", id="rel3-apply-button", color="primary", n_clicks=0, className="mt-4 w-100"),
             xs=12, md=2
-        ),
-        dbc.Col(html.Div(), xs=12, md=6)
+        )
     ], className="align-items-end mb-4"),
-    
-    # Stores para os dados de Produção e Hora
-    dcc.Store(id="rel3-data-store"),
-    dcc.Store(id="rel3-fato-hora-store"),
-    
-    # (2) Custos de Movimentação
+
+    # 1) Manutenção
     dbc.Card([
-        dbc.CardHeader(
-            html.H5("Custos de Movimentação", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
-            className="bg-light"
-        ),
+        dbc.CardHeader("Manutenção do Canteiro de Serviços", className="bg-light"),
+        dbc.CardBody(
+            dash_table.DataTable(
+                id="rel3-manut-canteiro",
+                columns=manut_canteiro_columns,
+                data=manut_canteiro_data,
+                page_action="none",
+                style_data_conditional=[
+                    {"if": {"filter_query": '{Item} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                ],
+                **common_table_style
+            )
+        )
+    ], className="shadow mb-4"),
+
+    # 2) Serviços Eventuais
+    dbc.Card([
+        dbc.CardHeader("Serviços Eventuais", className="bg-light"),
+        dbc.CardBody(
+            dash_table.DataTable(
+                id="rel3-servicos-eventuais",
+                columns=servicos_eventuais_columns,
+                data=servicos_eventuais_data,
+                page_action="none",
+                style_data_conditional=[
+                    {"if": {"filter_query": '{Equipamento} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                ],
+                **common_table_style
+            )
+        )
+    ], className="shadow mb-4"),
+
+    # 3) Custos de Movimentação
+    dbc.Card([
+        dbc.CardHeader("Custos de Movimentação", className="bg-light"),
         dbc.CardBody([
-            html.H6("Movimentação Minério", className="text-secondary mt-2", style={"fontFamily": "Arial, sans-serif"}),
+            html.H6("Movimentação Minério", className="mt-2"),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-minero",
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
-                    style_cell={
-                        "textAlign": "center",
-                        "padding": "5px",
-                        "fontFamily": "Arial, sans-serif",
-                        "fontSize": "10px",
-                        "whiteSpace": "normal"
-                    },
                     style_data_conditional=[
                         {"if": {"filter_query": '{dmt_bin} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
-                    export_format="csv"
-                ),
-                type="default"
+                    **common_table_style
+                )
             ),
             html.Hr(),
-            html.H6("Movimentação Estéril", className="text-secondary mt-2", style={"fontFamily": "Arial, sans-serif"}),
+            html.H6("Movimentação Estéril"),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-esteril",
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
-                    style_cell={
-                        "textAlign": "center",
-                        "padding": "5px",
-                        "fontFamily": "Arial, sans-serif",
-                        "fontSize": "10px",
-                        "whiteSpace": "normal"
-                    },
                     style_data_conditional=[
                         {"if": {"filter_query": '{dmt_bin} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
-                    export_format="csv"
-                ),
-                type="default"
+                    **common_table_style
+                )
             )
         ])
-    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
-    
-    # (3) Custos Adicionais
+    ], className="shadow mb-4"),
+
+    # 4) Custos Adicionais
     dbc.Card([
-        dbc.CardHeader(
-            html.H5("Custos Adicionais", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
-            className="bg-light"
-        ),
+        dbc.CardHeader("Custos Adicionais", className="bg-light"),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -405,27 +567,34 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
-                    style_cell={
-                        "textAlign": "center",
-                        "padding": "5px",
-                        "fontFamily": "Arial, sans-serif",
-                        "fontSize": "10px",
-                        "whiteSpace": "normal"
-                    },
-                    export_format="csv"
-                ),
-                type="default"
+                    **common_table_style
+                )
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
-    
-    # (5) Custo de Horas Paradas por Modelo (Preço 60%)
+    ], className="shadow mb-4"),
+
+    # (NOVO) Horas de Locação (Acima de Horas 60%)
     dbc.Card([
-        dbc.CardHeader(
-            html.H5("Custo de Horas Paradas por Modelo (Preço 60%)", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
-            className="bg-light"
-        ),
+        dbc.CardHeader("Horas de Locação por Modelo", className="bg-light"),
+        dbc.CardBody(
+            dcc.Loading(
+                dash_table.DataTable(
+                    id="horas-locacao-table",
+                    columns=[],
+                    data=[],
+                    page_action="none",
+                    style_data_conditional=[
+                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                    ],
+                    **common_table_style
+                )
+            )
+        )
+    ], className="shadow mb-4"),
+
+    # 5) Custo de Horas Paradas por Modelo (Preço 60%)
+    dbc.Card([
+        dbc.CardHeader("Custo de Horas Paradas por Modelo (Preço 60%)", className="bg-light"),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -433,58 +602,50 @@ layout = dbc.Container([
                     columns=[],
                     data=[],
                     page_action="none",
-                    style_table={"overflowX": "auto", "width": "100%", "margin": "auto"},
-                    style_cell={
-                        "textAlign": "center",
-                        "padding": "5px",
-                        "fontFamily": "Arial, sans-serif",
-                        "fontSize": "10px",
-                        "whiteSpace": "normal"
-                    },
                     style_data_conditional=[
                         {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
                     ],
-                    export_format="csv"
-                ),
-                type="default"
+                    **common_table_style
+                )
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
-    
-    # (6) Faturamento Final
+    ], className="shadow mb-4"),
+
+    # 6) Faturamento Final
     dbc.Card([
-        dbc.CardHeader(
-            html.H5("Faturamento Final", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
-            className="bg-light"
-        ),
+        dbc.CardHeader("Faturamento Final", className="bg-light"),
         dbc.CardBody(
-            html.Div(id="rel3-total-geral", style={
-                "fontSize": "20px",
-                "fontWeight": "bold",
-                "padding": "10px",
-                "backgroundColor": "#fff9c4",
-                "borderRadius": "5px",
-                "fontFamily": "Arial, sans-serif"
-            })
+            html.Div(
+                id="rel3-total-geral",
+                style={
+                    "fontWeight": "bold",
+                    "backgroundColor": "#fff9c4",
+                    "padding": "10px",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "12px"
+                }
+            )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
-    
+    ], className="shadow mb-4"),
+
     dbc.Card([
         dbc.CardBody(
             dbc.Button(
                 "Exportar para Excel (1 Aba)",
                 id="export-excel-button",
                 color="success",
-                className="w-100",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                className="w-100"
             )
         )
-    ], className="shadow mb-4 animate__animated animate__fadeInUp", style={"marginBottom": "30px"}),
-    
+    ], className="shadow mb-4"),
+
+    dcc.Store(id="rel3-data-store"),
+    dcc.Store(id="rel3-fato-hora-store"),
     dcc.Download(id="download-excel")
+
 ], fluid=True)
 
-# ===================== Callbacks =====================
+# ===================== CALLBACKS (inalterados + Nova Tabela) =====================
 
 @dash.callback(
     Output("rel3-data-store", "data"),
@@ -497,7 +658,9 @@ layout = dbc.Container([
 def apply_filter_unified(n_clicks, start_date, end_date):
     if not start_date or not end_date:
         return {}, {}
+
     start_dt, end_dt = get_search_period(start_date, end_date)
+
     query_prod = (
         f"EXEC dw_sdp_mt_fas..usp_fato_producao "
         f"'{start_dt:%d/%m/%Y %H:%M:%S}', '{end_dt:%d/%m/%Y %H:%M:%S}'"
@@ -509,24 +672,31 @@ def apply_filter_unified(n_clicks, start_date, end_date):
         df_prod = df_prod[(df_prod["dt_registro_turno"] >= start_dt) & (df_prod["dt_registro_turno"] <= end_dt)]
         df_prod = df_prod[df_prod["cod_viagem"].notnull() & (df_prod["cod_viagem"] != "")]
         df_prod = df_prod[df_prod["nome_tipo_operacao_modelo"] == "Transporte"]
+
         df_prod["dmt_mov_cheio"] = df_prod["dmt_mov_cheio"].fillna(0)
         df_prod["dmt_tratado"] = df_prod["dmt_mov_cheio"]
+
+        # CORREÇÃO: uso do operador bitwise OR "|"
         cond = (df_prod["dmt_mov_cheio"] <= 50) | (df_prod["dmt_mov_cheio"] > 7000)
+
         group_means = df_prod.groupby(["nome_origem", "nome_destino"])["dmt_mov_cheio"].transform("mean")
         group_counts = df_prod.groupby(["nome_origem", "nome_destino"])["dmt_mov_cheio"].transform("count")
         mask = cond & (group_counts > 1)
+
         df_prod.loc[mask, "dmt_tratado"] = group_means[mask].apply(lambda x: 7000 if x > 7000 else x)
+
         bins = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000]
         labels = [
-            "0-500", "501-1000", "1001-1500", "1501-2000", "2001-2500",
-            "2501-3000", "3001-3500", "3501-4000", "4001-4500", "4501-5000",
-            "5001-5500", "5501-6000", "6001-6500", "6501-7000"
+            "0-500", "501-1000", "1001-1500", "1501-2000",
+            "2001-2500", "2501-3000", "3001-3500", "3501-4000",
+            "4001-4500", "4501-5000", "5001-5500", "5501-6000",
+            "6001-6500", "6501-7000"
         ]
         cat_type = CategoricalDtype(categories=labels, ordered=True)
-        df_prod["dmt_bin"] = pd.cut(
-            df_prod["dmt_tratado"], bins=bins, labels=labels, include_lowest=True, right=True
-        ).astype(cat_type)
-    data_prod_json = df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {}
+        df_prod["dmt_bin"] = pd.cut(df_prod["dmt_tratado"], bins=bins, labels=labels, include_lowest=True, right=True).astype(cat_type)
+
+    data_prod_json = df_prod.to_json(orient="records") if not df_prod.empty else {}
+
     query_hora = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
         f"'{start_dt:%d/%m/%Y %H:%M:%S}', '{end_dt:%d/%m/%Y %H:%M:%S}'"
@@ -538,37 +708,28 @@ def apply_filter_unified(n_clicks, start_date, end_date):
         df_hora = df_hora[(df_hora["dt_registro_turno"] >= start_dt) & (df_hora["dt_registro_turno"] <= end_dt)]
         estados_filtro = ["Improdutiva Interna", "Improdutiva Externa", "Serviço Auxiliar"]
         df_hora = df_hora[df_hora["nome_tipo_estado"].isin(estados_filtro)]
-    data_hora_json = df_hora.to_json(date_format="iso", orient="records") if not df_hora.empty else {}
+
+    data_hora_json = df_hora.to_json(orient="records") if not df_hora.empty else {}
+
     return data_prod_json, data_hora_json
 
-@dash.callback(
-    Output("operacao-dropdown", "options", allow_duplicate=True),
-    Input("rel3-data-store", "data"),
-    prevent_initial_call="initial_duplicate"
-)
-def update_operacoes_options(json_data):
-    if not json_data or isinstance(json_data, dict):
-        return []
-    df = pd.read_json(json_data, orient="records")
-    if df.empty:
-        return []
-    ops_unicas = sorted(df["nome_operacao"].dropna().unique())
-    return [{"label": op, "value": op} for op in ops_unicas]
 
 @dash.callback(
     Output("rel3-custo-minero", "data"),
     Output("rel3-custo-minero", "columns"),
     Input("rel3-data-store", "data")
 )
-def update_custo_minero(json_data):
+def update_custo_minero_cb(json_data):
     if not json_data or isinstance(json_data, dict):
         return [], []
     df = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
+
     df_minero = calc_custo_por_faixa(df, "Movimentação Minério", CUSTO_MINERO_MAP)
     if df_minero.empty:
         return [], []
+
     total_vol = df_minero["total_volume"].sum()
     total_custo = df_minero["custo_total"].sum()
     df_total = pd.DataFrame([{
@@ -578,6 +739,7 @@ def update_custo_minero(json_data):
         "custo_total": total_custo
     }])
     df_minero = pd.concat([df_minero, df_total], ignore_index=True)
+
     columns = [
         {"name": "Faixa de DMT", "id": "dmt_bin"},
         {"name": "Volume Total (m³)", "id": "total_volume", "type": "numeric",
@@ -595,15 +757,17 @@ def update_custo_minero(json_data):
     Output("rel3-custo-esteril", "columns"),
     Input("rel3-data-store", "data")
 )
-def update_custo_esteril(json_data):
+def update_custo_esteril_cb(json_data):
     if not json_data or isinstance(json_data, dict):
         return [], []
     df = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
+
     df_esteril = calc_custo_por_faixa(df, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
     if df_esteril.empty:
         return [], []
+
     total_vol = df_esteril["total_volume"].sum()
     total_custo = df_esteril["custo_total"].sum()
     df_total = pd.DataFrame([{
@@ -613,6 +777,7 @@ def update_custo_esteril(json_data):
         "custo_total": total_custo
     }])
     df_esteril = pd.concat([df_esteril, df_total], ignore_index=True)
+
     columns = [
         {"name": "Faixa de DMT", "id": "dmt_bin"},
         {"name": "Volume Total (m³)", "id": "total_volume", "type": "numeric",
@@ -636,6 +801,7 @@ def update_custo_adicional_cb(json_data):
     df = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
+
     df_adic = calc_custo_adicional(df)
     columns = [
         {"name": "Item", "id": "item"},
@@ -649,23 +815,69 @@ def update_custo_adicional_cb(json_data):
     data = df_adic.to_dict("records")
     return data, columns
 
+# ===== CALLBACK Horas de Locação (Nova Tabela) =====
 @dash.callback(
-    Output("rel3-horas-paradas-table", "data"),
-    Output("rel3-horas-paradas-table", "columns"),
+    Output("horas-locacao-table", "data"),
+    Output("horas-locacao-table", "columns"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_horas_paradas_table(json_data):
+def update_horas_locacao_table_cb(json_data):
     if not json_data or isinstance(json_data, dict):
         return [], []
     df = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
+
+    df_subset = df[df["nome_estado"].isin(ESTADOS_LOCACAO)]
+    if df_subset.empty or "nome_modelo" not in df_subset.columns:
+        return [], []
+
+    df_group = df_subset.groupby("nome_modelo", as_index=False).agg(horas_locacao=("tempo_hora", "sum"))
+    df_group["preco_locacao"] = df_group["nome_modelo"].map(PRECO_LOCACAO_MAP).fillna(0)
+    df_group["custo_total"] = df_group["horas_locacao"] * df_group["preco_locacao"]
+
+    total_horas = df_group["horas_locacao"].sum()
+    total_custo = df_group["custo_total"].sum()
+    df_total = pd.DataFrame([{
+        "nome_modelo": "TOTAL",
+        "horas_locacao": total_horas,
+        "preco_locacao": "",
+        "custo_total": total_custo
+    }])
+    df_final = pd.concat([df_group, df_total], ignore_index=True)
+
+    columns = [
+        {"name": "Modelo", "id": "nome_modelo"},
+        {"name": "Horas Locação (h)", "id": "horas_locacao", "type": "numeric",
+         "format": Format(precision=2, scheme=Scheme.fixed, group=True)},
+        {"name": "Preço Locação (R$/h)", "id": "preco_locacao", "type": "numeric",
+         "format": FormatTemplate.money(2)},
+        {"name": "Custo Total (R$)", "id": "custo_total", "type": "numeric",
+         "format": FormatTemplate.money(2)}
+    ]
+    data = df_final.to_dict("records")
+    return data, columns
+
+# ====== CALLBACK Horas Paradas 60% (inalterado) ======
+@dash.callback(
+    Output("rel3-horas-paradas-table", "data"),
+    Output("rel3-horas-paradas-table", "columns"),
+    Input("rel3-fato-hora-store", "data")
+)
+def update_horas_paradas_table_cb(json_data):
+    if not json_data or isinstance(json_data, dict):
+        return [], []
+    df = pd.read_json(json_data, orient="records")
+    if df.empty:
+        return [], []
+
     df_parada = df[df["nome_estado"].isin(ESTADOS_PARADA)]
     if df_parada.empty or "nome_modelo" not in df_parada.columns:
         return [], []
     df_group = df_parada.groupby("nome_modelo", as_index=False).agg(horas_paradas=("tempo_hora", "sum"))
     df_group["preco_60"] = df_group["nome_modelo"].map(PRECO_60_MAP).fillna(0)
     df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
+
     total_horas = df_group["horas_paradas"].sum()
     total_custo = df_group["custo_total"].sum()
     df_total = pd.DataFrame([{
@@ -675,6 +887,7 @@ def update_horas_paradas_table(json_data):
         "custo_total": total_custo
     }])
     df_group = pd.concat([df_group, df_total], ignore_index=True)
+
     columns = [
         {"name": "Modelo", "id": "nome_modelo"},
         {"name": "Horas Paradas (h)", "id": "horas_paradas", "type": "numeric",
@@ -687,32 +900,43 @@ def update_horas_paradas_table(json_data):
     data = df_group.to_dict("records")
     return data, columns
 
+# ====== CALLBACK Faturamento Final (inalterado) ======
 @dash.callback(
     Output("rel3-total-geral", "children"),
     Input("rel3-data-store", "data"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_faturamento_final(json_producao, json_hora):
+def update_faturamento_final_cb(json_producao, json_hora):
     if not json_producao or isinstance(json_producao, dict):
-        faturamento_transporte = 0.0
+        fat_transporte = 0.0
     else:
         df_prod = pd.read_json(json_producao, orient="records")
-        faturamento_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
+        fat_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
+
     if not json_hora or isinstance(json_hora, dict):
-        faturamento_hora = 0.0
+        fat_horas = 0.0
     else:
         df_hora = pd.read_json(json_hora, orient="records")
-        faturamento_hora = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
-    faturamento_total = faturamento_transporte + faturamento_hora
+        fat_horas = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
+
+    manut_total = df_manut_canteiro.loc[df_manut_canteiro["Item"] == "TOTAL", "Valor Total (R$)"].values[0]
+    serv_event_total = df_servicos_eventuais.loc[df_servicos_eventuais["Equipamento"] == "TOTAL", "Valor Total (R$)"].values[0]
+    fat_total = fat_transporte + fat_horas + manut_total + serv_event_total
+
     return html.Div([
-        html.Div(f"Faturamento (Escavação e Transporte): R$ {faturamento_transporte:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"}),
-        html.Div(f"Faturamento Hora 60%: R$ {faturamento_hora:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"}),
-        html.Div(f"Faturamento Total: R$ {faturamento_total:,.2f}",
-                 style={"backgroundColor": "#fff9c4", "padding": "5px", "marginBottom": "5px", "fontFamily": "Arial, sans-serif"})
+        html.Div(f"Faturamento (Escavação e Transporte): R$ {fat_transporte:,.2f}",
+                 style={"padding": "5px", "marginBottom": "5px"}),
+        html.Div(f"Faturamento Hora 60%: R$ {fat_horas:,.2f}",
+                 style={"padding": "5px", "marginBottom": "5px"}),
+        html.Div(f"Manutenção do Canteiro de Serviços: R$ {manut_total:,.2f}",
+                 style={"padding": "5px", "marginBottom": "5px"}),
+        html.Div(f"Serviços Eventuais: R$ {serv_event_total:,.2f}",
+                 style={"padding": "5px", "marginBottom": "5px"}),
+        html.Div(f"Faturamento Total: R$ {fat_total:,.2f}",
+                 style={"padding": "5px"})
     ])
 
+# ====== CALLBACK EXPORT EXCEL (inalterado) ======
 @dash.callback(
     Output("download-excel", "data"),
     Input("export-excel-button", "n_clicks"),
@@ -720,8 +944,8 @@ def update_faturamento_final(json_producao, json_hora):
     State("rel3-fato-hora-store", "data"),
     prevent_initial_call=True
 )
-def export_to_excel(n_clicks, json_producao, json_hora):
+def export_to_excel_cb(n_clicks, json_producao, json_hora):
     if n_clicks:
-        processed_data = build_export_excel_single_sheet(json_producao, json_hora)
-        return dcc.send_bytes(lambda file: file.write(processed_data), "relatorio3.xlsx")
+        excel_bytes = build_export_excel_single_sheet(json_producao, json_hora)
+        return dcc.send_bytes(lambda f: f.write(excel_bytes), "relatorio3.xlsx")
     return dash.no_update

@@ -35,8 +35,12 @@ def load_db_config():
         "password": "DB_PASSWORD",
         "driver": "DB_DRIVER",
     }
-    db_config = { key: os.getenv(env_key) for key, env_key in env_keys.items() }
-    
+
+    # Aqui, usamos um dicionário por compreensão para carregar as variáveis;
+    # é simples e tem performance comparável a um loop explícito.
+    db_config = {key: os.getenv(env_key) for key, env_key in env_keys.items()}
+
+    # Verificamos se todas as variáveis estão presentes
     if not all(db_config.values()):
         msg = (
             "Uma ou mais variáveis de ambiente não foram definidas corretamente. "
@@ -45,7 +49,7 @@ def load_db_config():
         )
         logger.error(msg)
         raise ValueError(msg)
-    
+
     logger.info(f"Configurações de banco de dados carregadas com sucesso: {db_config}")
     return db_config
 
@@ -57,20 +61,24 @@ def load_metas():
     """
     current_dir = Path(__file__).parent
     metas_path = current_dir / "metas.json"
-    
+
     try:
-        with metas_path.open(mode="r", encoding="utf-8") as f:
+        # Abertura simplificada sem especificar 'mode="r"', pois 'r' já é padrão
+        with metas_path.open(encoding="utf-8") as f:
             metas = json.load(f)
         logger.info(f"Métas carregadas de {metas_path}")
         return metas
+
     except FileNotFoundError:
         msg = f"Arquivo 'metas.json' não encontrado em {metas_path}."
         logger.error(msg)
         raise ValueError(msg)
+
     except json.JSONDecodeError as e:
         msg = f"Erro ao decodificar 'metas.json': {e}"
         logger.error(msg)
         raise ValueError(msg)
+
     except Exception as e:
         msg = f"Erro ao carregar o arquivo 'metas.json': {e}"
         logger.error(msg)

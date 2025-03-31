@@ -5,10 +5,11 @@ import logging
 
 # Import das páginas (relatórios)
 import pages.relatorio1 as rel1
-import pages.relatorio2 as rel2
-import pages.relatorio3 as rel3
+#import pages.relatorio2 as rel2
+#import pages.relatorio3 as rel3
 import pages.relatorio4 as rel4
 import pages.relatorio5 as rel5
+
 
 def setup_logger():
     """
@@ -24,32 +25,33 @@ def setup_logger():
         logger.addHandler(console_handler)
     return logger
 
+
 logger = setup_logger()
 logger.info("Iniciando a aplicação Dash...")
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Configurações de estilo externas – tema LUX, Font Awesome e animate.css
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 external_stylesheets = [
     dbc.themes.LUX,
     "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
     "https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css",
 ]
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Criação do app Dash
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 app = dash.Dash(
     __name__,
-    suppress_callback_exceptions=True,
+    suppress_callback_exceptions=True,  # Necessário caso usemos layouts/páginas carregadas dinamicamente
     external_stylesheets=external_stylesheets
 )
 app.title = "Portal de Relatórios - Mineração"
-server = app.server
+server = app.server  # Exposição do servidor para implantação (gunicorn, etc.)
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Navbar responsiva com toggler para dispositivos móveis
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 def create_navbar():
     return dbc.Navbar(
         dbc.Container([
@@ -60,8 +62,8 @@ def create_navbar():
                     [
                         dbc.NavLink("Portal", href="/", active="exact"),
                         dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
-                        dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
-                        dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
+                        #dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
+                        #dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
                         dbc.NavLink("Produção", href="/relatorio4", active="exact"),
                         dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
                     ],
@@ -88,14 +90,20 @@ navbar = create_navbar()
     [State("navbar-collapse", "is_open")]
 )
 def toggle_navbar(n_clicks, is_open):
+    """
+    Callback que controla a abertura/fechamento do menu em dispositivos móveis.
+    """
     if n_clicks:
         return not is_open
     return is_open
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Função auxiliar para criação de cards
-# ---------------------------------------------------------------------------
-def create_card(img_src, title, subtitle, link, href):
+# ----------------------------------------------------------------------------
+def create_card(img_src, title, subtitle, link_text, href):
+    """
+    Cria e retorna um componente Card com imagem, título, subtítulo e link.
+    """
     return dbc.Card(
         [
             dbc.CardImg(
@@ -107,7 +115,7 @@ def create_card(img_src, title, subtitle, link, href):
                 [
                     html.H4(title, className="card-title"),
                     html.P(subtitle, className="card-text"),
-                    dcc.Link("Visualizar", href=href, className="btn btn-primary")
+                    dcc.Link(link_text, href=href, className="btn btn-primary")
                 ]
             )
         ],
@@ -115,9 +123,9 @@ def create_card(img_src, title, subtitle, link, href):
         className="card-hover animate__animated animate__fadeInUp"
     )
 
-# ---------------------------------------------------------------------------
-# Layout da página inicial (Portal) com cards aprimorados
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Layout da página inicial (Portal) com cards
+# ----------------------------------------------------------------------------
 home_layout = dbc.Container(
     [
         dbc.Row(
@@ -129,10 +137,22 @@ home_layout = dbc.Container(
         # Linha com os 4 primeiros cards
         dbc.Row(
             [
-                dbc.Col(create_card("/assets/mining.jpg", "Ciclo", "Análise de Hora", "Visualizar", "/relatorio1"), width=12, md=3),
-                dbc.Col(create_card("/assets/mining2.jpg", "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"), width=12, md=3),
-                dbc.Col(create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"), width=12, md=3),
-                dbc.Col(create_card("/assets/mining4.jpg", "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"), width=12, md=3),
+                dbc.Col(
+                    create_card("/assets/mining.jpg", "Ciclo", "Análise de Hora", "Visualizar", "/relatorio1"),
+                    width=12, md=3
+                ),
+                #dbc.Col(
+                    #create_card("/assets/mining2.jpg", "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"),
+                    #width=12, md=3
+                #),
+                #dbc.Col(
+                   # create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
+                    #width=12, md=3
+              #  ),
+                dbc.Col(
+                    create_card("/assets/mining4.jpg", "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"),
+                    width=12, md=3
+                ),
             ],
             className="my-4 justify-content-center"
         ),
@@ -156,9 +176,9 @@ home_layout = dbc.Container(
     fluid=True
 )
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Layout principal com dcc.Location e Spinner (feedback de carregamento)
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
@@ -172,26 +192,31 @@ app.layout = html.Div(
     ]
 )
 
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Mapeamento de páginas para facilitar a manutenção do callback de roteamento
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 pages = {
     "/relatorio1": rel1.layout,
-    "/relatorio2": rel2.layout,
-    "/relatorio3": rel3.layout,
+    #"/relatorio2": rel2.layout,
+    #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
 }
 
-# Callback para trocar conteúdo da página com base na URL
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
+    """
+    Callback para renderizar o layout conforme o path da URL.
+    """
     logger.info(f"Navegando para {pathname}")
+    # Retorna o layout correspondente ou o layout principal (home_layout)
     return pages.get(pathname, home_layout)
 
-# ---------------------------------------------------------------------------
-# Execução do servidor local
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Execução do servidor
+# ----------------------------------------------------------------------------
 if __name__ == "__main__":
+    # Para performance em produção, geralmente desativamos debug (debug=False).
+    # Aqui mantemos debug=True para desenvolvimento, conforme o original.
     logger.info("Executando o servidor no modo debug...")
     app.run_server(debug=True, host="0.0.0.0", port=8050)

@@ -4,6 +4,7 @@ import urllib.parse
 from sqlalchemy import create_engine
 from config import db_config
 
+
 def setup_logger():
     """
     Configura e retorna um logger para a aplicação.
@@ -18,7 +19,9 @@ def setup_logger():
         logger.addHandler(console_handler)
     return logger
 
+
 logger = setup_logger()
+
 
 def create_db_engine():
     """
@@ -26,6 +29,7 @@ def create_db_engine():
     Em caso de falha, registra o erro e relança a exceção.
     """
     try:
+        # Monta a string de conexão
         connection_string = (
             f"DRIVER={{{db_config['driver']}}};"
             f"SERVER={db_config['server']};"
@@ -35,7 +39,10 @@ def create_db_engine():
             "Encrypt=no;"
             "TrustServerCertificate=yes;"
         )
+        # Codifica a string de conexão para uso em URL
         params = urllib.parse.quote_plus(connection_string)
+
+        # Cria o engine usando PyODBC + SQLAlchemy
         engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
         logger.info("Engine criado com sucesso.")
         return engine
@@ -43,8 +50,10 @@ def create_db_engine():
         logger.error(f"Erro ao criar engine: {e}")
         raise
 
+
 # Inicializa o engine de forma global para reuso na aplicação
 engine = create_db_engine()
+
 
 def query_to_df(query, params=None, chunksize=None):
     """
@@ -62,13 +71,14 @@ def query_to_df(query, params=None, chunksize=None):
     """
     try:
         if chunksize:
-            # Utiliza chunksize para processar grandes volumes de dados sem sobrecarregar a memória
+            # Utiliza chunksize para lidar com grandes volumes de dados sem sobrecarregar a memória
             return pd.read_sql(query, engine, params=params, chunksize=chunksize)
         else:
             return pd.read_sql(query, engine, params=params)
     except Exception as e:
         logger.error(f"Erro ao executar query:\n{query}\nParâmetros: {params}\n{e}")
         raise
+
 
 def close_engine():
     """
