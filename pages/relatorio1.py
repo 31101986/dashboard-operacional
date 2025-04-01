@@ -25,17 +25,29 @@ from db import query_to_df
 # =============================================================================
 # CONSTANTES
 # =============================================================================
-SEARCH_PERIOD_HOURS = 2
 MAPBOX_TOKEN = ""  # Informe seu token Mapbox, se disponível
+DEFAULT_MAP_STYLE = "open-street-map"  # Forçamos um estilo fixo
 
 # =============================================================================
 # FUNÇÕES AUXILIARES
 # =============================================================================
-def get_search_period():
-    """Retorna o período de busca (data/hora inicial e final) com base na constante definida."""
+
+def get_current_shift_period():
+    """
+    Retorna o início e o fim do turno atual (07:00 → 07:00 do dia seguinte),
+    considerando o fuso horário definido em TIMEZONE.
+    """
     now = datetime.now(TIMEZONE)
-    period_start = now - timedelta(hours=SEARCH_PERIOD_HOURS)
-    return period_start, now
+    # Define a base como hoje às 07:00 (tz-aware)
+    shift_start = now.replace(hour=7, minute=0, second=0, microsecond=0)
+
+    # Se ainda não chegamos às 07:00 de hoje, significa que o turno começou ontem às 07:00
+    if now.hour < 7:
+        shift_start -= timedelta(days=1)
+
+    # Fim do turno: 24 horas após o início
+    shift_end = shift_start + timedelta(days=1)
+    return shift_start, shift_end
 
 def no_data_fig(title):
     """Retorna um gráfico vazio com mensagem 'Sem dados...' e layout modernizado."""
@@ -70,11 +82,14 @@ def execute_query(query):
         logging.error(f"Erro na execução da query: {e}")
         return pd.DataFrame()
 
-def common_map_layout(center_lat, center_lon, map_style):
-    """Layout padrão para mapas com configurações centralizadas e de estilo."""
+def common_map_layout(center_lat, center_lon):
+    """
+    Layout padrão para mapas com configurações centralizadas,
+    utilizando estilo fixo 'open-street-map'.
+    """
     return {
         "template": "plotly_white",
-        "mapbox_style": map_style,
+        "mapbox_style": DEFAULT_MAP_STYLE,
         "mapbox_accesstoken": MAPBOX_TOKEN if MAPBOX_TOKEN else None,
         "mapbox": {
             "center": {"lat": center_lat, "lon": center_lon},
@@ -96,6 +111,28 @@ def common_map_layout(center_lat, center_lon, map_style):
         "font": {"family": "Arial, sans-serif", "size": 14}
     }
 
+def localize_column_tz(df, col_name):
+    """
+    Converte a coluna 'col_name' de df para datetime (se ainda não for)
+    e, se estiver tz-naive, localiza no TIMEZONE; caso já tenha timezone,
+    converte para TIMEZONE.
+    """
+    if col_name not in df.columns:
+        return df
+    
+    # 1. Converte para datetime
+    df[col_name] = pd.to_datetime(df[col_name], errors="coerce")
+    
+    # 2. Se estiver completamente sem timezone, localize no TIMEZONE
+    # (Verificando se "dt.tz" é None)
+    sample_tz = df[col_name].dt.tz
+    if sample_tz is None:
+        df[col_name] = df[col_name].dt.tz_localize(TIMEZONE)
+    else:
+        # Caso já tenha timezone, converta para o TIMEZONE local
+        df[col_name] = df[col_name].dt.tz_convert(TIMEZONE)
+    return df
+
 def get_filtered_data_producao(period_start, period_end, operacao_filter=None, df=None):
     """
     Filtra os dados de Produção localmente ou executa a query se df for None.
@@ -110,12 +147,11 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, d
     if df.empty:
         return df
 
+    # Convertemos a coluna dt_registro_fim para tz-aware antes de comparar
     if "dt_registro_fim" in df.columns:
-        df["dt_registro_fim"] = pd.to_datetime(df["dt_registro_fim"], errors="coerce")
-        # Se os valores forem tz-naive, localize para TIMEZONE
-        if df["dt_registro_fim"].dt.tz is None:
-            df["dt_registro_fim"] = df["dt_registro_fim"].dt.tz_localize(TIMEZONE)
-        df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] <= period_end)]
+        df = localize_column_tz(df, "dt_registro_fim")
+        # Filtra pelo turno
+        df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
     
     if operacao_filter and "nome_operacao" in df.columns:
         df = df[df["nome_operacao"].isin(operacao_filter)]
@@ -124,7 +160,7 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, d
 def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
     """
     Filtra os dados de 'Hora' localmente ou executa a query se df for None.
-    Filtra por estado específico e converte colunas de data.
+    Filtra por estado específico e converte colunas de data (dt_registro_turno).
     """
     if df is None:
         query = (
@@ -135,16 +171,13 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
     if df.empty:
         return df
 
-    date_col = None
     if "dt_registro_turno" in df.columns:
-        date_col = "dt_registro_turno"
-        df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-    elif "dt_registro" in df.columns:
-        date_col = "dt_registro"
-        df["dt_registro"] = pd.to_datetime(df["dt_registro"], errors="coerce")
+        df = localize_column_tz(df, "dt_registro_turno")
+        df = df[(df["dt_registro_turno"] >= period_start) & (df["dt_registro_turno"] < period_end)]
 
     if "nome_estado" in df.columns:
         df = df[df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])]
+
     return df
 
 def compute_truck_stats(df_prod_period, df_hora):
@@ -158,7 +191,7 @@ def compute_truck_stats(df_prod_period, df_hora):
 
     if "tempo_ciclo_minuto" in df_prod_period.columns:
         df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
-        df_prod_period.loc[df_prod_period["tempo_ciclo_minuto"] > 120, "tempo_ciclo_minuto"] = 60
+        df_prod_period.loc[df_prod_period["tempo_ciclo_minuto"] > 60, "tempo_ciclo_minuto"] = 45
 
     prod_grp = df_prod_period.groupby("nome_equipamento_utilizado", as_index=False).agg(
         avg_cycle=("tempo_ciclo_minuto", "mean")
@@ -232,20 +265,6 @@ navbar = dbc.NavbarSimple(
     fluid=True,
 )
 
-# Seletor de estilo do mapa com label destacado
-map_style_selector = html.Div([
-    dbc.Label("Estilo do Mapa", className="mb-1", style={"fontWeight": "bold", "fontSize": "16px"}),
-    dbc.RadioItems(
-        id="map-style-selector",
-        options=[
-            {"label": "Padrão", "value": "open-street-map"},
-            {"label": "Satélite", "value": "satellite-streets"},
-        ],
-        value="open-street-map",
-        inline=True,
-    ),
-], style={"padding": "10px", "backgroundColor": "#f8f9fa", "borderRadius": "5px"})
-
 # Layout principal com cabeçalho, filtros e cards para gráficos e tabela
 layout = dbc.Container([
     navbar,
@@ -263,14 +282,13 @@ layout = dbc.Container([
                 persistence_type="session",
                 style={"fontSize": "16px"}
             ),
-            width=8
+            width=10
         ),
         dbc.Col(
             dbc.Button("Atualizar", id="btn-atualizar", color="primary",
                        className="w-100", style={"fontSize": "16px"}, title="Clique para atualizar os dados"),
             width=2
         ),
-        dbc.Col(map_style_selector, width=2)
     ], className="mb-4 align-items-center"),
 
     # Informativo de Caminhões
@@ -291,15 +309,18 @@ layout = dbc.Container([
         )
     ], className="mb-4"),
 
-    # Gráfico: Caminhões Necessários por Escavadeira (definindo minHeight para evitar sobreposição)
+    # Gráfico: Caminhões Necessários por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
                 dbc.CardHeader(html.H5("Caminhões Necessários por Escavadeira", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="truck-cards", config={"displayModeBar": True, "responsive": True},
-                                  style={"minHeight": "450px"}),
+                        dcc.Graph(
+                            id="truck-cards",
+                            config={"displayModeBar": True, "responsive": True},
+                            style={"minHeight": "450px"}
+                        ),
                         type="default"
                     )
                 )
@@ -307,33 +328,23 @@ layout = dbc.Container([
         )
     ]),
 
-    # Linha com dois gráficos lado a lado: Gráfico 3D e Volume por Escavadeira
+    # Linha apenas com o gráfico de Volume por Escavadeira
     dbc.Row([
-        dbc.Col(
-            dbc.Card([
-                dbc.CardHeader(html.H5("Gráfico de Dispersão 3D", className="mb-0")),
-                dbc.CardBody(
-                    dcc.Loading(
-                        dcc.Graph(id="scatter-3d", config={"displayModeBar": True, "responsive": True},
-                                  style={"minHeight": "450px"}),
-                        type="default"
-                    )
-                )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=12, md=6
-        ),
         dbc.Col(
             dbc.Card([
                 dbc.CardHeader(html.H5("Volume por Escavadeira", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="volume-bar", config={"displayModeBar": True, "responsive": True},
-                                  style={"minHeight": "450px"}),
+                        dcc.Graph(
+                            id="volume-bar",
+                            config={"displayModeBar": True, "responsive": True},
+                            style={"minHeight": "450px"}
+                        ),
                         type="default"
                     )
                 )
             ], className="shadow mb-4 animate__animated animate__fadeInUp"),
-            width=12, md=6
+            width=12
         )
     ]),
 
@@ -344,8 +355,11 @@ layout = dbc.Container([
                 dbc.CardHeader(html.H5("Mapa de Carregamento (Detalhado)", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="map-carregamento", config={"displayModeBar": True, "responsive": True},
-                                  style={"minHeight": "400px"}),
+                        dcc.Graph(
+                            id="map-carregamento",
+                            config={"displayModeBar": True, "responsive": True},
+                            style={"minHeight": "400px"}
+                        ),
                         type="default"
                     )
                 )
@@ -357,8 +371,11 @@ layout = dbc.Container([
                 dbc.CardHeader(html.H5("Mapa de Basculamento", className="mb-0")),
                 dbc.CardBody(
                     dcc.Loading(
-                        dcc.Graph(id="map-basculamento", config={"displayModeBar": True, "responsive": True},
-                                  style={"minHeight": "400px"}),
+                        dcc.Graph(
+                            id="map-basculamento",
+                            config={"displayModeBar": True, "responsive": True},
+                            style={"minHeight": "400px"}
+                        ),
                         type="default"
                     )
                 )
@@ -440,7 +457,7 @@ layout = dbc.Container([
         )
     ]),
 
-    # Atualização automática dos dados
+    # Atualização automática dos dados a cada 25 minutos
     dcc.Interval(id="interval-update", interval=25*60*1000, n_intervals=0),
 
     # Armazenamento dos dados para produção e hora
@@ -462,7 +479,8 @@ layout = dbc.Container([
     prevent_initial_call=False
 )
 def fetch_data(n_intervals, n_clicks):
-    period_start, period_end = get_search_period()
+    # Agora pegamos o período do turno (07:00 → 07:00)
+    period_start, period_end = get_current_shift_period()
 
     query_prod = (
         f"EXEC dw_sdp_mt_fas..usp_fato_producao "
@@ -484,16 +502,28 @@ def fetch_data(n_intervals, n_clicks):
     Input("store-producao", "data")
 )
 def update_dropdown(df_producao_records):
+    """
+    Ajuste para exibir apenas as operações referentes ao turno atual
+    (07:00 -> 07:00), usando dt_registro_fim (caso exista) como referência.
+    """
     if not df_producao_records:
         return []
+    
     df = pd.DataFrame(df_producao_records)
-    now = datetime.now(TIMEZONE)
-    if "dt_registro_turno" in df.columns:
-        df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
-        df = df[df["dt_registro_turno"].dt.date == now.date()]
+    period_start, period_end = get_current_shift_period()
+
+    # Se quiser filtrar pela dt_registro_fim para manter apenas o período do turno:
+    if "dt_registro_fim" in df.columns:
+        df = localize_column_tz(df, "dt_registro_fim")
+        df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
+
+    if df.empty:
+        return []
+
     if "nome_operacao" in df.columns:
         ops = sorted(df["nome_operacao"].dropna().unique())
         return [{"label": op, "value": op} for op in ops]
+
     return []
 
 # 3) Callback para resetar o intervalo de atualização manualmente
@@ -513,7 +543,7 @@ def manual_update(n_clicks):
     Input("operacao-filter", "value")
 )
 def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
-    period_start, period_end = get_search_period()
+    period_start, period_end = get_current_shift_period()
 
     df_prod_period = pd.DataFrame(df_producao_records or [])
     df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
@@ -549,15 +579,10 @@ def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
 @dash.callback(
     Output("map-carregamento", "figure"),
     Input("store-producao", "data"),
-    Input("operacao-filter", "value"),
-    Input("map-style-selector", "value")
+    Input("operacao-filter", "value")
 )
-def update_map_carregamento_detalhado(df_producao_records, operacao_filter, map_style):
-    if map_style == "satellite-streets" and not MAPBOX_TOKEN:
-        logging.info("Token Mapbox ausente; usando open-street-map.")
-        map_style = "open-street-map"
-
-    period_start, period_end = get_search_period()
+def update_map_carregamento_detalhado(df_producao_records, operacao_filter):
+    period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
 
@@ -585,22 +610,17 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter, map_
     )
     center_lat = df["latitude_carregamento"].mean()
     center_lon = df["longitude_carregamento"].mean()
-    fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
+    fig.update_layout(common_map_layout(center_lat, center_lon))
     return fig
 
 # 6) Callback para atualizar o Mapa de Basculamento
 @dash.callback(
     Output("map-basculamento", "figure"),
     Input("store-producao", "data"),
-    Input("operacao-filter", "value"),
-    Input("map-style-selector", "value")
+    Input("operacao-filter", "value")
 )
-def update_map_basculamento_detalhado(df_producao_records, operacao_filter, map_style):
-    if map_style == "satellite-streets" and not MAPBOX_TOKEN:
-        logging.info("Token Mapbox ausente; usando open-street-map.")
-        map_style = "open-street-map"
-
-    period_start, period_end = get_search_period()
+def update_map_basculamento_detalhado(df_producao_records, operacao_filter):
+    period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
     if df.empty:
@@ -624,62 +644,17 @@ def update_map_basculamento_detalhado(df_producao_records, operacao_filter, map_
     fig.update_traces(marker=dict(size=8, opacity=0.8))
     center_lat = df["latitude_basculamento"].mean()
     center_lon = df["longitude_basculamento"].mean()
-    fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
+    fig.update_layout(common_map_layout(center_lat, center_lon))
     return fig
 
-# 7) Callback para atualizar o Gráfico 3D
-@dash.callback(
-    Output("scatter-3d", "figure"),
-    Input("store-producao", "data"),
-    Input("operacao-filter", "value")
-)
-def update_scatter_3d(df_producao_records, operacao_filter):
-    period_start, period_end = get_search_period()
-    df = pd.DataFrame(df_producao_records or [])
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
-
-    if df.empty:
-        return no_data_fig("Gráfico 3D: Sem dados")
-
-    df["latitude_carregamento"] = pd.to_numeric(df["latitude_carregamento"], errors="coerce")
-    df["longitude_carregamento"] = pd.to_numeric(df["longitude_carregamento"], errors="coerce")
-    df["tempo_ciclo_minuto"] = pd.to_numeric(df["tempo_ciclo_minuto"], errors="coerce")
-    df = df.dropna(subset=["latitude_carregamento", "longitude_carregamento", "tempo_ciclo_minuto"])
-    if df.empty:
-        return no_data_fig("Gráfico 3D: Sem dados após filtros")
-
-    fig = px.scatter_3d(
-        df,
-        x="latitude_carregamento",
-        y="longitude_carregamento",
-        z="tempo_ciclo_minuto",
-        color="nome_operacao" if "nome_operacao" in df.columns else None,
-        hover_data=["nome_origem", "nome_destino"]
-        if ("nome_origem" in df.columns and "nome_destino" in df.columns)
-        else [],
-        title="Gráfico de Dispersão 3D: Carregamento e Tempo de Ciclo"
-    )
-    fig.update_layout(
-        template="plotly_white",
-        margin=dict(l=0, r=0, t=50, b=0),
-        title_x=0.5,
-        font=dict(family="Arial, sans-serif", size=14),
-        scene=dict(
-            xaxis_title="Latitude Carregamento",
-            yaxis_title="Longitude Carregamento",
-            zaxis_title="Tempo de Ciclo (min)"
-        )
-    )
-    return fig
-
-# 8) Callback para atualizar o Gráfico de Barras (Volume)
+# 7) Callback para atualizar o Gráfico de Barras (Volume)
 @dash.callback(
     Output("volume-bar", "figure"),
     Input("store-producao", "data"),
     Input("operacao-filter", "value")
 )
 def update_volume_bar(df_producao_records, operacao_filter):
-    period_start, period_end = get_search_period()
+    period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
 
@@ -710,14 +685,14 @@ def update_volume_bar(df_producao_records, operacao_filter):
     )
     return fig
 
-# 9) Callback para atualizar a tabela de detalhamento operacional
+# 8) Callback para atualizar a tabela de detalhamento operacional
 @dash.callback(
     Output("table-data", "data"),
     Input("store-producao", "data"),
     Input("operacao-filter", "value")
 )
 def update_table(df_producao_records, operacao_filter):
-    period_start, period_end = get_search_period()
+    period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
 
@@ -755,7 +730,7 @@ def update_table(df_producao_records, operacao_filter):
 
     return grouped.to_dict("records")
 
-# 10) Callback para atualizar o informativo de caminhões
+# 9) Callback para atualizar o informativo de caminhões
 @dash.callback(
     Output("truck-info", "children"),
     Input("store-producao", "data"),
@@ -763,7 +738,7 @@ def update_table(df_producao_records, operacao_filter):
     Input("operacao-filter", "value")
 )
 def update_truck_info(df_producao_records, df_hora_records, operacao_filter):
-    period_start, period_end = get_search_period()
+    period_start, period_end = get_current_shift_period()
     df_prod_period = pd.DataFrame(df_producao_records or [])
     df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
 

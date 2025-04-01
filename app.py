@@ -146,9 +146,9 @@ home_layout = dbc.Container(
                     #width=12, md=3
                 #),
                 #dbc.Col(
-                   # create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
+                    #create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
                     #width=12, md=3
-              #  ),
+                #),
                 dbc.Col(
                     create_card("/assets/mining4.jpg", "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"),
                     width=12, md=3
