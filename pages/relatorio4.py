@@ -1,4 +1,4 @@
-import math 
+import math  
 import logging
 from datetime import datetime, timedelta
 
@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 import dash_table
 import plotly.express as px
 import pandas as pd
+import numpy as np  # Importação para operações vetorizadas
 from dash.dash_table.Format import Format, Scheme
 from dash.dash_table import FormatTemplate
 from pandas.api.types import CategoricalDtype
@@ -59,7 +60,7 @@ def consulta_producao(dia_str):
     if df["dt_registro_turno"].dt.tz is None:
         df["dt_registro_turno"] = df["dt_registro_turno"].dt.tz_localize(TIMEZONE)
     filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").replace(tzinfo=TIMEZONE).date()
-    df = df[df["dt_registro_turno"].dt.date == filtro_data]
+    df = df.loc[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
 def consulta_hora(dia_str):
@@ -76,7 +77,7 @@ def consulta_hora(dia_str):
     if df["dt_registro_turno"].dt.tz is None:
         df["dt_registro_turno"] = df["dt_registro_turno"].dt.tz_localize(TIMEZONE)
     filtro_data = datetime.strptime(dia_str, "%d/%m/%Y").replace(tzinfo=TIMEZONE).date()
-    df = df[df["dt_registro_turno"].dt.date == filtro_data]
+    df = df.loc[df["dt_registro_turno"].dt.date == filtro_data]
     return df
 
 def calcular_horas_desde_7h(day_choice):
@@ -98,87 +99,89 @@ def calc_indicadores_agrupados_por_modelo(df, modelos_lista):
     """
     Agrupa os dados (do fato_hora) por modelo, calculando Disponibilidade, Utilização e Rendimento.
     Retorna (data, columns, style_data_conditional) para o DataTable.
+    Esta versão utiliza operações vetorizadas para performance.
     """
     needed_cols = {"nome_modelo", "nome_tipo_estado", "tempo_hora"}
     if not needed_cols.issubset(df.columns):
         return [], [], []
-    df_f = df[df["nome_modelo"].isin(modelos_lista)].copy()
+    df_f = df.loc[df["nome_modelo"].isin(modelos_lista)].copy()
     if df_f.empty:
         return [], [], []
     df_f["tempo_hora"] = pd.to_numeric(df_f["tempo_hora"], errors="coerce").fillna(0)
+    
+    grp_total = df_f.groupby("nome_modelo", as_index=False)["tempo_hora"].sum().rename(columns={"tempo_hora": "total"})
+    grp_fora = df_f[df_f["nome_tipo_estado"]=="Fora de Frota"].groupby("nome_modelo", as_index=False)["tempo_hora"].sum().rename(columns={"tempo_hora": "fora"})
+    grp_manut = df_f[df_f["nome_tipo_estado"].isin(["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"])].groupby("nome_modelo", as_index=False)["tempo_hora"].sum().rename(columns={"tempo_hora": "manut"})
+    grp_trab = df_f[df_f["nome_tipo_estado"].isin(["Operando", "Serviço Auxiliar", "Atraso Operacional"])].groupby("nome_modelo", as_index=False)["tempo_hora"].sum().rename(columns={"tempo_hora": "trab"})
+    
+    df_ind = pd.merge(grp_total, grp_fora, on="nome_modelo", how="left").fillna(0)
+    df_ind = pd.merge(df_ind, grp_manut, on="nome_modelo", how="left").fillna(0)
+    df_ind = pd.merge(df_ind, grp_trab, on="nome_modelo", how="left").fillna(0)
+    
+    df_ind["cal"] = df_ind["total"] - df_ind["fora"]
+    df_ind["disp"] = df_ind["cal"] - df_ind["manut"]
+    df_ind["disponibilidade"] = np.where(df_ind["cal"] > 0, 100 * df_ind["disp"] / df_ind["cal"], 0)
+    df_ind["utilizacao"] = np.where(df_ind["disp"] > 0, 100 * df_ind["trab"] / df_ind["disp"], 0)
+    df_ind["rendimento"] = df_ind["disponibilidade"] * df_ind["utilizacao"] / 100.0
 
-    def calc_indicadores(subdf):
-        horas_totais = subdf["tempo_hora"].sum()
-        horas_fora = subdf.loc[subdf["nome_tipo_estado"] == "Fora de Frota", "tempo_hora"].sum()
-        horas_cal = horas_totais - horas_fora
-        horas_manut = subdf.loc[subdf["nome_tipo_estado"].isin(
-            ["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"]
-        ), "tempo_hora"].sum()
-        horas_disp = horas_cal - horas_manut
-        horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin(
-            ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
-        ), "tempo_hora"].sum()
-        disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
-        util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
-        rend = (disp * util) / 100.0
-        return disp, util, rend
+    df_ind = df_ind[["nome_modelo", "disponibilidade", "utilizacao", "rendimento"]]
+    
+    # Cálculo global utilizando todos os dados
+    total_total = df_f["tempo_hora"].sum()
+    total_fora = df_f.loc[df_f["nome_tipo_estado"]=="Fora de Frota", "tempo_hora"].sum()
+    total_manut = df_f.loc[df_f["nome_tipo_estado"].isin(["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"]), "tempo_hora"].sum()
+    total_trab = df_f.loc[df_f["nome_tipo_estado"].isin(["Operando", "Serviço Auxiliar", "Atraso Operacional"]), "tempo_hora"].sum()
+    total_cal = total_total - total_fora
+    total_disp = total_cal - total_manut
+    overall_disp = (100 * total_disp / total_cal) if total_cal > 0 else 0
+    overall_util = (100 * total_trab / total_disp) if total_disp > 0 else 0
+    overall_rend = overall_disp * overall_util / 100.0
 
-    rows = []
-    for modelo, df_grp in df_f.groupby("nome_modelo"):
-        disp, util, rend = calc_indicadores(df_grp)
-        rows.append({
-            "nome_modelo": modelo,
-            "disponibilidade": disp,
-            "utilizacao": util,
-            "rendimento": rend
-        })
-    disp_all, util_all, rend_all = calc_indicadores(df_f)
     total_row = pd.DataFrame([{
-        "nome_modelo": "TOTAL",
-        "disponibilidade": disp_all,
-        "utilizacao": util_all,
-        "rendimento": rend_all
+         "nome_modelo": "TOTAL",
+         "disponibilidade": overall_disp,
+         "utilizacao": overall_util,
+         "rendimento": overall_rend
     }])
-    df_ind = pd.concat([pd.DataFrame(rows), total_row], ignore_index=True)
+    df_ind = pd.concat([df_ind, total_row], ignore_index=True)
     data = df_ind.to_dict("records")
     columns = [
-        {"name": "Modelo", "id": "nome_modelo", "type": "text"},
-        {"name": "Disponibilidade (%)", "id": "disponibilidade", "type": "numeric", "format": num_format},
-        {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
-        {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format},
+       {"name": "Modelo", "id": "nome_modelo", "type": "text"},
+       {"name": "Disponibilidade (%)", "id": "disponibilidade", "type": "numeric", "format": num_format},
+       {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
+       {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format},
     ]
     style_cond = [
-        {"if": {"filter_query": "{disponibilidade} >= 80", "column_id": "disponibilidade"}, "color": "green"},
-        {"if": {"filter_query": "{disponibilidade} < 80", "column_id": "disponibilidade"}, "color": "red"},
-        {"if": {"filter_query": "{utilizacao} >= 75", "column_id": "utilizacao"}, "color": "green"},
-        {"if": {"filter_query": "{utilizacao} < 75", "column_id": "utilizacao"}, "color": "red"},
-        {"if": {"filter_query": "{rendimento} >= 60", "column_id": "rendimento"}, "color": "green"},
-        {"if": {"filter_query": "{rendimento} < 60", "column_id": "rendimento"}, "color": "red"},
-        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+       {"if": {"filter_query": "{disponibilidade} >= 80", "column_id": "disponibilidade"}, "color": "green"},
+       {"if": {"filter_query": "{disponibilidade} < 80", "column_id": "disponibilidade"}, "color": "red"},
+       {"if": {"filter_query": "{utilizacao} >= 75", "column_id": "utilizacao"}, "color": "green"},
+       {"if": {"filter_query": "{utilizacao} < 75", "column_id": "utilizacao"}, "color": "red"},
+       {"if": {"filter_query": "{rendimento} >= 60", "column_id": "rendimento"}, "color": "green"},
+       {"if": {"filter_query": "{rendimento} < 60", "column_id": "rendimento"}, "color": "red"},
+       {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
     ]
     return data, columns, style_cond
 
 # ===================== LAYOUT =====================
 layout = dbc.Container(
     [
-        dbc.Row(
+        dbc.Row([
             dbc.Col(
-                html.H1(
-                    "Produção e Indicadores",
-                    className="text-center my-4 text-primary",
-                    style={"fontFamily": "Arial, sans-serif"}
-                ),
-                width=12
+                html.H1("Produção e Indicadores", className="text-center text-primary", 
+                        style={"fontFamily": "Arial, sans-serif"}),
+                xs=12, md=10
+            ),
+            dbc.Col(
+                dbc.Button("Voltar ao Portal", href="/", color="secondary", className="w-100"),
+                xs=12, md=2
             )
-        ),
+        ], className="my-4"),
         dbc.Row(
             dbc.Col(
                 html.Div(
                     [
-                        html.P(
-                            "Escolha se deseja visualizar o dia atual ou o dia anterior.",
-                            style={"fontFamily": "Arial, sans-serif"}
-                        ),
+                        html.P("Escolha se deseja visualizar o dia atual ou o dia anterior.",
+                               style={"fontFamily": "Arial, sans-serif"}),
                         dbc.RadioItems(
                             id="rel4-day-selector",
                             className="btn-group",
@@ -199,7 +202,7 @@ layout = dbc.Container(
             ),
             className="mb-4"
         ),
-        # Stores para armazenar dados de produção e hora
+        # Stores para dados de produção e hora
         dcc.Store(id="rel4-producao-store"),
         dcc.Store(id="rel4-hora-store"),
         # 1) Tabela de Movimentação
@@ -208,11 +211,8 @@ layout = dbc.Container(
                 dbc.Card(
                     [
                         dbc.CardHeader(
-                            html.H5(
-                                "Movimentação (Dia Atual ou Dia Anterior)",
-                                className="mb-0",
-                                style={"fontFamily": "Arial, sans-serif"}
-                            ),
+                            html.H5("Movimentação (Dia Atual ou Dia Anterior)", className="mb-0",
+                                    style={"fontFamily": "Arial, sans-serif"}),
                             className="bg-light"
                         ),
                         dbc.CardBody(
@@ -255,10 +255,7 @@ layout = dbc.Container(
                 dbc.Card(
                     [
                         dbc.CardHeader(
-                            html.H5(
-                                "Viagens por Hora Trabalhada (Dia Atual ou Dia Anterior)",
-                                style={"fontFamily": "Arial, sans-serif"}
-                            ),
+                            html.H5("Viagens por Hora Trabalhada", style={"fontFamily": "Arial, sans-serif"}),
                             className="bg-light"
                         ),
                         dbc.CardBody(
@@ -284,11 +281,7 @@ layout = dbc.Container(
             dbc.Col(
                 dbc.Card([
                     dbc.CardHeader(
-                        html.H5(
-                            "Indicadores - Escavação",
-                            className="mb-0",
-                            style={"fontFamily": "Arial, sans-serif"}
-                        ),
+                        html.H5("Indicadores - Escavação", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
                         className="bg-light"
                     ),
                     dbc.CardBody(
@@ -318,11 +311,7 @@ layout = dbc.Container(
             dbc.Col(
                 dbc.Card([
                     dbc.CardHeader(
-                        html.H5(
-                            "Indicadores - Transporte",
-                            className="mb-0",
-                            style={"fontFamily": "Arial, sans-serif"}
-                        ),
+                        html.H5("Indicadores - Transporte", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
                         className="bg-light"
                     ),
                     dbc.CardBody(
@@ -352,11 +341,7 @@ layout = dbc.Container(
             dbc.Col(
                 dbc.Card([
                     dbc.CardHeader(
-                        html.H5(
-                            "Indicadores - Perfuração",
-                            className="mb-0",
-                            style={"fontFamily": "Arial, sans-serif"}
-                        ),
+                        html.H5("Indicadores - Perfuração", className="mb-0", style={"fontFamily": "Arial, sans-serif"}),
                         className="bg-light"
                     ),
                     dbc.CardBody(
@@ -392,7 +377,7 @@ layout = dbc.Container(
                     className="btn btn-secondary",
                     style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
                 ),
-                width=12,
+                xs=12,
                 className="text-center my-4"
             )
         )
@@ -431,7 +416,7 @@ def update_tabela_movimentacao(json_prod, day_choice):
     df = pd.read_json(json_prod, orient="records")
     if df.empty:
         return [], []
-    df = df[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
+    df = df.loc[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df.empty:
         return [], []
     df_grp = df.groupby("nome_operacao", as_index=False).agg(
@@ -479,14 +464,14 @@ def update_grafico_viagens_hora(json_prod, json_hora):
     df_hora = pd.read_json(json_hora, orient="records")
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-    df_prod = df_prod[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
+    df_prod = df_prod.loc[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
     if df_prod.empty:
         return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
         viagens=("nome_equipamento_utilizado", "count")
     )
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
-    df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
+    df_hora_filtrada = df_hora.loc[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
@@ -498,10 +483,8 @@ def update_grafico_viagens_hora(json_prod, json_hora):
     )
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar Viagens/Hora.", template="plotly_white")
-    df_merged["viagens_por_hora"] = df_merged.apply(
-        lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
-        axis=1
-    )
+    df_merged["viagens_por_hora"] = df_merged["viagens"] / df_merged["horas_trabalhadas"].replace(0, np.nan)
+    df_merged["viagens_por_hora"] = df_merged["viagens_por_hora"].fillna(0)
     df_merged.sort_values("viagens_por_hora", inplace=True)
     fig = px.bar(
         df_merged,

@@ -51,45 +51,38 @@ def get_fato_hora(start_dt, end_dt):
 def compute_segments(df, end_dt):
     """
     Divide os registros de cada equipamento em segmentos contínuos onde o estado e
-    o tipo de estado permanecem inalterados. Para o último registro, o segmento vai até end_dt.
+    o tipo de estado permanecem inalterados. Para o último segmento, o período vai até end_dt.
     Acrescenta a coluna 'duration' (em minutos) para cada segmento.
+
+    Versão otimizada utilizando operações vetorizadas.
     """
-    segments = []
-    for equip, group in df.groupby("nome_equipamento"):
-        group = group.sort_values("dt_registro")
-        current_state = None
-        current_tipo = None
-        start_time = None
-        for _, row in group.iterrows():
-            if current_state is None:
-                current_state = row["nome_estado"]
-                current_tipo = row["nome_tipo_estado"]
-                start_time = row["dt_registro"]
-            elif row["nome_estado"] != current_state:
-                end_time = row["dt_registro"]
-                duration = (end_time - start_time).total_seconds() / 60.0
-                segments.append({
-                    "nome_equipamento": equip,
-                    "nome_estado": current_state,
-                    "nome_tipo_estado": current_tipo,
-                    "start": start_time,
-                    "end": end_time,
-                    "duration": round(duration, 1)
-                })
-                current_state = row["nome_estado"]
-                current_tipo = row["nome_tipo_estado"]
-                start_time = row["dt_registro"]
-        # Para o último segmento, a data final é end_dt (que para "hoje" é a hora atual)
-        duration = (end_dt - start_time).total_seconds() / 60.0
-        segments.append({
-            "nome_equipamento": equip,
-            "nome_estado": current_state,
-            "nome_tipo_estado": current_tipo,
-            "start": start_time,
-            "end": end_dt,
-            "duration": round(duration, 1)
-        })
-    return pd.DataFrame(segments)
+    # Ordena os dados por equipamento e tempo de registro
+    df = df.sort_values(["nome_equipamento", "dt_registro"]).copy()
+    
+    # Identifica onde há mudança de estado ou tipo de estado para cada equipamento
+    df["segment_change"] = (
+        (df.groupby("nome_equipamento")["nome_estado"].shift() != df["nome_estado"]) |
+        (df.groupby("nome_equipamento")["nome_tipo_estado"].shift() != df["nome_tipo_estado"])
+    )
+    # Cria um identificador incremental de segmento para cada equipamento
+    df["segment_id"] = df.groupby("nome_equipamento")["segment_change"].cumsum()
+    
+    # Agrega os dados de cada segmento: pega o primeiro estado, tipo e horário do segmento
+    segments = df.groupby(["nome_equipamento", "segment_id"], as_index=False).agg(
+        nome_estado=("nome_estado", "first"),
+        nome_tipo_estado=("nome_tipo_estado", "first"),
+        start=("dt_registro", "first")
+    )
+    
+    # Para cada equipamento, o final de um segmento é o início do próximo;
+    # para o último segmento, utiliza-se end_dt
+    segments["end"] = segments.groupby("nome_equipamento")["start"].shift(-1)
+    segments["end"] = segments["end"].fillna(end_dt)
+    
+    # Calcula a duração do segmento em minutos, arredondada para uma casa decimal
+    segments["duration"] = ((segments["end"] - segments["start"]).dt.total_seconds() / 60.0).round(1)
+    
+    return segments[["nome_equipamento", "nome_estado", "nome_tipo_estado", "start", "end", "duration"]]
 
 def create_timeline_graph(selected_day, equipment_filter=None):
     """
@@ -112,7 +105,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
         title = "Timeline de Apontamentos"
-    
+
     df = get_fato_hora(day_start, day_end)
     if df.empty:
         fig = px.timeline(title=title)
@@ -121,33 +114,33 @@ def create_timeline_graph(selected_day, equipment_filter=None):
 
     df = df[(df["dt_registro_turno"] >= pd.Timestamp(day_start)) &
             (df["dt_registro_turno"] < pd.Timestamp(day_end))]
-    
+
     # Padroniza os textos e converte para uppercase onde necessário
     df["nome_modelo"] = df["nome_modelo"].astype(str).str.strip()
     df["nome_equipamento"] = df["nome_equipamento"].astype(str).str.strip()
     df["nome_tipo_estado"] = df["nome_tipo_estado"].astype(str).str.strip().str.upper()
-    
+
     # Filtra os modelos permitidos e remove registros indesejados
     df = df[df["nome_modelo"].isin(ALLOWED_MODELS)]
     df = df[df["nome_equipamento"].str.upper() != "TRIMAK"]
-    
+
     if equipment_filter:
         df = df[df["nome_equipamento"].isin(equipment_filter)]
-    
+
     if df.empty:
         fig = px.timeline(title=title)
         fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
         return fig
-    
+
     seg_df = compute_segments(df, day_end)
-    
+
     # Cria colunas formatadas para tooltip
     seg_df["start_str"] = seg_df["start"].dt.strftime("%H:%M:%S")
     seg_df["end_str"] = seg_df["end"].dt.strftime("%H:%M:%S")
-    
+
     all_equips = sorted(df["nome_equipamento"].unique())
     dynamic_height = max(600, len(all_equips) * 60 + 150)
-    
+
     fig = px.timeline(
         seg_df,
         x_start="start",
@@ -158,7 +151,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         title=title,
         custom_data=["nome_estado", "duration", "start_str", "end_str"]
     )
-    
+
     fig.update_traces(
         hovertemplate=(
             "<b>Equipamento:</b> %{y}<br>" +
@@ -179,7 +172,7 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         gridwidth=1,
         gridcolor="lightgray"
     )
-    
+
     fig.update_layout(
         xaxis_title="Hora",
         yaxis_title="Equipamento",

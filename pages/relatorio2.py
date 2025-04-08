@@ -1,4 +1,4 @@
-import json
+import json  
 from datetime import datetime, timedelta
 
 import dash
@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable, FormatTemplate
 import plotly.express as px
 import pandas as pd
+import numpy as np
 from dash.dash_table.Format import Format, Scheme
 
 # Import da função para consultar o banco e das variáveis de meta
@@ -19,9 +20,9 @@ num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 # ==================== FUNÇÕES AUXILIARES ====================
 
 def convert_date_columns(df, date_cols):
-    """Converte as colunas de data do DataFrame para datetime."""
+    """Converte as colunas de data do DataFrame para datetime, se ainda não estiverem convertidas."""
     for col in date_cols:
-        if col in df.columns:
+        if col in df.columns and not np.issubdtype(df[col].dtype, np.datetime64):
             df[col] = pd.to_datetime(df[col], errors="coerce")
     return df
 
@@ -29,7 +30,8 @@ def filter_by_date(df, date_col, start_date, end_date):
     """Filtra o DataFrame pela coluna de data entre start_date e end_date."""
     if date_col in df.columns:
         df = df.dropna(subset=[date_col])
-        df = df[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
+        # Usa .loc para melhorar a performance do filtro
+        df = df.loc[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
     return df
 
 def group_movimentacao(df, group_col):
@@ -52,18 +54,31 @@ def format_total_row(df_group, group_col):
     return pd.concat([df_group, total], ignore_index=True)
 
 # ==================== LAYOUT ====================
+
+# Cabeçalho personalizado: título e botão de voltar ao portal
+header = dbc.Row(
+    [
+        dbc.Col(
+            html.H1(
+                "Informativo de Produção",
+                className="text-center my-4 text-primary",
+                style={"fontFamily": "Arial, sans-serif", "fontSize": "28px"}
+            ),
+            xs=10
+        ),
+        dbc.Col(
+            dbc.Button("Voltar ao Portal", href="/", color="secondary", className="mt-4"),
+            xs=2,
+            style={"textAlign": "right"}
+        )
+    ],
+    align="center",
+    className="mb-4"
+)
+
 layout = dbc.Container(
     [
-        dbc.Row(
-            dbc.Col(
-                html.H1(
-                    "Informativo de Produção",
-                    className="text-center my-4 text-primary",
-                    style={"fontFamily": "Arial, sans-serif"}
-                ),
-                width=12
-            )
-        ),
+        header,
         # Subtítulo ou breve descrição
         dbc.Row(
             dbc.Col(
@@ -405,15 +420,6 @@ layout = dbc.Container(
                 )
             ],
             className="mt-4"
-        ),
-        html.Hr(),
-        # Link de Navegação
-        dbc.Row(
-            dbc.Col(
-                dcc.Link("Voltar para o Portal", href="/", className="btn btn-secondary"),
-                xs=12,
-                className="text-center my-4"
-            )
         )
     ],
     fluid=True
@@ -476,7 +482,7 @@ def apply_filter(n_clicks, start_date, end_date):
     Input("data-store", "data")
 )
 def update_operacoes_options(json_data):
-    if not json_data or isinstance(json_data, dict):
+    if not json_data:
         return []
     df = pd.read_json(json_data, orient="records")
     if df.empty:
@@ -508,15 +514,15 @@ def update_tables(json_data, operacoes_selecionadas, start_date, end_date):
     if df.empty or "dt_registro_turno" not in df.columns:
         return [], [], [], [], [], []
 
-    df = convert_date_columns(df, ["dt_registro_turno"])
-    df = df.dropna(subset=["dt_registro_turno"])
+    df = convert_date_columns(df, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
     if operacoes_selecionadas:
-        df = df[df["nome_operacao"].isin(operacoes_selecionadas)]
+        df = df.loc[df["nome_operacao"].isin(operacoes_selecionadas)]
     if df.empty:
         return [], [], [], [], [], []
 
+    # Otimização: calcula apenas uma vez a data máxima
     ultimo_dia = df["dt_registro_turno"].dt.date.max()
-    df_last_day = df[df["dt_registro_turno"].dt.date == ultimo_dia]
+    df_last_day = df.loc[df["dt_registro_turno"].dt.date == ultimo_dia]
     df_t1 = group_movimentacao(df_last_day, "nome_operacao")
     df_t1 = format_total_row(df_t1, "nome_operacao")
 
@@ -595,18 +601,18 @@ def update_graphs(json_data, operacoes_selecionadas):
         fig_empty = px.bar(title="Sem dados no período.", template="plotly_white")
         return fig_empty, fig_empty
 
-    df = convert_date_columns(df, ["dt_registro_turno"])
-    df = df.dropna(subset=["dt_registro_turno"])
+    df = convert_date_columns(df, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
     if operacoes_selecionadas:
-        df = df[df["nome_operacao"].isin(operacoes_selecionadas)]
+        df = df.loc[df["nome_operacao"].isin(operacoes_selecionadas)]
     if df.empty:
         fig_empty = px.bar(title="Sem dados para esse filtro.", template="plotly_white")
         return fig_empty, fig_empty
 
+    # Cria coluna 'dia' somente uma vez
     df["dia"] = df["dt_registro_turno"].dt.date
     df_grouped = df.groupby("dia", as_index=False).agg(volume=("volume", "sum"), massa=("massa", "sum")).sort_values("dia")
     meta_total = META_MINERIO + META_ESTERIL
-    df_grouped["bar_color"] = df_grouped["volume"].apply(lambda x: "rgb(149,211,36)" if x >= meta_total else "red")
+    df_grouped["bar_color"] = np.where(df_grouped["volume"] >= meta_total, "rgb(149,211,36)", "red")
 
     # Gráfico de Volume
     fig_volume = px.bar(
@@ -684,17 +690,15 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
-    df_prod = convert_date_columns(df_prod, ["dt_registro_turno"])
-    df_prod = df_prod.dropna(subset=["dt_registro_turno"])
-    df_hora = convert_date_columns(df_hora, ["dt_registro_turno"])
-    df_hora = df_hora.dropna(subset=["dt_registro_turno"])
+    df_prod = convert_date_columns(df_prod, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
+    df_hora = convert_date_columns(df_hora, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
 
     filtro_dia = datetime.fromisoformat(end_date).date()
-    df_prod = df_prod[df_prod["dt_registro_turno"].dt.date == filtro_dia]
-    df_hora = df_hora[df_hora["dt_registro_turno"].dt.date == filtro_dia]
+    df_prod = df_prod.loc[df_prod["dt_registro_turno"].dt.date == filtro_dia]
+    df_hora = df_hora.loc[df_hora["dt_registro_turno"].dt.date == filtro_dia]
 
     if operacoes_selecionadas:
-        df_prod = df_prod[df_prod["nome_operacao"].isin(operacoes_selecionadas)]
+        df_prod = df_prod.loc[df_prod["nome_operacao"].isin(operacoes_selecionadas)]
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
@@ -702,7 +706,7 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
         viagens=("nome_operacao", "count")
     )
     estados_trabalho = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
-    df_hora_filtrada = df_hora[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
+    df_hora_filtrada = df_hora.loc[df_hora["nome_tipo_estado"].isin(estados_trabalho)]
     df_horas = df_hora_filtrada.groupby("nome_equipamento", as_index=False).agg(
         horas_trabalhadas=("tempo_hora", "sum")
     )
@@ -715,10 +719,10 @@ def update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_seleci
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
-    df_merged["viagens_por_hora"] = df_merged.apply(
-        lambda row: row["viagens"] / row["horas_trabalhadas"] if row["horas_trabalhadas"] > 0 else 0,
-        axis=1
-    )
+    # Evita divisão por zero substituindo horas 0 por NaN
+    df_merged["viagens_por_hora"] = df_merged["horas_trabalhadas"].replace(0, np.nan)
+    df_merged["viagens_por_hora"] = df_merged["viagens"] / df_merged["viagens_por_hora"]
+    df_merged["viagens_por_hora"] = df_merged["viagens_por_hora"].fillna(0)
     df_merged.sort_values("viagens_por_hora", inplace=True)
     fig = px.bar(
         df_merged,
@@ -777,77 +781,75 @@ def update_tabelas_indicadores(json_data_hora, lista_modelos, end_date):
 
     df_h = convert_date_columns(df_h, ["dt_registro_turno"])
     if lista_modelos:
-        df_h = df_h[df_h["nome_modelo"].isin(lista_modelos)]
+        df_h = df_h.loc[df_h["nome_modelo"].isin(lista_modelos)]
         if df_h.empty:
             return [], [], [], [], [], []
 
     df_h["tempo_hora"] = pd.to_numeric(df_h["tempo_hora"], errors="coerce").fillna(0)
 
-    def calc_indicadores(subdf):
-        horas_totais = subdf["tempo_hora"].sum()
-        horas_fora = subdf.loc[subdf["nome_tipo_estado"] == "Fora de Frota", "tempo_hora"].sum()
-        horas_cal = horas_totais - horas_fora
-        horas_manut = subdf.loc[subdf["nome_tipo_estado"].isin([
-            "Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"
-        ]), "tempo_hora"].sum()
-        horas_disp = horas_cal - horas_manut
-        horas_trab = subdf.loc[subdf["nome_tipo_estado"].isin([
-            "Operando", "Serviço Auxiliar", "Atraso Operacional"
-        ]), "tempo_hora"].sum()
+    maintenance_states = ["Manutenção Preventiva", "Manutenção Corretiva", "Manutenção Operacional"]
+    working_states = ["Operando", "Serviço Auxiliar", "Atraso Operacional"]
 
-        disp = (horas_disp / horas_cal * 100) if horas_cal > 0 else 0.0
-        util = (horas_trab / horas_disp * 100) if horas_disp > 0 else 0.0
-        rend = (disp * util) / 100.0
-        return disp, util, rend
+    df_h["horas_totais"] = df_h["tempo_hora"]
+    df_h["horas_fora"] = np.where(df_h["nome_tipo_estado"] == "Fora de Frota", df_h["tempo_hora"], 0)
+    df_h["horas_manut"] = np.where(df_h["nome_tipo_estado"].isin(maintenance_states), df_h["tempo_hora"], 0)
+    df_h["horas_trab"] = np.where(df_h["nome_tipo_estado"].isin(working_states), df_h["tempo_hora"], 0)
+
+    def calc_indicators(df_subset):
+        grp = df_subset.groupby("nome_tipo_equipamento").agg(
+            total_totais=('horas_totais', 'sum'),
+            total_fora=('horas_fora', 'sum'),
+            total_manut=('horas_manut', 'sum'),
+            total_trab=('horas_trab', 'sum')
+        ).reset_index()
+        grp["horas_cal"] = grp["total_totais"] - grp["total_fora"]
+        grp["horas_disp"] = grp["horas_cal"] - grp["total_manut"]
+        grp["disponibilidade"] = np.where(grp["horas_cal"] > 0, 100 * grp["horas_disp"] / grp["horas_cal"], 0)
+        grp["utilizacao"] = np.where(grp["horas_disp"] > 0, 100 * grp["total_trab"] / grp["horas_disp"], 0)
+        grp["rendimento"] = grp["disponibilidade"] * grp["utilizacao"] / 100
+        return grp[["nome_tipo_equipamento", "disponibilidade", "utilizacao", "rendimento"]]
 
     if end_date:
         filtro_dia = datetime.fromisoformat(end_date).date()
-        df_last = df_h[df_h["dt_registro_turno"].dt.date == filtro_dia]
+        df_last = df_h.loc[df_h["dt_registro_turno"].dt.date == filtro_dia]
     else:
         df_last = df_h.copy()
-
-    rows_t1 = []
-    for equip, df_grp in df_last.groupby("nome_tipo_equipamento"):
-        disp, util, rend = calc_indicadores(df_grp)
-        rows_t1.append({
-            "nome_tipo_equipamento": equip,
-            "disponibilidade": disp,
-            "utilizacao": util,
-            "rendimento": rend
-        })
-    df_t1 = pd.DataFrame(rows_t1)
+    grp_last = calc_indicators(df_last)
     if not df_last.empty:
-        disp, util, rend = calc_indicadores(df_last)
-        total_1 = pd.DataFrame([{
+        tot = calc_indicators(df_last).agg({
+            "disponibilidade": "mean",
+            "utilizacao": "mean",
+            "rendimento": "mean"
+        }).to_dict()
+        total_last = pd.DataFrame([{
             "nome_tipo_equipamento": "TOTAL",
-            "disponibilidade": disp,
-            "utilizacao": util,
-            "rendimento": rend
+            "disponibilidade": tot["disponibilidade"],
+            "utilizacao": tot["utilizacao"],
+            "rendimento": tot["rendimento"]
         }])
-        df_t1 = pd.concat([df_t1, total_1], ignore_index=True)
+        df_ind_ultimo = pd.concat([grp_last, total_last], ignore_index=True)
+    else:
+        df_ind_ultimo = pd.DataFrame()
 
-    rows_t2 = []
-    for equip, df_grp in df_h.groupby("nome_tipo_equipamento"):
-        disp, util, rend = calc_indicadores(df_grp)
-        rows_t2.append({
-            "nome_tipo_equipamento": equip,
-            "disponibilidade": disp,
-            "utilizacao": util,
-            "rendimento": rend
-        })
-    df_t2 = pd.DataFrame(rows_t2)
+    grp_acum = calc_indicators(df_h)
     if not df_h.empty:
-        disp, util, rend = calc_indicadores(df_h)
-        total_2 = pd.DataFrame([{
+        tot_acum = calc_indicators(df_h).agg({
+            "disponibilidade": "mean",
+            "utilizacao": "mean",
+            "rendimento": "mean"
+        }).to_dict()
+        total_acum = pd.DataFrame([{
             "nome_tipo_equipamento": "TOTAL",
-            "disponibilidade": disp,
-            "utilizacao": util,
-            "rendimento": rend
+            "disponibilidade": tot_acum["disponibilidade"],
+            "utilizacao": tot_acum["utilizacao"],
+            "rendimento": tot_acum["rendimento"]
         }])
-        df_t2 = pd.concat([df_t2, total_2], ignore_index=True)
+        df_ind_acum = pd.concat([grp_acum, total_acum], ignore_index=True)
+    else:
+        df_ind_acum = pd.DataFrame()
 
-    data_t1 = df_t1.to_dict("records")
-    data_t2 = df_t2.to_dict("records")
+    data_t1 = df_ind_ultimo.to_dict("records")
+    data_t2 = df_ind_acum.to_dict("records")
     columns_ind = [
         {"name": "Tipo Equipamento", "id": "nome_tipo_equipamento", "type": "text"},
         {"name": "Disponibilidade (%)", "id": "disponibilidade", "type": "numeric", "format": num_format},

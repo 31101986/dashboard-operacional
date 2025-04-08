@@ -10,3 +10,7 @@
 
 2025-03-21 09:49:15,102 - INFO - Iniciando a aplicação Dash...
 2025-03-21 09:49:15,110 - INFO - Executando o servidor no modo debug...
+2025-04-05 07:25:06,055 - INFO - Navigating to /relatorio1
+2025-04-05 07:25:08,586 - INFO - Navigating to /relatorio3
+2025-04-05 07:26:55,959 - INFO - Navigating to /relatorio2
+2025-04-05 07:26:55,962 - INFO - Lazy\u2011loading module pages.relatorio2

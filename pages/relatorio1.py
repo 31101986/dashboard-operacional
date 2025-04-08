@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 import dash_table
 import plotly.express as px
 import pandas as pd
+import numpy as np  # Para operações vetorizadas
 
 # Importa o fuso horário definido em config.py
 from config import TIMEZONE
@@ -38,14 +39,9 @@ def get_current_shift_period():
     considerando o fuso horário definido em TIMEZONE.
     """
     now = datetime.now(TIMEZONE)
-    # Define a base como hoje às 07:00 (tz-aware)
     shift_start = now.replace(hour=7, minute=0, second=0, microsecond=0)
-
-    # Se ainda não chegamos às 07:00 de hoje, significa que o turno começou ontem às 07:00
     if now.hour < 7:
         shift_start -= timedelta(days=1)
-
-    # Fim do turno: 24 horas após o início
     shift_end = shift_start + timedelta(days=1)
     return shift_start, shift_end
 
@@ -114,22 +110,16 @@ def common_map_layout(center_lat, center_lon):
 def localize_column_tz(df, col_name):
     """
     Converte a coluna 'col_name' de df para datetime (se ainda não for)
-    e, se estiver tz-naive, localiza no TIMEZONE; caso já tenha timezone,
-    converte para TIMEZONE.
+    e, se estiver tz-naive, localiza no TIMEZONE; se já tiver timezone diferente,
+    converte para TIMEZONE. Se já estiver no TIMEZONE, retorna sem alterações.
     """
     if col_name not in df.columns:
         return df
-    
-    # 1. Converte para datetime
     df[col_name] = pd.to_datetime(df[col_name], errors="coerce")
-    
-    # 2. Se estiver completamente sem timezone, localize no TIMEZONE
-    # (Verificando se "dt.tz" é None)
     sample_tz = df[col_name].dt.tz
     if sample_tz is None:
         df[col_name] = df[col_name].dt.tz_localize(TIMEZONE)
-    else:
-        # Caso já tenha timezone, converta para o TIMEZONE local
+    elif sample_tz != TIMEZONE:
         df[col_name] = df[col_name].dt.tz_convert(TIMEZONE)
     return df
 
@@ -146,13 +136,9 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, d
         df = execute_query(query)
     if df.empty:
         return df
-
-    # Convertemos a coluna dt_registro_fim para tz-aware antes de comparar
     if "dt_registro_fim" in df.columns:
         df = localize_column_tz(df, "dt_registro_fim")
-        # Filtra pelo turno
         df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
-    
     if operacao_filter and "nome_operacao" in df.columns:
         df = df[df["nome_operacao"].isin(operacao_filter)]
     return df
@@ -170,20 +156,18 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
         df = execute_query(query)
     if df.empty:
         return df
-
     if "dt_registro_turno" in df.columns:
         df = localize_column_tz(df, "dt_registro_turno")
         df = df[(df["dt_registro_turno"] >= period_start) & (df["dt_registro_turno"] < period_end)]
-
     if "nome_estado" in df.columns:
         df = df[df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])]
-
     return df
 
 def compute_truck_stats(df_prod_period, df_hora):
     """
     Calcula estatísticas de ciclo e estima os caminhões necessários.
-    Caso 'tempo_ciclo_minuto' seja superior a 120, considera o valor 60.
+    Se 'tempo_ciclo_minuto' for superior a 60, é considerado o valor 45.
+    Essa função utiliza operações vetorizadas para melhorar a performance.
     """
     if df_prod_period.empty:
         cols = ["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"]
@@ -191,13 +175,17 @@ def compute_truck_stats(df_prod_period, df_hora):
 
     if "tempo_ciclo_minuto" in df_prod_period.columns:
         df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
-        df_prod_period.loc[df_prod_period["tempo_ciclo_minuto"] > 60, "tempo_ciclo_minuto"] = 45
+        # Utiliza np.where para aplicar a condição de forma vetorizada
+        df_prod_period["tempo_ciclo_minuto"] = np.where(
+            df_prod_period["tempo_ciclo_minuto"] > 60,
+            45,
+            df_prod_period["tempo_ciclo_minuto"]
+        )
 
     prod_grp = df_prod_period.groupby("nome_equipamento_utilizado", as_index=False).agg(
         avg_cycle=("tempo_ciclo_minuto", "mean")
     )
     prod_grp["avg_cycle"] = prod_grp["avg_cycle"].round(2)
-
     base = df_prod_period[["cod_viagem", "nome_equipamento_utilizado"]].drop_duplicates()
 
     if df_hora.empty:
@@ -206,51 +194,63 @@ def compute_truck_stats(df_prod_period, df_hora):
     else:
         cod_list = df_prod_period["cod_viagem"].unique()
         df_join = df_hora[df_hora["cod_viagem"].isin(cod_list)]
-        df_join = pd.merge(base, df_join, on="cod_viagem", how="left")
-
-        def compute_avg(grp, state, default):
-            sub = grp[grp["nome_estado"] == state]
-            if not sub.empty:
-                val = sub["tempo_minuto"].mean()
-                if state == "Carregando":
-                    return val if 1 <= val <= 10 else default
-                elif state == "Manobra no Carregamento":
-                    return val if 5/60 <= val <= 5 else default
-            return default
-
-        if not df_join.empty:
-            trip_stats = df_join.groupby("cod_viagem").apply(
-                lambda g: pd.Series({
-                    "avg_carregando": compute_avg(g, "Carregando", 3.5),
-                    "avg_manobra": compute_avg(g, "Manobra no Carregamento", 1)
-                })
-            ).reset_index()
-            trip_stats = trip_stats.merge(base, on="cod_viagem", how="left")
-            op_grp = trip_stats.groupby("nome_equipamento_utilizado", as_index=False).agg(
-                avg_carregando=("avg_carregando", "mean"),
-                avg_manobra=("avg_manobra", "mean")
-            )
-            op_grp["avg_carregando"] = op_grp["avg_carregando"].round(2)
-            op_grp["avg_manobra"] = op_grp["avg_manobra"].round(2)
-        else:
+        if df_join.empty:
             eq_list = base["nome_equipamento_utilizado"].unique()
             op_grp = pd.DataFrame({
                 "nome_equipamento_utilizado": eq_list,
                 "avg_carregando": [3.5] * len(eq_list),
                 "avg_manobra": [1] * len(eq_list)
             })
-
-        prod_grp = pd.merge(prod_grp, op_grp, on="nome_equipamento_utilizado", how="left")
+        else:
+            # Cálculo vetorizado para "Carregando"
+            df_carregando = (
+                df_join[df_join["nome_estado"] == "Carregando"]
+                .groupby("cod_viagem", as_index=False)["tempo_minuto"]
+                .mean()
+                .rename(columns={"tempo_minuto": "avg_carregando"})
+            )
+            if not df_carregando.empty:
+                df_carregando["avg_carregando"] = np.where(
+                    (df_carregando["avg_carregando"] >= 1) & (df_carregando["avg_carregando"] <= 10),
+                    df_carregando["avg_carregando"],
+                    3.5
+                )
+            # Cálculo vetorizado para "Manobra no Carregamento"
+            df_manobra = (
+                df_join[df_join["nome_estado"] == "Manobra no Carregamento"]
+                .groupby("cod_viagem", as_index=False)["tempo_minuto"]
+                .mean()
+                .rename(columns={"tempo_minuto": "avg_manobra"})
+            )
+            if not df_manobra.empty:
+                df_manobra["avg_manobra"] = np.where(
+                    (df_manobra["avg_manobra"] >= 5/60) & (df_manobra["avg_manobra"] <= 5),
+                    df_manobra["avg_manobra"],
+                    1
+                )
+            # Merge dos dados com a base dos códigos de viagem
+            op = base.copy()
+            op = op.merge(df_carregando, on="cod_viagem", how="left")
+            op = op.merge(df_manobra, on="cod_viagem", how="left")
+            op["avg_carregando"] = op["avg_carregando"].fillna(3.5)
+            op["avg_manobra"] = op["avg_manobra"].fillna(1)
+            op_grp = op.groupby("nome_equipamento_utilizado", as_index=False).agg(
+                avg_carregando=("avg_carregando", "mean"),
+                avg_manobra=("avg_manobra", "mean")
+            )
+            op_grp["avg_carregando"] = op_grp["avg_carregando"].round(2)
+            op_grp["avg_manobra"] = op_grp["avg_manobra"].round(2)
+        prod_grp = prod_grp.merge(op_grp, on="nome_equipamento_utilizado", how="left")
 
     if "avg_carregando" not in prod_grp.columns:
         prod_grp["avg_carregando"] = 3.5
     if "avg_manobra" not in prod_grp.columns:
         prod_grp["avg_manobra"] = 1
 
-    prod_grp["trucks_needed"] = prod_grp.apply(
-        lambda row: math.ceil(row["avg_cycle"] / (row["avg_carregando"] + row["avg_manobra"]))
-        if (row["avg_carregando"] + row["avg_manobra"]) > 0 else 0, axis=1
-    )
+    denominator = prod_grp["avg_carregando"] + prod_grp["avg_manobra"]
+    prod_grp["trucks_needed"] = np.where(denominator > 0,
+                                         np.ceil(prod_grp["avg_cycle"] / denominator),
+                                         0)
     return prod_grp
 
 # =============================================================================
@@ -479,7 +479,6 @@ layout = dbc.Container([
     prevent_initial_call=False
 )
 def fetch_data(n_intervals, n_clicks):
-    # Agora pegamos o período do turno (07:00 → 07:00)
     period_start, period_end = get_current_shift_period()
 
     query_prod = (
@@ -487,12 +486,16 @@ def fetch_data(n_intervals, n_clicks):
         f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
     )
     df_producao = execute_query(query_prod)
+    if not df_producao.empty and "dt_registro_fim" in df_producao.columns:
+        df_producao = localize_column_tz(df_producao, "dt_registro_fim")
 
     query_hora = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
         f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
     )
     df_hora = execute_query(query_hora)
+    if not df_hora.empty and "dt_registro_turno" in df_hora.columns:
+        df_hora = localize_column_tz(df_hora, "dt_registro_turno")
 
     return df_producao.to_dict("records"), df_hora.to_dict("records")
 
@@ -502,28 +505,18 @@ def fetch_data(n_intervals, n_clicks):
     Input("store-producao", "data")
 )
 def update_dropdown(df_producao_records):
-    """
-    Ajuste para exibir apenas as operações referentes ao turno atual
-    (07:00 -> 07:00), usando dt_registro_fim (caso exista) como referência.
-    """
     if not df_producao_records:
         return []
-    
     df = pd.DataFrame(df_producao_records)
     period_start, period_end = get_current_shift_period()
-
-    # Se quiser filtrar pela dt_registro_fim para manter apenas o período do turno:
     if "dt_registro_fim" in df.columns:
         df = localize_column_tz(df, "dt_registro_fim")
         df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
-
     if df.empty:
         return []
-
     if "nome_operacao" in df.columns:
         ops = sorted(df["nome_operacao"].dropna().unique())
         return [{"label": op, "value": op} for op in ops]
-
     return []
 
 # 3) Callback para resetar o intervalo de atualização manualmente
@@ -585,14 +578,11 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter):
     period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
-
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
-
     df = df.dropna(subset=["latitude_carregamento", "longitude_carregamento"])
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
-
     fig = px.scatter_mapbox(
         df,
         lat="latitude_carregamento",
@@ -625,11 +615,9 @@ def update_map_basculamento_detalhado(df_producao_records, operacao_filter):
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
-
     df = df.dropna(subset=["latitude_basculamento", "longitude_basculamento"])
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
-
     fig = px.scatter_mapbox(
         df,
         lat="latitude_basculamento",
@@ -657,18 +645,14 @@ def update_volume_bar(df_producao_records, operacao_filter):
     period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
-
     if df.empty or "volume" not in df.columns:
         return no_data_fig("Volume: Sem dados")
-
     df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
     df = df.dropna(subset=["volume"])
     if df.empty:
         return no_data_fig("Volume: Sem dados após filtros")
-
     df_group = df.groupby("nome_equipamento_utilizado", as_index=False)["volume"].sum()
     df_group = df_group.sort_values("volume", ascending=False)
-
     fig = px.bar(
         df_group,
         x="nome_equipamento_utilizado",
@@ -695,7 +679,6 @@ def update_table(df_producao_records, operacao_filter):
     period_start, period_end = get_current_shift_period()
     df = pd.DataFrame(df_producao_records or [])
     df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
-
     if df.empty:
         return no_data_table()
 
@@ -707,21 +690,25 @@ def update_table(df_producao_records, operacao_filter):
         if col not in df.columns:
             df[col] = None
 
-    def weighted_avg(series, weights):
-        total_weight = weights.sum()
-        return (series * weights).sum() / total_weight if total_weight != 0 else series.mean()
-
-    grouped = df.groupby("nome_origem").apply(
-        lambda g: pd.Series({
-            "nome_destino": g["nome_destino"].iloc[0] if "nome_destino" in g.columns else None,
-            "tempo_ciclo_minuto": g["tempo_ciclo_minuto"].mean(),
-            "volume": g["volume"].sum(),
-            "dmt_mov_cheio": weighted_avg(g["dmt_mov_cheio"], g["volume"]),
-            "dmt_mov_vazio": weighted_avg(g["dmt_mov_vazio"], g["volume"]),
-            "velocidade_media_cheio": g["velocidade_media_cheio"].mean(),
-            "velocidade_media_vazio": g["velocidade_media_vazio"].mean()
-        })
+    # Agregações vetorizadas
+    grouped = df.groupby("nome_origem").agg(
+        nome_destino=("nome_destino", "first"),
+        tempo_ciclo_minuto=("tempo_ciclo_minuto", "mean"),
+        volume=("volume", "sum"),
+        velocidade_media_cheio=("velocidade_media_cheio", "mean"),
+        velocidade_media_vazio=("velocidade_media_vazio", "mean")
     ).reset_index()
+
+    total_volume = df.groupby("nome_origem")["volume"].sum()
+    dmt_mov_cheio = (df["dmt_mov_cheio"] * df["volume"]).groupby(df["nome_origem"]).sum() / total_volume
+    dmt_mov_vazio = (df["dmt_mov_vazio"] * df["volume"]).groupby(df["nome_origem"]).sum() / total_volume
+
+    # Caso a soma dos pesos seja zero, utiliza a média simples
+    dmt_mov_cheio = dmt_mov_cheio.fillna(df.groupby("nome_origem")["dmt_mov_cheio"].mean())
+    dmt_mov_vazio = dmt_mov_vazio.fillna(df.groupby("nome_origem")["dmt_mov_vazio"].mean())
+
+    grouped["dmt_mov_cheio"] = dmt_mov_cheio.values
+    grouped["dmt_mov_vazio"] = dmt_mov_vazio.values
 
     for col in ["tempo_ciclo_minuto", "dmt_mov_cheio", "dmt_mov_vazio",
                 "velocidade_media_cheio", "velocidade_media_vazio"]:
@@ -741,17 +728,14 @@ def update_truck_info(df_producao_records, df_hora_records, operacao_filter):
     period_start, period_end = get_current_shift_period()
     df_prod_period = pd.DataFrame(df_producao_records or [])
     df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
-
     if df_prod_period.empty:
         return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
 
     df_hora = pd.DataFrame(df_hora_records or [])
     df_hora = get_filtered_data_hora(period_start, period_end, df=df_hora)
-
     merged_data = compute_truck_stats(df_prod_period, df_hora)
     if merged_data.empty:
         return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
-
     total_trucks = merged_data["trucks_needed"].sum()
     return f"Total Caminhões Indicados: {total_trucks} / Máximo em Operação: 48"
 

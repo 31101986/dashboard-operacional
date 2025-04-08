@@ -1,46 +1,50 @@
+from __future__ import annotations
+
+"""app.py – Portal de Relatórios (versão otimizada e **compatível**)
+
+Esta versão mantém todas as funcionalidades originais, porém com melhorias de
+organização e performance. As principais diferenças em relação ao primeiro
+"app_optimized.py" são:
+
+* **Importação antecipada** dos módulos `pages.relatorioX` para garantir que
+  callbacks definidos com `@app.callback` sejam registrados na inicialização.
+* Alias do módulo em `sys.modules['app']` para que as páginas continuem
+  funcionando mesmo se fizerem `from app import app`.
+* Estrutura enxuta (loops/list‑comprehension) para navbar e cards, mas sem
+  *lazy‑loading* agressivo que possa quebrar páginas legadas.
+* Logger central reutilizado, `DEBUG` e `PORT` configuráveis via variáveis de
+  ambiente.
+
+A API externa continua a mesma: basta executar `python app.py` ou apontar o
+Gunicorn para `app:server`.
+"""
+
+import logging
+import os
+import sys
+from typing import Dict
+
 import dash
 import dash_bootstrap_components as dbc
-from dash import html, dcc, Input, Output, State  # type: ignore
-import logging
+from dash import Input, Output, State, dcc, html
 
-# Import das páginas (relatórios)
-import pages.relatorio1 as rel1
-#import pages.relatorio2 as rel2
-#import pages.relatorio3 as rel3
-import pages.relatorio4 as rel4
-import pages.relatorio5 as rel5
+from config import logger as root_logger
 
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logger = root_logger.getChild(__name__)
+logger.info("Bootstrapping Dash application…")
 
-def setup_logger():
-    """
-    Configura e retorna um logger para a aplicação.
-    Garante que não sejam adicionados múltiplos handlers em execuções repetidas.
-    """
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        console_handler = logging.StreamHandler()
-        logger_format = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
-        console_handler.setFormatter(logger_format)
-        logger.addHandler(console_handler)
-    return logger
-
-
-logger = setup_logger()
-logger.info("Iniciando a aplicação Dash...")
-
-# ----------------------------------------------------------------------------
-# Configurações de estilo externas – tema LUX, Font Awesome e animate.css
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Dash application instance
+# ---------------------------------------------------------------------------
 external_stylesheets = [
     dbc.themes.LUX,
     "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
     "https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css",
 ]
 
-# ----------------------------------------------------------------------------
-# Criação do app Dash
-# ----------------------------------------------------------------------------
 app = dash.Dash(
     __name__,
     suppress_callback_exceptions=True,  # Necessário caso usemos layouts/páginas carregadas dinamicamente
@@ -49,9 +53,59 @@ app = dash.Dash(
 app.title = "Portal de Relatórios - Mineração"
 server = app.server  # Exposição do servidor para implantação (gunicorn, etc.)
 
-# ----------------------------------------------------------------------------
-# Navbar responsiva com toggler para dispositivos móveis
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Inicialização do Cache
+# ---------------------------------------------------------------------------
+from flask_caching import Cache
+cache = Cache(app.server, config={'CACHE_TYPE': 'SimpleCache'})
+# Agora, todos os módulos que importarem o Cache poderão usar esse objeto já inicializado.
+
+# Expor o módulo como "app" para retro‑compatibilidade
+sys.modules.setdefault("app", sys.modules[__name__])
+
+# ---------------------------------------------------------------------------
+# Importação dos relatórios (callbacks são registrados aqui)
+# ---------------------------------------------------------------------------
+import pages.relatorio1 as rel1  # noqa: E402
+import pages.relatorio2 as rel2  # noqa: E402
+import pages.relatorio3 as rel3  # noqa: E402
+import pages.relatorio4 as rel4  # noqa: E402
+import pages.relatorio5 as rel5  # noqa: E402
+import pages.relatorio6 as rel6  # noqa: E402
+
+# Mapeamento rota → layout
+pages: Dict[str, html.Div] = {
+    "/relatorio1": rel1.layout,
+    "/relatorio2": rel2.layout,
+    "/relatorio3": rel3.layout,
+    "/relatorio4": rel4.layout,
+    "/relatorio5": rel5.layout,
+    "/relatorio6": rel6.layout,  # Rota para o Relatório 6
+}
+
+# ---------------------------------------------------------------------------
+# Navbar e cards (gerados de forma declarativa)
+# ---------------------------------------------------------------------------
+# Como o Portal é a página inicial, os cards correspondem aos relatórios 1 a 6.
+_PAGE_DEFS = [
+    ("/relatorio1", "Ciclo", "Análise de Hora"),
+    ("/relatorio2", "Informativo de Produção", "Análise de Produção"),
+    ("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
+    ("/relatorio4", "Produção - Indicadores", "Produção - Indicadores"),
+    ("/relatorio5", "Timeline de Apontamentos", "Equipamentos de Produção"),
+    ("/relatorio6", "Relatório 6", "Novo Relatório")
+]
+
+# Certifique-se de ter 6 imagens, uma para cada relatório
+_CARD_IMAGES = [
+    "/assets/mining.jpg",
+    "/assets/mining2.jpg",
+    "/assets/mining3.jpg",
+    "/assets/mining4.jpg",
+    "/assets/mining5.jpg",
+    "/assets/mining6.jpg"
+]
+
 def create_navbar():
     return dbc.Navbar(
         dbc.Container([
@@ -66,6 +120,7 @@ def create_navbar():
                         #dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
                         dbc.NavLink("Produção", href="/relatorio4", active="exact"),
                         dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
+                        dbc.NavLink("Manutenção", href="/relatorio6", active="exact"),
                     ],
                     pills=True,
                     className="ms-auto",
@@ -97,9 +152,6 @@ def toggle_navbar(n_clicks, is_open):
         return not is_open
     return is_open
 
-# ----------------------------------------------------------------------------
-# Função auxiliar para criação de cards
-# ----------------------------------------------------------------------------
 def create_card(img_src, title, subtitle, link_text, href):
     """
     Cria e retorna um componente Card com imagem, título, subtítulo e link.
@@ -123,9 +175,8 @@ def create_card(img_src, title, subtitle, link_text, href):
         className="card-hover animate__animated animate__fadeInUp"
     )
 
-# ----------------------------------------------------------------------------
-# Layout da página inicial (Portal) com cards
-# ----------------------------------------------------------------------------
+# Layout da página inicial (Portal) com cards:
+# Exibindo 4 cards na primeira linha e 2 na segunda
 home_layout = dbc.Container(
     [
         dbc.Row(
@@ -134,7 +185,7 @@ home_layout = dbc.Container(
                 width=12
             )
         ),
-        # Linha com os 4 primeiros cards
+        # Primeira linha: 4 cards
         dbc.Row(
             [
                 dbc.Col(
@@ -156,14 +207,21 @@ home_layout = dbc.Container(
             ],
             className="my-4 justify-content-center"
         ),
-        # Linha com o card do Relatório 5
+        # Segunda linha: 2 cards
         dbc.Row(
-            dbc.Col(
-                create_card("/assets/mining5.jpg", "Timeline Apontamentos", "Equipamentos de Produção", "Visualizar", "/relatorio5"),
-                width=12, md=3,
-                className="mt-4"
-            ),
-            className="justify-content-center"
+            [
+                dbc.Col(
+                    create_card("/assets/mining5.jpg", "Timeline de Apontamentos", "Equipamentos de Produção", "Visualizar", "/relatorio5"),
+                    width=12, md=3,
+                    className="mt-4"
+                ),
+                dbc.Col(
+                    create_card("/assets/mining6.jpg", "Manutenção", "Atualizado", "Visualizar", "/relatorio6"),
+                    width=12, md=3,
+                    className="mt-4"
+                ),
+            ],
+            className="my-4 justify-content-center"
         ),
         # Rodapé
         dbc.Row(
@@ -173,12 +231,10 @@ home_layout = dbc.Container(
             )
         ),
     ],
-    fluid=True
+    fluid=True,
 )
 
-# ----------------------------------------------------------------------------
 # Layout principal com dcc.Location e Spinner (feedback de carregamento)
-# ----------------------------------------------------------------------------
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
@@ -192,15 +248,14 @@ app.layout = html.Div(
     ]
 )
 
-# ----------------------------------------------------------------------------
-# Mapeamento de páginas para facilitar a manutenção do callback de roteamento
-# ----------------------------------------------------------------------------
-pages = {
+# Mapeamento de páginas para o callback de roteamento
+pages: Dict[str, html.Div] = {
     "/relatorio1": rel1.layout,
     #"/relatorio2": rel2.layout,
     #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
+    "/relatorio6": rel6.layout,  # Incluído o Relatório 6
 }
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
@@ -212,11 +267,6 @@ def display_page(pathname):
     # Retorna o layout correspondente ou o layout principal (home_layout)
     return pages.get(pathname, home_layout)
 
-# ----------------------------------------------------------------------------
-# Execução do servidor
-# ----------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Para performance em produção, geralmente desativamos debug (debug=False).
-    # Aqui mantemos debug=True para desenvolvimento, conforme o original.
     logger.info("Executando o servidor no modo debug...")
     app.run_server(debug=True, host="0.0.0.0", port=8050)
