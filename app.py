@@ -116,8 +116,8 @@ def create_navbar():
                     [
                         dbc.NavLink("Portal", href="/", active="exact"),
                         dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
-                        #dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
-                        #dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
+                        dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
+                        dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
                         dbc.NavLink("Produção", href="/relatorio4", active="exact"),
                         dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
                         dbc.NavLink("Manutenção", href="/relatorio6", active="exact"),
@@ -192,14 +192,14 @@ home_layout = dbc.Container(
                     create_card("/assets/mining.jpg", "Ciclo", "Análise de Hora", "Visualizar", "/relatorio1"),
                     width=12, md=3
                 ),
-                #dbc.Col(
-                    #create_card("/assets/mining2.jpg", "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"),
-                    #width=12, md=3
-                #),
-                #dbc.Col(
-                    #create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
-                    #width=12, md=3
-                #),
+                dbc.Col(
+                    create_card("/assets/mining2.jpg", "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"),
+                    width=12, md=3
+                ),
+                dbc.Col(
+                    create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
+                    width=12, md=3
+                ),
                 dbc.Col(
                     create_card("/assets/mining4.jpg", "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"),
                     width=12, md=3
@@ -216,7 +216,7 @@ home_layout = dbc.Container(
                     className="mt-4"
                 ),
                 dbc.Col(
-                    create_card("/assets/mining6.jpg", "Manutenção", "Atualizado", "Visualizar", "/relatorio6"),
+                    create_card("/assets/mining6.jpg", "Relatório 6", "Novo Relatório", "Visualizar", "/relatorio6"),
                     width=12, md=3,
                     className="mt-4"
                 ),
@@ -251,8 +251,8 @@ app.layout = html.Div(
 # Mapeamento de páginas para o callback de roteamento
 pages: Dict[str, html.Div] = {
     "/relatorio1": rel1.layout,
-    #"/relatorio2": rel2.layout,
-    #"/relatorio3": rel3.layout,
+    "/relatorio2": rel2.layout,
+    "/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
     "/relatorio6": rel6.layout,  # Incluído o Relatório 6
