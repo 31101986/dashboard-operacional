@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Define o período para consulta: últimos 7 dias
 DAY_END = datetime.now()
-DAY_START = DAY_END - timedelta(days=7)
+DAY_START = DAY_END - timedelta(days=3)
 
 # Definição de mapeamento de imagens por modelo (as imagens devem estar na pasta assets)
 model_images = {
