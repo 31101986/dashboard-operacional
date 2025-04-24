@@ -1,6 +1,8 @@
 import math
 import logging
+import time
 from datetime import datetime, timedelta
+from functools import wraps
 
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
@@ -8,7 +10,7 @@ import dash_bootstrap_components as dbc
 import dash_table
 import plotly.express as px
 import pandas as pd
-import numpy as np  # Para operações vetorizadas
+import numpy as np
 
 # Importa o fuso horário definido em config.py
 from config import TIMEZONE
@@ -28,6 +30,23 @@ from db import query_to_df
 # =============================================================================
 MAPBOX_TOKEN = ""  # Informe seu token Mapbox, se disponível
 DEFAULT_MAP_STYLE = "open-street-map"  # Forçamos um estilo fixo
+
+# =============================================================================
+# DECORADOR DE PROFILING
+# =============================================================================
+def profile_time(func):
+    """
+    Decorador simples para medir o tempo de execução da função.
+    Registra o tempo decorrido via logging.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        t1 = time.perf_counter()
+        logging.info(f"[Profile] {func.__name__} executed in {t1-t0:.4f} seconds")
+        return result
+    return wrapper
 
 # =============================================================================
 # FUNÇÕES AUXILIARES
@@ -71,7 +90,10 @@ def no_data_table():
     return [{"Mensagem": "Sem dados para o período selecionado"}]
 
 def execute_query(query):
-    """Executa a query usando query_to_df e trata exceções, retornando um DataFrame."""
+    """
+    Executa a query utilizando query_to_df e trata exceções.
+    Retorna um DataFrame (pode estar vazio em caso de erro).
+    """
     try:
         return query_to_df(query)
     except Exception as e:
@@ -109,9 +131,8 @@ def common_map_layout(center_lat, center_lon):
 
 def localize_column_tz(df, col_name):
     """
-    Converte a coluna 'col_name' de df para datetime (se ainda não for)
-    e, se estiver tz-naive, localiza no TIMEZONE; se já tiver timezone diferente,
-    converte para TIMEZONE. Se já estiver no TIMEZONE, retorna sem alterações.
+    Converte a coluna 'col_name' de df para datetime e aplica ou converte
+    a timezone para TIMEZONE.
     """
     if col_name not in df.columns:
         return df
@@ -123,6 +144,7 @@ def localize_column_tz(df, col_name):
         df[col_name] = df[col_name].dt.tz_convert(TIMEZONE)
     return df
 
+@profile_time
 def get_filtered_data_producao(period_start, period_end, operacao_filter=None, df=None):
     """
     Filtra os dados de Produção localmente ou executa a query se df for None.
@@ -143,6 +165,7 @@ def get_filtered_data_producao(period_start, period_end, operacao_filter=None, d
         df = df[df["nome_operacao"].isin(operacao_filter)]
     return df
 
+@profile_time
 def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
     """
     Filtra os dados de 'Hora' localmente ou executa a query se df for None.
@@ -163,19 +186,20 @@ def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
         df = df[df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])]
     return df
 
+@profile_time
 def compute_truck_stats(df_prod_period, df_hora):
     """
     Calcula estatísticas de ciclo e estima os caminhões necessários.
     Se 'tempo_ciclo_minuto' for superior a 60, é considerado o valor 45.
-    Essa função utiliza operações vetorizadas para melhorar a performance.
+    Utiliza operações vetorizadas para maior performance.
     """
     if df_prod_period.empty:
         cols = ["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"]
         return pd.DataFrame(columns=cols)
 
+    # Converte e ajusta tempo_ciclo_minuto de forma vetorizada
     if "tempo_ciclo_minuto" in df_prod_period.columns:
         df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
-        # Utiliza np.where para aplicar a condição de forma vetorizada
         df_prod_period["tempo_ciclo_minuto"] = np.where(
             df_prod_period["tempo_ciclo_minuto"] > 60,
             45,
@@ -202,7 +226,7 @@ def compute_truck_stats(df_prod_period, df_hora):
                 "avg_manobra": [1] * len(eq_list)
             })
         else:
-            # Cálculo vetorizado para "Carregando"
+            # Média para "Carregando" com condição vetorizada
             df_carregando = (
                 df_join[df_join["nome_estado"] == "Carregando"]
                 .groupby("cod_viagem", as_index=False)["tempo_minuto"]
@@ -215,7 +239,7 @@ def compute_truck_stats(df_prod_period, df_hora):
                     df_carregando["avg_carregando"],
                     3.5
                 )
-            # Cálculo vetorizado para "Manobra no Carregamento"
+            # Média para "Manobra no Carregamento" com condição vetorizada
             df_manobra = (
                 df_join[df_join["nome_estado"] == "Manobra no Carregamento"]
                 .groupby("cod_viagem", as_index=False)["tempo_minuto"]
@@ -228,7 +252,7 @@ def compute_truck_stats(df_prod_period, df_hora):
                     df_manobra["avg_manobra"],
                     1
                 )
-            # Merge dos dados com a base dos códigos de viagem
+            # Merge dos dados utilizando a base dos códigos de viagem
             op = base.copy()
             op = op.merge(df_carregando, on="cod_viagem", how="left")
             op = op.merge(df_manobra, on="cod_viagem", how="left")
@@ -690,7 +714,7 @@ def update_table(df_producao_records, operacao_filter):
         if col not in df.columns:
             df[col] = None
 
-    # Agregações vetorizadas
+    # Agrupamento vetorizado
     grouped = df.groupby("nome_origem").agg(
         nome_destino=("nome_destino", "first"),
         tempo_ciclo_minuto=("tempo_ciclo_minuto", "mean"),

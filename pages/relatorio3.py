@@ -1,6 +1,8 @@
-import logging 
+import logging
+import time
 from datetime import datetime, timedelta
 from io import BytesIO
+from typing import Tuple, Union, Any, Dict, List
 
 import dash
 from dash import dcc, html, callback, Input, Output, State
@@ -24,12 +26,12 @@ logging.basicConfig(
 )
 
 # ===================== DATAS PADRÃO =====================
-today = datetime.today().date()
-start_default = today - timedelta(days=45)
-end_default = today
+today: datetime.date = datetime.today().date()
+start_default: datetime.date = today - timedelta(days=45)
+end_default: datetime.date = today
 
 # ===================== MAPAS DE CUSTO E PREÇO =====================
-CUSTO_MINERO_MAP = {
+CUSTO_MINERO_MAP: Dict[str, float] = {
     "0-500": 10.9517831011859,
     "501-1000": 11.4656811042058,
     "1001-1500": 11.9061651067943,
@@ -45,7 +47,7 @@ CUSTO_MINERO_MAP = {
     "6001-6500": 29.4159655595681,
     "6501-7000": 32.1337449862673
 }
-CUSTO_ESTERIL_MAP = {
+CUSTO_ESTERIL_MAP: Dict[str, float] = {
     "0-500": 10.515151785518,
     "501-1000": 10.9135122505256,
     "1001-1500": 11.2756581278053,
@@ -62,11 +64,11 @@ CUSTO_ESTERIL_MAP = {
     "6501-7000": 25.3936899423054
 }
 
-CUSTO_CARGA_MINERO = 4.90818672114214
-CUSTO_CARGA_ESTERIL = 3.72386776463452
-CUSTO_ESPALHAMENTO_ESTERIL = 1.58371634448642
+CUSTO_CARGA_MINERO: float = 4.90818672114214
+CUSTO_CARGA_ESTERIL: float = 3.72386776463452
+CUSTO_ESPALHAMENTO_ESTERIL: float = 1.58371634448642
 
-PRECO_60_MAP = {
+PRECO_60_MAP: Dict[str, float] = {
     "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": 652.784394340166,
     "ESCAVADEIRA HIDRAULICA SANY SY750H": 652.784394340166,
     "ESCAVADEIRA HIDRÁULICA CAT 374DL": 652.784394340166,
@@ -81,9 +83,9 @@ PRECO_60_MAP = {
     "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": 839.916000000000
 }
 
-ESTADOS_PARADA = ["Falta de Frente", "Falta de Combustível", "Aguardando Geologia", "Detonação", "Poeira"]
+ESTADOS_PARADA: List[str] = ["Falta de Frente", "Falta de Combustível", "Aguardando Geologia", "Detonação", "Poeira"]
 
-PRECO_LOCACAO_MAP = {
+PRECO_LOCACAO_MAP: Dict[str, float] = {
     "ESCAVADEIRA HIDRÁULICA SANY SY750H": 1025.90663891272,
     "ESCAVADEIRA HIDRÁULICA CAT 320": 471.362509770711,
     "ESCAVADEIRA HIDRÁULICA CAT 352": 726.452809176037,
@@ -103,12 +105,14 @@ PRECO_LOCACAO_MAP = {
     "TRATOR DE ESTEIRAS KOMATSU D155": 792.998104673078,
     "VOLVO FMX 500 8X4": 316.090153610947
 }
-ESTADOS_LOCACAO = ["Dobrando Bloco", "Limpeza de Detonação", "Limpeza para Perfuração", "Perfurando Repé",
-                    "Retaludando", "Tombando Material", "Perfuração Geologia", "Perfuração Pré-Corte",
-                    "Perfurando Extra", "Repasse"]
+ESTADOS_LOCACAO: List[str] = [
+    "Dobrando Bloco", "Limpeza de Detonação", "Limpeza para Perfuração", "Perfurando Repé",
+    "Retaludando", "Tombando Material", "Perfuração Geologia", "Perfuração Pré-Corte",
+    "Perfurando Extra", "Repasse"
+]
 
 # ===================== TABELAS ESTÁTICAS =====================
-df_manut_canteiro = pd.DataFrame([
+df_manut_canteiro: pd.DataFrame = pd.DataFrame([
     {
         "Item": "Manutenção do Canteiro de Serviços",
         "Unidade": 1,
@@ -122,7 +126,7 @@ df_manut_canteiro = pd.DataFrame([
         "Valor Total (R$)": 205181.327782545
     }
 ])
-manut_canteiro_columns = [
+manut_canteiro_columns: List[Dict[str, Any]] = [
     {"name": "Item", "id": "Item"},
     {"name": "Unidade", "id": "Unidade", "type": "numeric",
      "format": Format(precision=0, scheme=Scheme.fixed, group=True)},
@@ -131,9 +135,9 @@ manut_canteiro_columns = [
     {"name": "Valor Total (R$)", "id": "Valor Total (R$)",
      "type": "numeric", "format": FormatTemplate.money(2)}
 ]
-manut_canteiro_data = df_manut_canteiro.to_dict("records")
+manut_canteiro_data: List[Dict[str, Any]] = df_manut_canteiro.to_dict("records")
 
-df_servicos_eventuais = pd.DataFrame([
+df_servicos_eventuais: pd.DataFrame = pd.DataFrame([
     {
         "Equipamento": "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)",
         "Horas Mínimas Garantidas": 500,
@@ -170,7 +174,7 @@ df_servicos_eventuais = pd.DataFrame([
         )
     }
 ])
-servicos_eventuais_columns = [
+servicos_eventuais_columns: List[Dict[str, Any]] = [
     {"name": "Equipamento", "id": "Equipamento"},
     {"name": "Horas Mínimas Garantidas", "id": "Horas Mínimas Garantidas",
      "type": "numeric", "format": Format(precision=0, scheme=Scheme.fixed, group=True)},
@@ -179,10 +183,14 @@ servicos_eventuais_columns = [
     {"name": "Valor Total (R$)", "id": "Valor Total (R$)",
      "type": "numeric", "format": FormatTemplate.money(2)}
 ]
-servicos_eventuais_data = df_servicos_eventuais.to_dict("records")
+servicos_eventuais_data: List[Dict[str, Any]] = df_servicos_eventuais.to_dict("records")
 
 # ===================== FUNÇÕES AUXILIARES (consultas e cálculos) =====================
-def get_search_period(start_date, end_date):
+
+def get_search_period(start_date: str, end_date: str) -> Tuple[datetime, datetime]:
+    """
+    Converte as strings start_date e end_date para objetos datetime.
+    """
     start_dt = datetime.fromisoformat(start_date)
     end_dt = datetime.fromisoformat(end_date)
     return start_dt, end_dt
@@ -191,14 +199,20 @@ def get_search_period(start_date, end_date):
 from app import cache
 
 @cache.memoize(timeout=300)
-def cached_query(query):
+def cached_query(query: str) -> pd.DataFrame:
+    """
+    Executa a query utilizando o cache. Em caso de erro, registra no log e retorna um DataFrame vazio.
+    """
     try:
         return query_to_df(query)
     except Exception as e:
         logging.error(f"Erro na execução da query: {e}")
         return pd.DataFrame()
 
-def execute_query(query):
+def execute_query(query: str) -> pd.DataFrame:
+    """
+    Executa a query sem cache, registrando erros.
+    """
     try:
         return query_to_df(query)
     except Exception as e:
@@ -206,10 +220,33 @@ def execute_query(query):
         return pd.DataFrame()
 
 @cache.memoize(timeout=60)
-def parse_json_to_df(json_data):
+def parse_json_to_df(json_data: Union[str, dict]) -> pd.DataFrame:
+    """
+    Converte dados em JSON para DataFrame.
+    """
     return pd.read_json(json_data, orient="records")
 
-def calc_custo_por_faixa(df, nome_operacao, custo_map):
+# -----------------------------------------------------------------
+# Decorador para Profiling
+# -----------------------------------------------------------------
+def profile_time(func):
+    """
+    Decorador simples para medir o tempo de execução da função.
+    Registra o tempo decorrido via logging.
+    """
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        t1 = time.perf_counter()
+        logging.info(f"[Profile] {func.__name__} executada em {t1-t0:.4f} segundos")
+        return result
+    return wrapper
+
+@profile_time
+def calc_custo_por_faixa(df: pd.DataFrame, nome_operacao: str, custo_map: Dict[str, float]) -> pd.DataFrame:
+    """
+    Calcula o custo por faixa de DMT para uma operação específica usando um mapa de custos.
+    """
     df_filtro = df.loc[df["nome_operacao"] == nome_operacao]
     if df_filtro.empty:
         return pd.DataFrame()
@@ -222,7 +259,11 @@ def calc_custo_por_faixa(df, nome_operacao, custo_map):
     df_group["custo_total"] = df_group["total_volume"] * df_group["custo_unitario"]
     return df_group
 
-def calc_custo_adicional(df):
+@profile_time
+def calc_custo_adicional(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calcula os custos adicionais para movimentação de minério e estéril.
+    """
     df_minero = df.loc[df["nome_operacao"] == "Movimentação Minério"].drop_duplicates(subset=["cod_viagem"])
     df_esteril = df.loc[df["nome_operacao"] == "Movimentação Estéril"].drop_duplicates(subset=["cod_viagem"])
     vol_minero = df_minero["volume"].sum() if not df_minero.empty else 0
@@ -254,7 +295,11 @@ def calc_custo_adicional(df):
     ])
     return df_adic
 
-def calc_faturamento_transporte(df):
+@profile_time
+def calc_faturamento_transporte(df: pd.DataFrame) -> float:
+    """
+    Calcula o faturamento total de transporte combinando custos de minério, estéril e adicionais.
+    """
     df_minero = calc_custo_por_faixa(df, "Movimentação Minério", CUSTO_MINERO_MAP)
     total_minero = df_minero["custo_total"].sum() if not df_minero.empty else 0
     df_esteril = calc_custo_por_faixa(df, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
@@ -263,7 +308,11 @@ def calc_faturamento_transporte(df):
     total_adic = df_adic["custo_total (R$)"].sum()
     return total_minero + total_esteril + total_adic
 
-def calc_faturamento_hora_60(df_hora):
+@profile_time
+def calc_faturamento_hora_60(df_hora: pd.DataFrame) -> float:
+    """
+    Calcula o faturamento com base nas horas paradas, utilizando preço 60%.
+    """
     df_parada = df_hora.loc[df_hora["nome_estado"].isin(ESTADOS_PARADA)]
     if df_parada.empty or "nome_modelo" not in df_parada.columns:
         return 0.0
@@ -272,7 +321,11 @@ def calc_faturamento_hora_60(df_hora):
     df_group["custo_total"] = df_group["horas_paradas"] * df_group["preco_60"]
     return df_group["custo_total"].sum()
 
-def calc_horas_locacao(df_hora):
+@profile_time
+def calc_horas_locacao(df_hora: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calcula as horas de locação e os custos associados por modelo.
+    """
     if df_hora.empty:
         return pd.DataFrame()
     df_subset = df_hora.loc[df_hora["nome_estado"].isin(ESTADOS_LOCACAO)]
@@ -291,12 +344,17 @@ def calc_horas_locacao(df_hora):
     }])
     return pd.concat([df_group, df_total], ignore_index=True)
 
-def build_export_excel_single_sheet(json_producao, json_hora):
-    df_prod = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
-    df_hora = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
+def build_export_excel_single_sheet(json_producao: Union[str, dict],
+                                    json_hora: Union[str, dict]) -> bytes:
+    """
+    Prepara um arquivo Excel com todos os dados de medição para exportação.
+    Utiliza o context manager para garantir o fechamento correto do arquivo.
+    """
+    df_prod: pd.DataFrame = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
+    df_hora: pd.DataFrame = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
 
-    df_manut_excel = df_manut_canteiro.copy()
-    df_serv_event_excel = df_servicos_eventuais.copy()
+    df_manut_excel: pd.DataFrame = df_manut_canteiro.copy()
+    df_serv_event_excel: pd.DataFrame = df_servicos_eventuais.copy()
 
     if not df_prod.empty:
         df_minero = calc_custo_por_faixa(df_prod, "Movimentação Minério", CUSTO_MINERO_MAP)
@@ -339,12 +397,12 @@ def build_export_excel_single_sheet(json_producao, json_hora):
     else:
         df_horas = pd.DataFrame()
 
-    fat_trans = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
-    fat_hora = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
+    fat_trans: float = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
+    fat_hora: float = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
 
     manut_total = df_manut_excel.loc[df_manut_excel["Item"] == "TOTAL", "Valor Total (R$)"].values[0]
     serv_event_total = df_servicos_eventuais.loc[df_servicos_eventuais["Equipamento"] == "TOTAL", "Valor Total (R$)"].values[0]
-    fat_total = fat_trans + fat_hora + manut_total + serv_event_total
+    fat_total: float = fat_trans + fat_hora + manut_total + serv_event_total
 
     df_faturamento = pd.DataFrame({
         "Descrição": [
@@ -375,7 +433,7 @@ def build_export_excel_single_sheet(json_producao, json_hora):
 
         row_cursor = 0
 
-        def write_table(title, df_table, total_col=None):
+        def write_table(title: str, df_table: pd.DataFrame, total_col: Union[str, None] = None) -> None:
             nonlocal row_cursor
             worksheet.write(row_cursor, 0, title, bold_fmt)
             row_cursor += 1
@@ -395,7 +453,7 @@ def build_export_excel_single_sheet(json_producao, json_hora):
                         worksheet.write(excel_row, c_idx, val, bold_fmt)
                     else:
                         if isinstance(val, (int, float)):
-                            if ("custo" in c_name.lower() or "valor" in c_name.lower() or "preço" in c_name.lower()):
+                            if any(x in c_name.lower() for x in ["custo", "valor", "preço"]):
                                 worksheet.write_number(excel_row, c_idx, val, money_fmt)
                             else:
                                 worksheet.write_number(excel_row, c_idx, val, numeric_fmt)
@@ -413,7 +471,7 @@ def build_export_excel_single_sheet(json_producao, json_hora):
     return output.getvalue()
 
 # ===================== LAYOUT (inalterado, + nova Tabela) =====================
-common_table_style = {
+common_table_style: Dict[str, Any] = {
     "style_table": {
         "overflowX": "auto",
         "width": "100%",
@@ -599,7 +657,7 @@ layout = dbc.Container([
     State("rel3-date-picker-range", "end_date"),
     prevent_initial_call=True
 )
-def apply_filter_unified(n_clicks, start_date, end_date):
+def apply_filter_unified(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, Any]:
     if not start_date or not end_date:
         return {}, {}
 
@@ -609,7 +667,7 @@ def apply_filter_unified(n_clicks, start_date, end_date):
         f"EXEC dw_sdp_mt_fas..usp_fato_producao "
         f"'{start_dt:%d/%m/%Y %H:%M:%S}', '{end_dt:%d/%m/%Y %H:%M:%S}'"
     )
-    df_prod = cached_query(query_prod)
+    df_prod: pd.DataFrame = cached_query(query_prod)
     if not df_prod.empty and "dt_registro_turno" in df_prod.columns:
         df_prod["dt_registro_turno"] = pd.to_datetime(df_prod["dt_registro_turno"], errors="coerce")
         df_prod.dropna(subset=["dt_registro_turno"], inplace=True)
@@ -636,20 +694,20 @@ def apply_filter_unified(n_clicks, start_date, end_date):
         cat_type = CategoricalDtype(categories=labels, ordered=True)
         df_prod["dmt_bin"] = pd.cut(df_prod["dmt_tratado"], bins=bins, labels=labels, include_lowest=True, right=True).astype(cat_type)
 
-    data_prod_json = df_prod.to_json(orient="records") if not df_prod.empty else {}
+    data_prod_json: Union[str, dict] = df_prod.to_json(orient="records") if not df_prod.empty else {}
 
     query_hora = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
         f"'{start_dt:%d/%m/%Y %H:%M:%S}', '{end_dt:%d/%m/%Y %H:%M:%S}'"
     )
-    df_hora = cached_query(query_hora)
+    df_hora: pd.DataFrame = cached_query(query_hora)
     if not df_hora.empty and "dt_registro_turno" in df_hora.columns:
         df_hora["dt_registro_turno"] = pd.to_datetime(df_hora["dt_registro_turno"], errors="coerce")
         df_hora.dropna(subset=["dt_registro_turno"], inplace=True)
         df_hora = df_hora.loc[(df_hora["dt_registro_turno"] >= start_dt) & (df_hora["dt_registro_turno"] <= end_dt)]
         estados_filtro = ["Improdutiva Interna", "Improdutiva Externa", "Serviço Auxiliar"]
         df_hora = df_hora.loc[df_hora["nome_tipo_estado"].isin(estados_filtro)]
-    data_hora_json = df_hora.to_json(orient="records") if not df_hora.empty else {}
+    data_hora_json: Union[str, dict] = df_hora.to_json(orient="records") if not df_hora.empty else {}
 
     return data_prod_json, data_hora_json
 
@@ -658,14 +716,14 @@ def apply_filter_unified(n_clicks, start_date, end_date):
     Output("rel3-custo-minero", "columns"),
     Input("rel3-data-store", "data")
 )
-def update_custo_minero_cb(json_data):
+def update_custo_minero_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df = parse_json_to_df(json_data)
+    df: pd.DataFrame = parse_json_to_df(json_data)
     if df.empty:
         return [], []
 
-    df_minero = calc_custo_por_faixa(df, "Movimentação Minério", CUSTO_MINERO_MAP)
+    df_minero: pd.DataFrame = calc_custo_por_faixa(df, "Movimentação Minério", CUSTO_MINERO_MAP)
     if df_minero.empty:
         return [], []
 
@@ -691,14 +749,14 @@ def update_custo_minero_cb(json_data):
     Output("rel3-custo-esteril", "columns"),
     Input("rel3-data-store", "data")
 )
-def update_custo_esteril_cb(json_data):
+def update_custo_esteril_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df = parse_json_to_df(json_data)
+    df: pd.DataFrame = parse_json_to_df(json_data)
     if df.empty:
         return [], []
 
-    df_esteril = calc_custo_por_faixa(df, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
+    df_esteril: pd.DataFrame = calc_custo_por_faixa(df, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
     if df_esteril.empty:
         return [], []
 
@@ -724,14 +782,14 @@ def update_custo_esteril_cb(json_data):
     Output("rel3-custo-adicional", "columns"),
     Input("rel3-data-store", "data")
 )
-def update_custo_adicional_cb(json_data):
+def update_custo_adicional_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df = parse_json_to_df(json_data)
+    df: pd.DataFrame = parse_json_to_df(json_data)
     if df.empty:
         return [], []
 
-    df_adic = calc_custo_adicional(df)
+    df_adic: pd.DataFrame = calc_custo_adicional(df)
     columns = [
         {"name": "Item", "id": "item"},
         {"name": "Volume Total (m³)", "id": "volume_total (m³)", "type": "numeric",
@@ -749,10 +807,10 @@ def update_custo_adicional_cb(json_data):
     Output("horas-locacao-table", "columns"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_horas_locacao_table_cb(json_data):
+def update_horas_locacao_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df = pd.read_json(json_data, orient="records")
+    df: pd.DataFrame = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
 
@@ -786,10 +844,10 @@ def update_horas_locacao_table_cb(json_data):
     Output("rel3-horas-paradas-table", "columns"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_horas_paradas_table_cb(json_data):
+def update_horas_paradas_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df = pd.read_json(json_data, orient="records")
+    df: pd.DataFrame = pd.read_json(json_data, orient="records")
     if df.empty:
         return [], []
 
@@ -822,17 +880,17 @@ def update_horas_paradas_table_cb(json_data):
     Input("rel3-data-store", "data"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_faturamento_final_cb(json_producao, json_hora):
+def update_faturamento_final_cb(json_producao: Union[str, dict], json_hora: Union[str, dict]) -> html.Div:
     if not json_producao or isinstance(json_producao, dict):
-        fat_transporte = 0.0
+        fat_transporte: float = 0.0
     else:
-        df_prod = pd.read_json(json_producao, orient="records")
+        df_prod: pd.DataFrame = pd.read_json(json_producao, orient="records")
         fat_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
 
     if not json_hora or isinstance(json_hora, dict):
-        fat_horas = 0.0
+        fat_horas: float = 0.0
     else:
-        df_hora = pd.read_json(json_hora, orient="records")
+        df_hora: pd.DataFrame = pd.read_json(json_hora, orient="records")
         fat_horas = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
 
     manut_total = df_manut_canteiro.loc[df_manut_canteiro["Item"] == "TOTAL", "Valor Total (R$)"].values[0]
@@ -854,7 +912,7 @@ def update_faturamento_final_cb(json_producao, json_hora):
     State("rel3-fato-hora-store", "data"),
     prevent_initial_call=True
 )
-def export_to_excel_cb(n_clicks, json_producao, json_hora):
+def export_to_excel_cb(n_clicks: int, json_producao: Union[str, dict], json_hora: Union[str, dict]) -> Any:
     if n_clicks:
         excel_bytes = build_export_excel_single_sheet(json_producao, json_hora)
         return dcc.send_bytes(lambda f: f.write(excel_bytes), "relatorio3.xlsx")

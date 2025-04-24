@@ -1,8 +1,12 @@
-from datetime import datetime, timedelta  
+from datetime import datetime, timedelta
 import logging
+import time
+from typing import Tuple, List, Dict, Any, Union
+
 import pandas as pd
 from dash import dcc, html, Input, Output, callback
 import dash_bootstrap_components as dbc
+import plotly.express as px
 
 from db import query_to_df
 
@@ -13,12 +17,12 @@ from app import cache
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define o período para consulta: últimos 7 dias
-DAY_END = datetime.now()
-DAY_START = DAY_END - timedelta(days=3)
+# Define o período para consulta: últimos 7 dias (no exemplo, últimos 3 dias)
+DAY_END: datetime = datetime.now()
+DAY_START: datetime = DAY_END - timedelta(days=3)
 
 # Definição de mapeamento de imagens por modelo (as imagens devem estar na pasta assets)
-model_images = {
+model_images: Dict[str, str] = {
     "VOLVO FMX 500 8X4": "/assets/VOLVO FMX 500 8X4.jpg",
     "MERCEDES BENZ AROCS 4851/45 8X4": "/assets/MERCEDES_BENZ_AROCS 4851_45_8X4.jpg",
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": "/assets/MERCEDES BENZ AXOR 3344 6X4 (PIPA).jpg",
@@ -38,14 +42,32 @@ model_images = {
     "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": "/assets/ESCAVADEIRA HIDRÁULICA VOLVO EC480DL.jpg",
     "MOTONIVELADORA CAT 140K": "/assets/MOTONIVELADORA CAT 140K.jpg",
     "PÁ CARREGADEIRA CAT 966L": "/assets/PÁ CARREGADEIRA CAT 966L.jpg",
-    "RETRO ESCAVADEIRA CAT 416F2": "/assets/RETRO ESCAVADEIRA CAT 416F2.jpg",          
+    "RETRO ESCAVADEIRA CAT 416F2": "/assets/RETRO ESCAVADEIRA CAT 416F2.jpg",
     # Adicione outros modelos e seus respectivos caminhos, se necessário.
 }
 
 # Tempo máximo considerado para a escala de cores (em segundos); por exemplo, 4 horas
-MAX_DURATION_SECONDS = 4 * 60 * 60  # 4 horas
+MAX_DURATION_SECONDS: int = 4 * 60 * 60  # 4 horas
 
-def get_color_for_duration(duration: timedelta) -> tuple[str, int]:
+# ============================================================
+# Decorador para Profiling
+# ============================================================
+def profile_time(func):
+    """
+    Decorador para medir o tempo de execução da função e registrar essa informação no log.
+    """
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        t1 = time.perf_counter()
+        logger.info(f"[Profile] {func.__name__} executada em {t1 - t0:.4f} segundos")
+        return result
+    return wrapper
+
+# ============================================================
+# Funções Auxiliares
+# ============================================================
+def get_color_for_duration(duration: timedelta) -> Tuple[str, int]:
     """
     Retorna uma cor interpolada entre amarelo (#FFFF00) e vermelho (#FF0000)
     com base na duração informada, e o valor do componente green utilizado.
@@ -58,10 +80,11 @@ def get_color_for_duration(duration: timedelta) -> tuple[str, int]:
     return f"rgb(255, {green}, 0)", green
 
 @cache.memoize(timeout=300)
+@profile_time
 def get_all_records_cached() -> pd.DataFrame:
     """
     Consulta a tabela fato_hora para os últimos 7 dias e retorna todos os registros com todas as colunas.
-    Essa versão utiliza cache para melhorar a performance.
+    Utiliza cache para melhorar a performance.
     """
     query = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
@@ -76,16 +99,16 @@ def get_all_records_cached() -> pd.DataFrame:
 
 def get_all_records() -> pd.DataFrame:
     """
-    Wrapper para obter registros utilizando cache.
+    Retorna os registros utilizando cache.
     """
     return get_all_records_cached()
 
+@profile_time
 def get_current_state_records() -> pd.DataFrame:
     """
     Para cada equipamento, retorna o registro mais recente (baseado em dt_registro) e,
-    se houver várias linhas com o mesmo id_lancamento, utiliza o menor dt_registro
-    daquele id_lancamento para indicar quando o estado iniciou.
-    Retorna um DataFrame com todas as colunas originais e uma nova coluna "dt_registro_inicio".
+    se houver várias linhas com o mesmo id_lancamento, utiliza o menor dt_registro daquele id_lancamento.
+    Retorna um DataFrame com as colunas originais e uma nova coluna "dt_registro_inicio".
     """
     df = get_all_records()
     if df.empty:
@@ -99,24 +122,28 @@ def get_current_state_records() -> pd.DataFrame:
 
 def get_latest_records_by_equipment() -> pd.DataFrame:
     """
-    Função de compatibilidade: retorna os registros com estado atual, incluindo dt_registro_inicio.
+    Retorna os registros com estado atual, incluindo dt_registro_inicio.
     """
     return get_current_state_records()
 
-def create_tv_layout(df: pd.DataFrame, filter_values: list[str] = None) -> html.Div:
+@profile_time
+def create_tv_layout(df: pd.DataFrame, filter_values: Union[List[str], None] = None) -> html.Div:
     """
     Cria um layout para visualização em TV:
       - Cabeçalho com duas colunas: "Estado" e "Equipamento".
-      - Para cada combinação (nome_estado, nome_tipo_estado), cria uma linha (dbc.Row) com:
-          * Coluna esquerda: informações do estado (nome, tipo e quantidade de equipamentos).
-          * Coluna direita: cartões dos equipamentos, onde cada cartão contém:
-              - Uma caixinha menor com a imagem do modelo (ou placeholder, se não houver imagem).
-              - Uma faixa horizontal com fundo colorido (de acordo com o tempo decorrido) e informações centralizadas.
+      - Para cada combinação (nome_estado, nome_tipo_estado), exibe os equipamentos como cartões.
+      
+    Parameters:
+        df (pd.DataFrame): DataFrame com os registros.
+        filter_values (List[str], opcional): Filtros para a coluna nome_tipo_estado.
+        
+    Returns:
+        html.Div: Layout para visualização.
     """
     if df.empty:
         return html.Div("Sem dados para agrupar.", className="text-center my-4")
     
-    # Exclui registros do equipamento TRIMAK
+    # Remove registros do equipamento TRIMAK
     df = df[df["nome_equipamento"].str.upper() != "TRIMAK"]
     
     if filter_values:
@@ -127,7 +154,7 @@ def create_tv_layout(df: pd.DataFrame, filter_values: list[str] = None) -> html.
     
     df = df.sort_values(["nome_estado", "nome_tipo_estado", "nome_equipamento"])
     
-    # Cria um dicionário de mapeamento de imagens com chave normalizada (uppercase e strip)
+    # Cria um dicionário de mapeamento de imagens com chaves normalizadas
     normalized_model_images = {key.strip().upper(): url for key, url in model_images.items()}
     
     header = dbc.Row(
@@ -247,63 +274,67 @@ def create_tv_layout(df: pd.DataFrame, filter_values: list[str] = None) -> html.
     return html.Div([header] + rows)
 
 # ===================== LAYOUT PRINCIPAL =====================
-layout = dbc.Container(
-    [
-        dbc.Row([
-            dbc.Col(
-                html.H1("Relatório 6 – Dashboard de Equipamentos", 
-                        className="text-center", 
-                        style={"fontFamily": "Arial, sans-serif"}),
-                xs=12, md=10
+layout = dbc.Container([
+    dbc.Row(
+        dbc.Col(
+            html.H1(
+                "Equipamentos Por Estado",
+                className="text-center my-4",
+                style={"fontFamily": "Arial, sans-serif"}
             ),
-            dbc.Col(
-                dbc.Button("Voltar ao Portal", href="/", color="secondary", className="w-100"),
-                xs=12, md=2
-            )
-        ], className="my-4"),
-        dbc.Row([
-            dbc.Col(
-                dbc.Button("Atualizar", id="update-button", color="success", className="mb-3", 
-                           style={"width": "100%"}),
-                width=2
-            ),
-            dbc.Col(
-                html.Div(id="last-update", 
-                         style={"fontSize": "14px", "textAlign": "center", "paddingTop": "15px"}),
-                width=10
-            )
-        ], justify="center"),
-        dcc.Interval(id="interval-component", interval=300000, n_intervals=0),
-        dbc.Row(
-            dbc.Col(
-                dcc.Dropdown(
-                    id="filter-dropdown",
-                    multi=True,
-                    placeholder="Selecione os tipos de estado (nome_tipo_estado) para filtrar...",
-                    clearable=False,
-                    style={"marginBottom": "20px"}
-                ),
-                width=12
-            )
-        ),
-        dcc.Store(id="latest-data-store"),
-        dcc.Loading(
-            id="loading-tv-layout",
-            type="default",
-            children=html.Div(id="tv-layout")
+            width=12
         )
-    ],
-    fluid=True,
-    style={"minHeight": "100vh", "width": "100vw"}
+    ),
+    dbc.Row([
+        dbc.Col(
+            dbc.Button("Atualizar", id="update-button", color="success", className="mb-3", 
+                       style={"width": "100%"}),
+            width=2
+        ),
+        dbc.Col(
+            html.Div(id="last-update", 
+                     style={"fontSize": "14px", "textAlign": "center", "paddingTop": "15px"}),
+            width=10
+        )
+    ], justify="center"),
+    dcc.Interval(id="interval-component", interval=300000, n_intervals=0),
+    dbc.Row(
+        dbc.Col(
+            dcc.Dropdown(
+                id="filter-dropdown",
+                multi=True,
+                placeholder="Selecione os tipos de estado (nome_tipo_estado) para filtrar...",
+                clearable=False,
+                style={"marginBottom": "20px"}
+            ),
+            width=12
+        )
+    ),
+    dcc.Store(id="latest-data-store"),
+    dcc.Loading(
+        id="loading-tv-layout",
+        type="default",
+        children=html.Div(id="tv-layout")
+    )
+],
+fluid=True,
+style={"minHeight": "100vh", "width": "100vw"}
 )
 
+# ============================================================
+# CALLBACKS
+# ============================================================
 @callback(
     Output("latest-data-store", "data"),
     Output("last-update", "children"),
     Input("update-button", "n_clicks"),
     Input("interval-component", "n_intervals")
 )
-def update_data(n_clicks, n_intervals):
+def update_data(n_clicks: int, n_intervals: int) -> Tuple[Union[str, None], str]:
+    """
+    Atualiza os dados a partir dos registros mais recentes por equipamento.
+    Retorna os dados em JSON e a mensagem de última atualização.
+    """
     latest = get_latest_records_by_equipment()
     if latest.empty:
         return None, "Sem dados"
@@ -318,20 +349,16 @@ def update_data(n_clicks, n_intervals):
     Output("filter-dropdown", "value"),
     Input("latest-data-store", "data")
 )
-def update_filter_options(json_data):
+def update_filter_options(json_data: Union[str, dict]) -> Tuple[List[Dict[str, str]], List[str]]:
     """
-    Atualiza as opções do Dropdown e define os valores pré-selecionados.
+    Atualiza as opções do Dropdown para filtro e define os valores pré-selecionados.
     """
     if not json_data:
         return [], []
-
     df = pd.read_json(json_data, orient="records")
-    # Normaliza para uppercase
     df["nome_tipo_estado"] = df["nome_tipo_estado"].str.upper()
-    
     tipos = sorted(df["nome_tipo_estado"].dropna().unique())
     options = [{"label": t, "value": t} for t in tipos]
-    
     default_preselection = [
         "MANUTENÇÃO CORRETIVA",
         "MANUTENÇÃO PREVENTIVA",
@@ -339,7 +366,6 @@ def update_filter_options(json_data):
         "FORA DE FROTA"
     ]
     default_value = [t for t in default_preselection if t in tipos]
-    
     return options, default_value
 
 @callback(
@@ -347,7 +373,10 @@ def update_filter_options(json_data):
     Input("latest-data-store", "data"),
     Input("filter-dropdown", "value")
 )
-def render_tv_layout(json_data, filter_values):
+def render_tv_layout(json_data: Union[str, dict], filter_values: Union[List[str], None]) -> html.Div:
+    """
+    Renderiza o layout para visualização em TV com base nos dados e filtros.
+    """
     if not json_data:
         return html.Div("Clique em 'Atualizar' para carregar os dados.", className="text-center my-4")
     df = pd.read_json(json_data, orient="records")

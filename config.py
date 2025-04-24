@@ -94,7 +94,7 @@ def load_db_config() -> dict[str, str]:
 # Production targets (metas)
 # ---------------------------------------------------------------------------
 
-_DEFAULT_METAS: dict[str, Any] = {"meta_minerio": 1901, "meta_esteril": 21555}
+_DEFAULT_METAS: dict[str, Any] = {"meta_minerio": 5500, "meta_esteril": 23000}
 
 
 @lru_cache(maxsize=1)

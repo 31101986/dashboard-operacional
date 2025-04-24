@@ -1,22 +1,16 @@
 from __future__ import annotations
 
-"""app.py – Portal de Relatórios (versão otimizada e **compatível**)
+"""
+app.py – Portal de Relatórios (versão otimizada e compatível)
 
-Esta versão mantém todas as funcionalidades originais, porém com melhorias de
-organização e performance. As principais diferenças em relação ao primeiro
-"app_optimized.py" são:
-
-* **Importação antecipada** dos módulos `pages.relatorioX` para garantir que
-  callbacks definidos com `@app.callback` sejam registrados na inicialização.
-* Alias do módulo em `sys.modules['app']` para que as páginas continuem
-  funcionando mesmo se fizerem `from app import app`.
-* Estrutura enxuta (loops/list‑comprehension) para navbar e cards, mas sem
-  *lazy‑loading* agressivo que possa quebrar páginas legadas.
-* Logger central reutilizado, `DEBUG` e `PORT` configuráveis via variáveis de
-  ambiente.
-
-A API externa continua a mesma: basta executar `python app.py` ou apontar o
-Gunicorn para `app:server`.
+Esta versão mantém todas as funcionalidades originais, com melhorias de organização, performance,
+gerenciamento de recursos e profiling. Nesta versão, as datas são manipuladas em UTC no backend
+e a conversão para o fuso local é feita no front‑end via JavaScript, garantindo que o horário exibido 
+no Render (ou em qualquer navegador) seja o horário local do usuário.
+    
+Para executar:
+  - Basta executar `python app.py`
+  - Ou apontar o Gunicorn para `app:server`
 """
 
 import logging
@@ -28,13 +22,26 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html
 
-from config import logger as root_logger
+from config import logger as root_logger, TIMEZONE  # TIMEZONE pode continuar sendo usado para outros cálculos
+
+# ---------------------------------------------------------------------------
+# OBS.: Nesta versão não forçamos a alteração de timezone via os.environ nem time.tzset(),
+# pois queremos que o backend trabalhe em UTC e o front‑end converta para o fuso local do usuário.
+# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 logger = root_logger.getChild(__name__)
 logger.info("Bootstrapping Dash application…")
+
+# ---------------------------------------------------------------------------
+# Definir variáveis de data para cálculos internos (em UTC ou convertendo conforme TIMEZONE se necessário)
+# ---------------------------------------------------------------------------
+from datetime import datetime, timezone, timedelta
+# Exemplo: obtém a data atual em UTC e, se necessário, outros cálculos podem usar TIMEZONE.
+DAY_END: datetime = datetime.now(timezone.utc)
+DAY_START: datetime = DAY_END - timedelta(days=3)
 
 # ---------------------------------------------------------------------------
 # Dash application instance
@@ -58,7 +65,6 @@ server = app.server  # Exposição do servidor para implantação (gunicorn, etc
 # ---------------------------------------------------------------------------
 from flask_caching import Cache
 cache = Cache(app.server, config={'CACHE_TYPE': 'SimpleCache'})
-# Agora, todos os módulos que importarem o Cache poderão usar esse objeto já inicializado.
 
 # Expor o módulo como "app" para retro‑compatibilidade
 sys.modules.setdefault("app", sys.modules[__name__])
@@ -73,7 +79,7 @@ import pages.relatorio4 as rel4  # noqa: E402
 import pages.relatorio5 as rel5  # noqa: E402
 import pages.relatorio6 as rel6  # noqa: E402
 
-# Mapeamento rota → layout
+# Mapeamento de rota → layout
 pages: Dict[str, html.Div] = {
     "/relatorio1": rel1.layout,
     #"/relatorio2": rel2.layout,
@@ -84,9 +90,24 @@ pages: Dict[str, html.Div] = {
 }
 
 # ---------------------------------------------------------------------------
+# Decorador de Profiling
+# ---------------------------------------------------------------------------
+def profile_time(func):
+    """
+    Decorador para medir o tempo de execução da função e registrar essa informação no log.
+    """
+    import time
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        t1 = time.perf_counter()
+        logger.info(f"[Profile] {func.__name__} executed in {t1 - t0:.4f} seconds")
+        return result
+    return wrapper
+
+# ---------------------------------------------------------------------------
 # Navbar e cards (gerados de forma declarativa)
 # ---------------------------------------------------------------------------
-# Como o Portal é a página inicial, os cards correspondem aos relatórios 1 a 6.
 _PAGE_DEFS = [
     ("/relatorio1", "Ciclo", "Análise de Hora"),
     ("/relatorio2", "Informativo de Produção", "Análise de Produção"),
@@ -96,7 +117,6 @@ _PAGE_DEFS = [
     ("/relatorio6", "Relatório 6", "Novo Relatório")
 ]
 
-# Certifique-se de ter 6 imagens, uma para cada relatório
 _CARD_IMAGES = [
     "/assets/mining.jpg",
     "/assets/mining2.jpg",
@@ -106,7 +126,8 @@ _CARD_IMAGES = [
     "/assets/mining6.jpg"
 ]
 
-def create_navbar():
+def create_navbar() -> dbc.Navbar:
+    """Cria e retorna uma navbar para o portal."""
     return dbc.Navbar(
         dbc.Container([
             dbc.NavbarBrand("Mineração", href="/", className="ms-2"),
@@ -138,13 +159,12 @@ def create_navbar():
 
 navbar = create_navbar()
 
-# Callback para abrir/fechar a navbar em telas pequenas
 @app.callback(
     Output("navbar-collapse", "is_open"),
     [Input("navbar-toggler", "n_clicks")],
     [State("navbar-collapse", "is_open")]
 )
-def toggle_navbar(n_clicks, is_open):
+def toggle_navbar(n_clicks: int, is_open: bool) -> bool:
     """
     Callback que controla a abertura/fechamento do menu em dispositivos móveis.
     """
@@ -152,7 +172,7 @@ def toggle_navbar(n_clicks, is_open):
         return not is_open
     return is_open
 
-def create_card(img_src, title, subtitle, link_text, href):
+def create_card(img_src: str, title: str, subtitle: str, link_text: str, href: str) -> dbc.Card:
     """
     Cria e retorna um componente Card com imagem, título, subtítulo e link.
     """
@@ -175,8 +195,7 @@ def create_card(img_src, title, subtitle, link_text, href):
         className="card-hover animate__animated animate__fadeInUp"
     )
 
-# Layout da página inicial (Portal) com cards:
-# Exibindo 4 cards na primeira linha e 2 na segunda
+# Layout da página inicial (Portal) com cards e exibição do horário local
 home_layout = dbc.Container(
     [
         dbc.Row(
@@ -185,23 +204,35 @@ home_layout = dbc.Container(
                 width=12
             )
         ),
+        # Linha para exibição dinâmica do horário local (no fuso do navegador)
+        dbc.Row(
+            dbc.Col(
+                html.Div([
+                    html.H5("Horário Local:"),
+                    html.Div(id="local-time", style={"fontWeight": "bold", "fontSize": "1.2rem"})
+                ], className="text-center my-2"),
+                width=12
+            )
+        ),
+        # Intervalo para atualizar o horário a cada 1 segundo
+        dcc.Interval(id="time-interval", interval=1000, n_intervals=0),
         # Primeira linha: 4 cards
         dbc.Row(
             [
                 dbc.Col(
-                    create_card("/assets/mining.jpg", "Ciclo", "Análise de Hora", "Visualizar", "/relatorio1"),
+                    create_card(_CARD_IMAGES[0], "Ciclo", "Análise de Hora", "Visualizar", "/relatorio1"),
                     width=12, md=3
                 ),
                 #dbc.Col(
-                    #create_card("/assets/mining2.jpg", "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"),
+                    #create_card(_CARD_IMAGES[1], "Informativo de Produção", "Análise de Produção", "Visualizar", "/relatorio2"),
                     #width=12, md=3
                 #),
                 #dbc.Col(
-                    #create_card("/assets/mining3.jpg", "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
+                    #create_card(_CARD_IMAGES[2], "Avanço Financeiro", "Avanço Financeiro", "Visualizar", "/relatorio3"),
                     #width=12, md=3
                 #),
                 dbc.Col(
-                    create_card("/assets/mining4.jpg", "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"),
+                    create_card(_CARD_IMAGES[3], "Produção - Indicadores", "Produção - Indicadores", "Visualizar", "/relatorio4"),
                     width=12, md=3
                 ),
             ],
@@ -211,12 +242,12 @@ home_layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    create_card("/assets/mining5.jpg", "Timeline de Apontamentos", "Equipamentos de Produção", "Visualizar", "/relatorio5"),
+                    create_card(_CARD_IMAGES[4], "Timeline de Apontamentos", "Equipamentos de Produção", "Visualizar", "/relatorio5"),
                     width=12, md=3,
                     className="mt-4"
                 ),
                 dbc.Col(
-                    create_card("/assets/mining6.jpg", "Manutenção", "Atualizado", "Visualizar", "/relatorio6"),
+                    create_card(_CARD_IMAGES[5], "Manutenção", "Novo Relatório", "Visualizar", "/relatorio6"),
                     width=12, md=3,
                     className="mt-4"
                 ),
@@ -231,7 +262,7 @@ home_layout = dbc.Container(
             )
         ),
     ],
-    fluid=True,
+    fluid=True
 )
 
 # Layout principal com dcc.Location e Spinner (feedback de carregamento)
@@ -239,6 +270,7 @@ app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
         navbar,
+        # Aqui o horário local é exibido de forma dinâmica em todas as páginas
         dbc.Spinner(
             html.Div(id="page-content"),
             size="lg",
@@ -255,18 +287,35 @@ pages: Dict[str, html.Div] = {
     #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
-    "/relatorio6": rel6.layout,  # Incluído o Relatório 6
+    "/relatorio6": rel6.layout,  # Rota para o Relatório 6
 }
 
+@profile_time
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
-def display_page(pathname):
+def display_page(pathname: str) -> html.Div:
     """
     Callback para renderizar o layout conforme o path da URL.
+    Retorna o layout correspondente ou o layout principal (home_layout).
     """
     logger.info(f"Navegando para {pathname}")
-    # Retorna o layout correspondente ou o layout principal (home_layout)
     return pages.get(pathname, home_layout)
 
+# ---------------------------------------------------------------------------
+# Callback clientside para atualizar dinamicamente o horário local
+# ---------------------------------------------------------------------------
+app.clientside_callback(
+    """
+    function(n_intervals) {
+         var now = new Date();
+         return now.toLocaleString();
+    }
+    """,
+    Output("local-time", "children"),
+    [Input("time-interval", "n_intervals")]
+)
+
 if __name__ == "__main__":
-    logger.info("Executando o servidor no modo debug...")
-    app.run_server(debug=True, host="0.0.0.0", port=8050)
+    debug_mode: bool = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
+    port: int = int(os.environ.get("PORT", 8050))
+    logger.info("Executando o servidor no modo debug…" if debug_mode else "Executando o servidor...")
+    app.run_server(debug=debug_mode, host="0.0.0.0", port=port)

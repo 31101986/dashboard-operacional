@@ -1870,3 +1870,809 @@ Can't reconnect until invalid transaction is rolled back.  Please rollback() ful
 
 2025-04-08 14:36:47,391 - INFO - Dash is running on http://0.0.0.0:8050/
 
+2025-04-08 14:46:35,342 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-09 07:39:42,332 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 07:02:03,245 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 09:03:54,101 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 15:11:48,562 - INFO - [Profile] get_filtered_data_producao executed in 0.0188 seconds
+2025-04-10 15:11:48,796 - INFO - [Profile] get_filtered_data_hora executed in 0.0380 seconds
+2025-04-10 15:11:48,853 - INFO - [Profile] get_filtered_data_producao executed in 0.1131 seconds
+2025-04-10 15:11:48,864 - INFO - [Profile] compute_truck_stats executed in 0.0581 seconds
+2025-04-10 15:11:48,868 - INFO - [Profile] get_filtered_data_producao executed in 0.0583 seconds
+2025-04-10 15:11:48,911 - INFO - [Profile] get_filtered_data_producao executed in 0.0134 seconds
+2025-04-10 15:11:48,917 - INFO - [Profile] get_filtered_data_producao executed in 0.0371 seconds
+2025-04-10 15:11:49,104 - INFO - [Profile] get_filtered_data_producao executed in 0.0186 seconds
+2025-04-10 15:11:49,148 - INFO - [Profile] get_filtered_data_hora executed in 0.0045 seconds
+2025-04-10 15:11:49,157 - INFO - [Profile] compute_truck_stats executed in 0.0070 seconds
+2025-04-10 15:11:57,993 - INFO - [Profile] get_filtered_data_producao executed in 0.0603 seconds
+2025-04-10 15:11:58,030 - INFO - [Profile] get_filtered_data_producao executed in 0.0488 seconds
+2025-04-10 15:11:58,044 - INFO - [Profile] get_filtered_data_producao executed in 0.0786 seconds
+2025-04-10 15:11:58,386 - INFO - [Profile] get_filtered_data_producao executed in 0.0247 seconds
+2025-04-10 15:11:58,757 - INFO - [Profile] get_filtered_data_producao executed in 0.0158 seconds
+2025-04-10 15:11:58,775 - INFO - [Profile] get_filtered_data_producao executed in 0.0488 seconds
+2025-04-10 15:11:58,878 - INFO - [Profile] get_filtered_data_hora executed in 0.0098 seconds
+2025-04-10 15:11:58,902 - INFO - [Profile] get_filtered_data_hora executed in 0.0109 seconds
+2025-04-10 15:11:58,904 - INFO - [Profile] compute_truck_stats executed in 0.0224 seconds
+2025-04-10 15:11:58,918 - INFO - [Profile] compute_truck_stats executed in 0.0122 seconds
+2025-04-10 15:12:01,147 - INFO - [Profile] get_filtered_data_producao executed in 0.0623 seconds
+2025-04-10 15:12:01,168 - INFO - [Profile] get_filtered_data_producao executed in 0.0586 seconds
+2025-04-10 15:12:01,194 - INFO - [Profile] get_filtered_data_producao executed in 0.0689 seconds
+2025-04-10 15:12:01,484 - INFO - [Profile] get_filtered_data_producao executed in 0.2553 seconds
+2025-04-10 15:12:01,710 - INFO - [Profile] get_filtered_data_producao executed in 0.0272 seconds
+2025-04-10 15:12:01,883 - INFO - [Profile] get_filtered_data_hora executed in 0.0102 seconds
+2025-04-10 15:12:01,892 - INFO - [Profile] compute_truck_stats executed in 0.0073 seconds
+2025-04-10 15:12:01,961 - INFO - [Profile] get_filtered_data_producao executed in 0.0597 seconds
+2025-04-10 15:12:02,012 - INFO - [Profile] get_filtered_data_hora executed in 0.0050 seconds
+2025-04-10 15:12:02,022 - INFO - [Profile] compute_truck_stats executed in 0.0087 seconds
+2025-04-10 15:28:15,004 - INFO - [Profile] get_filtered_data_producao executed in 0.0463 seconds
+2025-04-10 15:28:15,036 - INFO - [Profile] get_filtered_data_producao executed in 0.0543 seconds
+2025-04-10 15:28:15,099 - INFO - [Profile] get_filtered_data_producao executed in 0.0342 seconds
+2025-04-10 15:28:15,099 - INFO - [Profile] get_filtered_data_producao executed in 0.0209 seconds
+2025-04-10 15:28:15,511 - INFO - [Profile] get_filtered_data_producao executed in 0.1419 seconds
+2025-04-10 15:28:15,601 - INFO - [Profile] get_filtered_data_producao executed in 0.0281 seconds
+2025-04-10 15:28:15,615 - INFO - [Profile] get_filtered_data_hora executed in 0.0216 seconds
+2025-04-10 15:28:15,660 - INFO - [Profile] compute_truck_stats executed in 0.0429 seconds
+2025-04-10 15:28:15,683 - INFO - [Profile] get_filtered_data_hora executed in 0.0065 seconds
+2025-04-10 15:28:15,698 - INFO - [Profile] compute_truck_stats executed in 0.0137 seconds
+2025-04-10 15:28:36,030 - INFO - [Profile] calc_custo_por_faixa executada em 0.2764 segundos
+2025-04-10 15:28:36,995 - INFO - [Profile] calc_custo_adicional executada em 0.1305 segundos
+2025-04-10 15:28:37,258 - INFO - [Profile] calc_custo_por_faixa executada em 0.4508 segundos
+2025-04-10 15:28:37,402 - INFO - [Profile] calc_custo_por_faixa executada em 0.0147 segundos
+2025-04-10 15:28:37,437 - INFO - [Profile] calc_custo_por_faixa executada em 0.0348 segundos
+2025-04-10 15:28:37,461 - INFO - [Profile] calc_custo_adicional executada em 0.0227 segundos
+2025-04-10 15:28:37,461 - INFO - [Profile] calc_faturamento_transporte executada em 0.0741 segundos
+2025-04-10 15:28:37,663 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0096 segundos
+2025-04-10 15:37:08,998 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 15:40:40,862 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 15:46:25,709 - INFO - [Profile] get_fato_hora executada em 0.9726 segundos
+2025-04-10 15:46:25,864 - INFO - [Profile] get_fato_hora executada em 1.1259 segundos
+2025-04-10 15:46:25,897 - INFO - [Profile] compute_segments executada em 0.0164 segundos
+2025-04-10 15:46:26,072 - INFO - [Profile] create_timeline_graph executada em 1.3340 segundos
+2025-04-10 15:50:39,079 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-10 16:18:56,866 - INFO - [Profile] get_all_records_cached executada em 3.6927 segundos
+2025-04-10 16:18:57,783 - INFO - [Profile] get_current_state_records executada em 4.6101 segundos
+2025-04-10 16:18:57,933 - INFO - [Profile] create_tv_layout executada em 0.0547 segundos
+2025-04-10 16:23:55,481 - INFO - [Profile] get_all_records_cached executada em 2.2996 segundos
+2025-04-10 16:23:56,343 - INFO - [Profile] get_current_state_records executada em 3.1622 segundos
+2025-04-10 16:23:56,500 - INFO - [Profile] create_tv_layout executada em 0.0472 segundos
+2025-04-10 16:28:55,739 - INFO - [Profile] get_all_records_cached executada em 2.5664 segundos
+2025-04-10 16:28:56,740 - INFO - [Profile] get_current_state_records executada em 3.5682 segundos
+2025-04-10 16:28:56,910 - INFO - [Profile] create_tv_layout executada em 0.0481 segundos
+2025-04-10 16:33:55,550 - INFO - [Profile] get_all_records_cached executada em 2.3747 segundos
+2025-04-10 16:33:56,485 - INFO - [Profile] get_current_state_records executada em 3.3095 segundos
+2025-04-10 16:33:56,650 - INFO - [Profile] create_tv_layout executada em 0.0391 segundos
+2025-04-10 16:38:55,817 - INFO - [Profile] get_all_records_cached executada em 2.6433 segundos
+2025-04-10 16:38:56,731 - INFO - [Profile] get_current_state_records executada em 3.5574 segundos
+2025-04-10 16:38:56,898 - INFO - [Profile] create_tv_layout executada em 0.0374 segundos
+2025-04-10 16:43:56,250 - INFO - [Profile] get_all_records_cached executada em 3.0640 segundos
+2025-04-10 16:43:57,189 - INFO - [Profile] get_current_state_records executada em 4.0029 segundos
+2025-04-10 16:43:57,357 - INFO - [Profile] create_tv_layout executada em 0.0513 segundos
+2025-04-10 16:49:53,917 - INFO - [Profile] get_all_records_cached executada em 2.2639 segundos
+2025-04-10 16:49:54,588 - INFO - [Profile] get_current_state_records executada em 2.9357 segundos
+2025-04-10 16:49:54,747 - INFO - [Profile] create_tv_layout executada em 0.0485 segundos
+2025-04-10 16:54:54,427 - INFO - [Profile] get_all_records_cached executada em 2.7769 segundos
+2025-04-10 16:54:55,339 - INFO - [Profile] get_current_state_records executada em 3.6899 segundos
+2025-04-10 16:54:55,524 - INFO - [Profile] create_tv_layout executada em 0.0691 segundos
+2025-04-10 16:59:54,678 - INFO - [Profile] get_all_records_cached executada em 3.0160 segundos
+2025-04-10 16:59:55,730 - INFO - [Profile] get_current_state_records executada em 4.0687 segundos
+2025-04-10 16:59:55,904 - INFO - [Profile] create_tv_layout executada em 0.0447 segundos
+2025-04-10 19:28:10,235 - INFO - [Profile] get_all_records_cached executada em 10.2453 segundos
+2025-04-10 19:28:11,492 - INFO - [Profile] get_current_state_records executada em 11.5035 segundos
+2025-04-10 19:31:19,988 - INFO - [Profile] calc_custo_por_faixa executada em 0.2062 segundos
+2025-04-10 19:31:23,970 - INFO - [Profile] calc_custo_por_faixa executada em 0.3090 segundos
+2025-04-10 19:31:35,260 - INFO - [Profile] calc_custo_adicional executada em 0.4123 segundos
+2025-04-10 19:31:42,053 - INFO - [Profile] calc_custo_por_faixa executada em 0.0465 segundos
+2025-04-10 19:31:42,241 - INFO - [Profile] calc_custo_por_faixa executada em 0.1875 segundos
+2025-04-10 19:31:42,424 - INFO - [Profile] calc_custo_adicional executada em 0.1812 segundos
+2025-04-10 19:31:42,424 - INFO - [Profile] calc_faturamento_transporte executada em 0.4184 segundos
+2025-04-10 19:31:45,686 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0367 segundos
+2025-04-11 07:01:00,353 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-11 07:52:51,786 - INFO - [Profile] get_filtered_data_producao executed in 0.0041 seconds
+2025-04-11 07:52:51,836 - INFO - [Profile] get_filtered_data_producao executed in 0.0042 seconds
+2025-04-11 07:52:51,865 - INFO - [Profile] get_filtered_data_producao executed in 0.0036 seconds
+2025-04-11 07:52:51,883 - INFO - [Profile] get_filtered_data_producao executed in 0.0172 seconds
+2025-04-11 07:52:51,892 - INFO - [Profile] get_filtered_data_hora executed in 0.0177 seconds
+2025-04-11 07:52:51,895 - INFO - [Profile] get_filtered_data_producao executed in 0.0023 seconds
+2025-04-11 07:52:51,918 - INFO - [Profile] get_filtered_data_producao executed in 0.0053 seconds
+2025-04-11 07:52:51,987 - INFO - [Profile] get_filtered_data_hora executed in 0.0404 seconds
+2025-04-11 07:52:52,013 - INFO - [Profile] compute_truck_stats executed in 0.0693 seconds
+2025-04-11 07:52:52,202 - INFO - [Profile] compute_truck_stats executed in 0.1869 seconds
+2025-04-11 09:11:11,661 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-11 12:13:37,184 - INFO - [Profile] get_fato_hora executada em 0.3509 segundos
+2025-04-11 12:13:37,508 - INFO - [Profile] get_fato_hora executada em 0.6729 segundos
+2025-04-11 12:13:37,550 - INFO - [Profile] compute_segments executada em 0.0211 segundos
+2025-04-11 12:13:37,842 - INFO - [Profile] create_timeline_graph executada em 1.0074 segundos
+2025-04-11 12:13:47,878 - INFO - [Profile] get_fato_hora executada em 3.1164 segundos
+2025-04-11 12:13:48,228 - INFO - [Profile] compute_segments executada em 0.0914 segundos
+2025-04-11 12:13:48,294 - INFO - [Profile] get_fato_hora executada em 3.5338 segundos
+2025-04-11 12:13:48,404 - INFO - [Profile] create_timeline_graph executada em 3.6426 segundos
+2025-04-11 12:13:52,024 - INFO - [Profile] get_fato_hora executada em 0.2307 segundos
+2025-04-11 12:13:52,041 - INFO - [Profile] get_fato_hora executada em 0.2462 segundos
+2025-04-11 12:13:52,058 - INFO - [Profile] compute_segments executada em 0.0104 segundos
+2025-04-11 12:13:52,159 - INFO - [Profile] create_timeline_graph executada em 0.3646 segundos
+2025-04-11 09:14:00,843 - INFO - [Profile] get_fato_hora executada em 0.8629 segundos
+2025-04-11 09:14:00,858 - INFO - [Profile] get_fato_hora executada em 0.8792 segundos
+2025-04-11 09:14:00,877 - INFO - [Profile] compute_segments executada em 0.0265 segundos
+2025-04-11 09:14:01,336 - INFO - [Profile] create_timeline_graph executada em 1.3562 segundos
+2025-04-11 14:29:02,463 - INFO - [Profile] get_fato_hora executada em 1.6976 segundos
+2025-04-11 14:29:02,483 - INFO - [Profile] get_fato_hora executada em 1.7151 segundos
+2025-04-11 14:29:02,504 - INFO - [Profile] compute_segments executada em 0.0110 segundos
+2025-04-11 14:29:03,165 - INFO - [Profile] create_timeline_graph executada em 2.3968 segundos
+2025-04-11 11:29:35,733 - INFO - [Profile] get_fato_hora executada em 1.3090 segundos
+2025-04-11 11:29:36,308 - INFO - [Profile] get_fato_hora executada em 1.8813 segundos
+2025-04-11 11:29:36,330 - INFO - [Profile] compute_segments executada em 0.0125 segundos
+2025-04-11 11:29:37,087 - INFO - [Profile] create_timeline_graph executada em 2.6614 segundos
+2025-04-11 12:21:47,122 - INFO - [Profile] get_fato_hora executada em 0.9077 segundos
+2025-04-11 12:21:47,321 - INFO - [Profile] get_fato_hora executada em 1.1052 segundos
+2025-04-11 12:21:47,342 - INFO - [Profile] compute_segments executada em 0.0093 segundos
+2025-04-11 12:21:47,812 - INFO - [Profile] create_timeline_graph executada em 1.5960 segundos
+2025-04-11 12:25:04,314 - INFO - [Profile] get_all_records_cached executada em 2.2536 segundos
+2025-04-11 12:25:05,202 - INFO - [Profile] get_current_state_records executada em 3.1429 segundos
+2025-04-11 12:25:05,394 - INFO - [Profile] create_tv_layout executada em 0.0614 segundos
+2025-04-11 12:25:12,633 - INFO - [Profile] create_tv_layout executada em 0.0387 segundos
+2025-04-11 12:25:13,561 - INFO - [Profile] create_tv_layout executada em 0.0295 segundos
+2025-04-11 12:25:14,561 - INFO - [Profile] create_tv_layout executada em 0.0308 segundos
+2025-04-11 12:25:15,394 - INFO - [Profile] create_tv_layout executada em 0.1222 segundos
+2025-04-11 12:25:18,465 - INFO - [Profile] create_tv_layout executada em 0.0249 segundos
+2025-04-11 12:25:24,793 - INFO - [Profile] create_tv_layout executada em 0.0478 segundos
+2025-04-11 12:25:27,818 - INFO - [Profile] create_tv_layout executada em 0.0451 segundos
+2025-04-11 12:25:31,364 - INFO - [Profile] create_tv_layout executada em 0.0952 segundos
+2025-04-11 12:28:41,246 - INFO - [Profile] get_current_state_records executada em 0.5461 segundos
+2025-04-11 12:28:41,416 - INFO - [Profile] create_tv_layout executada em 0.0609 segundos
+2025-04-11 12:30:07,276 - INFO - [Profile] get_all_records_cached executada em 5.2192 segundos
+2025-04-11 12:30:08,014 - INFO - [Profile] get_current_state_records executada em 5.9580 segundos
+2025-04-11 12:30:08,156 - INFO - [Profile] create_tv_layout executada em 0.0335 segundos
+2025-04-11 12:33:14,663 - INFO - [Profile] get_fato_hora executada em 0.4032 segundos
+2025-04-11 12:33:14,770 - INFO - [Profile] get_fato_hora executada em 0.5079 segundos
+2025-04-11 12:33:14,800 - INFO - [Profile] compute_segments executada em 0.0141 segundos
+2025-04-11 12:33:14,914 - INFO - [Profile] create_timeline_graph executada em 0.6518 segundos
+2025-04-11 15:09:34,757 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-11 15:26:48,873 - INFO - [Profile] get_filtered_data_producao executed in 0.0549 seconds
+2025-04-11 15:26:48,977 - INFO - [Profile] get_filtered_data_producao executed in 0.0178 seconds
+2025-04-11 15:26:49,017 - INFO - [Profile] get_filtered_data_producao executed in 0.0679 seconds
+2025-04-11 15:26:49,018 - INFO - [Profile] get_filtered_data_producao executed in 0.0803 seconds
+2025-04-11 15:26:49,019 - INFO - [Profile] get_filtered_data_hora executed in 0.0199 seconds
+2025-04-11 15:26:49,068 - INFO - [Profile] get_filtered_data_producao executed in 0.0624 seconds
+2025-04-11 15:26:49,115 - INFO - [Profile] compute_truck_stats executed in 0.0765 seconds
+2025-04-11 15:26:49,352 - INFO - [Profile] get_filtered_data_producao executed in 0.0167 seconds
+2025-04-11 15:26:49,410 - INFO - [Profile] get_filtered_data_hora executed in 0.0063 seconds
+2025-04-11 15:26:49,417 - INFO - [Profile] compute_truck_stats executed in 0.0062 seconds
+2025-04-12 07:48:19,641 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-14 07:13:39,492 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-14 08:52:33,773 - INFO - [Profile] get_filtered_data_producao executed in 0.0038 seconds
+2025-04-14 08:52:33,800 - INFO - [Profile] get_filtered_data_producao executed in 0.0036 seconds
+2025-04-14 08:52:33,805 - INFO - [Profile] get_filtered_data_producao executed in 0.0048 seconds
+2025-04-14 08:52:33,836 - INFO - [Profile] get_filtered_data_producao executed in 0.0040 seconds
+2025-04-14 08:52:33,845 - INFO - [Profile] get_filtered_data_producao executed in 0.0023 seconds
+2025-04-14 08:52:33,877 - INFO - [Profile] get_filtered_data_hora executed in 0.0072 seconds
+2025-04-14 08:52:33,909 - INFO - [Profile] get_filtered_data_producao executed in 0.0031 seconds
+2025-04-14 08:52:33,921 - INFO - [Profile] compute_truck_stats executed in 0.0436 seconds
+2025-04-14 08:52:33,938 - INFO - [Profile] get_filtered_data_hora executed in 0.0068 seconds
+2025-04-14 08:52:33,945 - INFO - [Profile] compute_truck_stats executed in 0.0067 seconds
+2025-04-14 08:54:17,711 - INFO - [Profile] get_filtered_data_producao executed in 0.0050 seconds
+2025-04-14 08:54:17,761 - INFO - [Profile] get_filtered_data_producao executed in 0.0151 seconds
+2025-04-14 08:54:17,839 - INFO - [Profile] get_filtered_data_producao executed in 0.0164 seconds
+2025-04-14 08:54:18,011 - INFO - [Profile] get_filtered_data_producao executed in 0.0967 seconds
+2025-04-14 08:54:18,027 - INFO - [Profile] get_filtered_data_producao executed in 0.0190 seconds
+2025-04-14 08:54:18,097 - INFO - [Profile] get_filtered_data_hora executed in 0.0303 seconds
+2025-04-14 08:54:18,100 - INFO - [Profile] get_filtered_data_producao executed in 0.0061 seconds
+2025-04-14 08:54:18,114 - INFO - [Profile] compute_truck_stats executed in 0.0129 seconds
+2025-04-14 08:54:18,191 - INFO - [Profile] get_filtered_data_hora executed in 0.0069 seconds
+2025-04-14 08:54:18,203 - INFO - [Profile] compute_truck_stats executed in 0.0119 seconds
+2025-04-14 08:54:21,433 - INFO - [Profile] get_filtered_data_producao executed in 0.0040 seconds
+2025-04-14 08:54:21,461 - INFO - [Profile] get_filtered_data_producao executed in 0.0028 seconds
+2025-04-14 08:54:21,525 - INFO - [Profile] get_filtered_data_producao executed in 0.0048 seconds
+2025-04-14 08:54:21,721 - INFO - [Profile] get_filtered_data_producao executed in 0.0068 seconds
+2025-04-14 08:54:21,771 - INFO - [Profile] get_filtered_data_producao executed in 0.0058 seconds
+2025-04-14 08:54:21,808 - INFO - [Profile] get_filtered_data_producao executed in 0.0031 seconds
+2025-04-14 08:54:21,820 - INFO - [Profile] get_filtered_data_hora executed in 0.0064 seconds
+2025-04-14 08:54:21,833 - INFO - [Profile] compute_truck_stats executed in 0.0115 seconds
+2025-04-14 08:54:21,886 - INFO - [Profile] get_filtered_data_hora executed in 0.0440 seconds
+2025-04-14 08:54:21,895 - INFO - [Profile] compute_truck_stats executed in 0.0083 seconds
+2025-04-14 08:54:22,901 - INFO - [Profile] get_filtered_data_producao executed in 0.0048 seconds
+2025-04-14 08:54:22,986 - INFO - [Profile] get_filtered_data_producao executed in 0.0037 seconds
+2025-04-14 08:54:23,084 - INFO - [Profile] get_filtered_data_producao executed in 0.0049 seconds
+2025-04-14 08:54:23,156 - INFO - [Profile] get_filtered_data_producao executed in 0.0064 seconds
+2025-04-14 08:54:23,162 - INFO - [Profile] get_filtered_data_producao executed in 0.0043 seconds
+2025-04-14 08:54:23,215 - INFO - [Profile] get_filtered_data_hora executed in 0.0216 seconds
+2025-04-14 08:54:23,225 - INFO - [Profile] get_filtered_data_producao executed in 0.0040 seconds
+2025-04-14 08:54:23,240 - INFO - [Profile] compute_truck_stats executed in 0.0196 seconds
+2025-04-14 08:54:23,291 - INFO - [Profile] get_filtered_data_hora executed in 0.0067 seconds
+2025-04-14 08:54:23,306 - INFO - [Profile] compute_truck_stats executed in 0.0135 seconds
+2025-04-14 09:44:50,655 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x00000235556A1A90>
+2025-04-14 09:44:57,545 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x00000235556A1A90>
+2025-04-14 09:47:26,315 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x00000235556A1A90>
+2025-04-14 09:47:34,345 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x00000235556A1A90>
+2025-04-14 10:38:13,177 - INFO - [Profile] get_filtered_data_producao executed in 0.0193 seconds
+2025-04-14 10:38:13,178 - INFO - [Profile] get_filtered_data_producao executed in 0.0125 seconds
+2025-04-14 10:38:13,186 - INFO - [Profile] get_filtered_data_producao executed in 0.0069 seconds
+2025-04-14 10:38:13,199 - INFO - [Profile] get_filtered_data_producao executed in 0.0304 seconds
+2025-04-14 10:38:13,214 - INFO - [Profile] get_filtered_data_producao executed in 0.0190 seconds
+2025-04-14 10:38:13,337 - INFO - [Profile] get_filtered_data_hora executed in 0.0310 seconds
+2025-04-14 10:38:13,405 - INFO - [Profile] compute_truck_stats executed in 0.0662 seconds
+2025-04-14 10:38:13,415 - INFO - [Profile] get_filtered_data_producao executed in 0.0077 seconds
+2025-04-14 10:38:13,447 - INFO - [Profile] get_filtered_data_hora executed in 0.0112 seconds
+2025-04-14 10:38:13,459 - INFO - [Profile] compute_truck_stats executed in 0.0106 seconds
+2025-04-15 07:02:43,043 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-15 07:03:16,039 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:03:18,256 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:05:36,481 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:05:55,832 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:25:50,125 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:26:13,493 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001C2148E1950>
+2025-04-15 07:38:26,680 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001E5A8855A90>
+2025-04-15 07:38:33,878 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001E5A8855A90>
+2025-04-15 07:40:22,965 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001E5A8855A90>
+2025-04-15 07:40:45,308 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001E5A8855A90>
+2025-04-15 07:59:23,033 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
+2025-04-15 07:59:30,391 - ERROR - Exception possibly due to cache backend.
+Traceback (most recent call last):
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 861, in decorated_function
+    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 618, in make_cache_key
+    fname, version_data = self._memoize_version(
+                          ~~~~~~~~~~~~~~~~~~~~~^
+        f,
+        ^^
+    ...<4 lines>...
+        args_to_ignore=args_to_ignore,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 568, in _memoize_version
+    version_data_list = list(self.cache.get_many(*fetch_keys))
+                             ^^^^^^^^^^
+  File "C:\DashboardMineracao\venv\Lib\site-packages\flask_caching\__init__.py", line 191, in cache
+    return app.extensions["cache"][self]
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
+2025-04-16 08:36:34,936 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-16 09:15:13,063 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-18 09:23:59,728 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-19 08:57:38,904 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-20 08:19:28,335 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-21 09:47:38,918 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-22 07:50:54,571 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-22 09:22:47,801 - INFO - [Profile] get_filtered_data_producao executed in 0.0053 seconds
+2025-04-22 09:22:47,830 - INFO - [Profile] get_filtered_data_producao executed in 0.0029 seconds
+2025-04-22 09:22:47,833 - INFO - [Profile] get_filtered_data_producao executed in 0.0021 seconds
+2025-04-22 09:22:47,849 - INFO - [Profile] get_filtered_data_producao executed in 0.0026 seconds
+2025-04-22 09:22:47,884 - INFO - [Profile] get_filtered_data_producao executed in 0.0037 seconds
+2025-04-22 09:22:47,892 - INFO - [Profile] get_filtered_data_hora executed in 0.0122 seconds
+2025-04-22 09:22:47,930 - INFO - [Profile] compute_truck_stats executed in 0.0297 seconds
+2025-04-22 09:22:47,935 - INFO - [Profile] get_filtered_data_producao executed in 0.0029 seconds
+2025-04-22 09:22:47,962 - INFO - [Profile] get_filtered_data_hora executed in 0.0032 seconds
+2025-04-22 09:22:47,968 - INFO - [Profile] compute_truck_stats executed in 0.0050 seconds
+2025-04-22 09:22:51,392 - INFO - [Profile] get_filtered_data_producao executed in 0.0241 seconds
+2025-04-22 09:22:51,396 - INFO - [Profile] get_filtered_data_producao executed in 0.0058 seconds
+2025-04-22 09:22:51,399 - INFO - [Profile] get_filtered_data_producao executed in 0.0029 seconds
+2025-04-22 09:22:51,433 - INFO - [Profile] get_filtered_data_producao executed in 0.0329 seconds
+2025-04-22 09:22:51,509 - INFO - [Profile] get_filtered_data_producao executed in 0.0037 seconds
+2025-04-22 09:22:51,603 - INFO - [Profile] get_filtered_data_hora executed in 0.0038 seconds
+2025-04-22 09:22:51,610 - INFO - [Profile] compute_truck_stats executed in 0.0056 seconds
+2025-04-22 09:22:51,679 - INFO - [Profile] get_filtered_data_producao executed in 0.0090 seconds
+2025-04-22 09:22:51,696 - INFO - [Profile] get_filtered_data_hora executed in 0.0031 seconds
+2025-04-22 09:22:51,701 - INFO - [Profile] compute_truck_stats executed in 0.0044 seconds
+2025-04-22 09:22:53,751 - INFO - [Profile] get_filtered_data_producao executed in 0.0032 seconds
+2025-04-22 09:22:53,761 - INFO - [Profile] get_filtered_data_producao executed in 0.0031 seconds
+2025-04-22 09:22:53,871 - INFO - [Profile] get_filtered_data_producao executed in 0.0074 seconds
+2025-04-22 09:22:53,941 - INFO - [Profile] get_filtered_data_producao executed in 0.0152 seconds
+2025-04-22 09:22:53,952 - INFO - [Profile] get_filtered_data_producao executed in 0.0081 seconds
+2025-04-22 09:22:54,002 - INFO - [Profile] get_filtered_data_hora executed in 0.0035 seconds
+2025-04-22 09:22:54,008 - INFO - [Profile] compute_truck_stats executed in 0.0051 seconds
+2025-04-22 09:22:54,059 - INFO - [Profile] get_filtered_data_producao executed in 0.0041 seconds
+2025-04-22 09:22:54,073 - INFO - [Profile] get_filtered_data_hora executed in 0.0030 seconds
+2025-04-22 09:22:54,078 - INFO - [Profile] compute_truck_stats executed in 0.0045 seconds
+2025-04-22 09:23:13,856 - INFO - [Profile] get_filtered_data_producao executed in 0.0104 seconds
+2025-04-22 09:23:13,857 - INFO - [Profile] get_filtered_data_producao executed in 0.0145 seconds
+2025-04-22 09:23:13,858 - INFO - [Profile] get_filtered_data_producao executed in 0.0078 seconds
+2025-04-22 09:23:13,867 - INFO - [Profile] get_filtered_data_producao executed in 0.0059 seconds
+2025-04-22 09:23:13,995 - INFO - [Profile] get_filtered_data_producao executed in 0.0172 seconds
+2025-04-22 09:23:14,128 - INFO - [Profile] get_filtered_data_producao executed in 0.0024 seconds
+2025-04-22 09:23:14,137 - INFO - [Profile] get_filtered_data_hora executed in 0.0160 seconds
+2025-04-22 09:23:14,149 - INFO - [Profile] compute_truck_stats executed in 0.0108 seconds
+2025-04-22 09:23:14,203 - INFO - [Profile] get_filtered_data_hora executed in 0.0052 seconds
+2025-04-22 09:23:14,209 - INFO - [Profile] compute_truck_stats executed in 0.0049 seconds
+2025-04-22 09:23:17,732 - INFO - [Profile] get_filtered_data_producao executed in 0.0047 seconds
+2025-04-22 09:23:17,743 - INFO - [Profile] get_filtered_data_producao executed in 0.0081 seconds
+2025-04-22 09:23:17,752 - INFO - [Profile] get_filtered_data_producao executed in 0.0130 seconds
+2025-04-22 09:23:17,825 - INFO - [Profile] get_filtered_data_producao executed in 0.0033 seconds
+2025-04-22 09:23:17,946 - INFO - [Profile] get_filtered_data_producao executed in 0.0053 seconds
+2025-04-22 09:23:17,963 - INFO - [Profile] get_filtered_data_hora executed in 0.0039 seconds
+2025-04-22 09:23:17,971 - INFO - [Profile] compute_truck_stats executed in 0.0073 seconds
+2025-04-22 09:23:18,036 - INFO - [Profile] get_filtered_data_producao executed in 0.0041 seconds
+2025-04-22 09:23:18,048 - INFO - [Profile] get_filtered_data_hora executed in 0.0027 seconds
+2025-04-22 09:23:18,053 - INFO - [Profile] compute_truck_stats executed in 0.0046 seconds
+2025-04-22 09:23:19,641 - INFO - [Profile] get_filtered_data_producao executed in 0.0044 seconds
+2025-04-22 09:23:19,681 - INFO - [Profile] get_filtered_data_producao executed in 0.0316 seconds
+2025-04-22 09:23:19,689 - INFO - [Profile] get_filtered_data_producao executed in 0.0026 seconds
+2025-04-22 09:23:19,710 - INFO - [Profile] get_filtered_data_producao executed in 0.0277 seconds
+2025-04-22 09:23:19,801 - INFO - [Profile] get_filtered_data_producao executed in 0.0032 seconds
+2025-04-22 09:23:19,865 - INFO - [Profile] get_filtered_data_hora executed in 0.0032 seconds
+2025-04-22 09:23:19,871 - INFO - [Profile] compute_truck_stats executed in 0.0052 seconds
+2025-04-22 09:23:19,925 - INFO - [Profile] get_filtered_data_producao executed in 0.0257 seconds
+2025-04-22 09:23:19,939 - INFO - [Profile] get_filtered_data_hora executed in 0.0029 seconds
+2025-04-22 09:23:19,943 - INFO - [Profile] compute_truck_stats executed in 0.0043 seconds
+2025-04-22 09:26:04,060 - INFO - [Profile] calc_custo_por_faixa executada em 0.0392 segundos
+2025-04-22 09:26:04,298 - INFO - [Profile] calc_custo_adicional executada em 0.0296 segundos
+2025-04-22 09:26:04,576 - INFO - [Profile] calc_custo_por_faixa executada em 0.0322 segundos
+2025-04-22 09:26:04,601 - INFO - [Profile] calc_custo_por_faixa executada em 0.0055 segundos
+2025-04-22 09:26:04,617 - INFO - [Profile] calc_custo_por_faixa executada em 0.0154 segundos
+2025-04-22 09:26:04,622 - INFO - [Profile] calc_custo_adicional executada em 0.0052 segundos
+2025-04-22 09:26:04,623 - INFO - [Profile] calc_faturamento_transporte executada em 0.0268 segundos
+2025-04-22 09:26:04,746 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0041 segundos
+2025-04-22 09:28:05,237 - INFO - [Profile] get_fato_hora executada em 0.8563 segundos
+2025-04-22 09:28:06,693 - INFO - [Profile] get_fato_hora executada em 2.3113 segundos
+2025-04-22 09:28:06,721 - INFO - [Profile] compute_segments executada em 0.0230 segundos
+2025-04-22 09:28:06,809 - INFO - [Profile] create_timeline_graph executada em 2.4282 segundos
+2025-04-22 09:29:02,326 - INFO - [Profile] get_all_records_cached executada em 25.9146 segundos
+2025-04-22 09:29:03,042 - INFO - [Profile] get_current_state_records executada em 26.6309 segundos
+2025-04-22 09:29:03,124 - INFO - [Profile] create_tv_layout executada em 0.0256 segundos
+2025-04-22 09:33:38,729 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-22 09:37:11,685 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-22 20:04:14,614 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-23 08:27:40,571 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-23 17:13:11,210 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-23 17:47:10,153 - INFO - [Profile] get_filtered_data_producao executed in 0.0442 seconds
+2025-04-23 17:47:10,211 - INFO - [Profile] get_filtered_data_producao executed in 0.0502 seconds
+2025-04-23 17:47:10,220 - INFO - [Profile] get_filtered_data_producao executed in 0.0436 seconds
+2025-04-23 17:47:10,225 - INFO - [Profile] get_filtered_data_producao executed in 0.0267 seconds
+2025-04-23 17:47:10,228 - INFO - [Profile] get_filtered_data_producao executed in 0.0445 seconds
+2025-04-23 17:47:10,315 - INFO - [Profile] get_filtered_data_hora executed in 0.0087 seconds
+2025-04-23 17:47:10,329 - INFO - [Profile] compute_truck_stats executed in 0.0109 seconds
+2025-04-23 17:47:10,463 - INFO - [Profile] get_filtered_data_producao executed in 0.0074 seconds
+2025-04-23 17:47:10,509 - INFO - [Profile] get_filtered_data_hora executed in 0.0061 seconds
+2025-04-23 17:47:10,523 - INFO - [Profile] compute_truck_stats executed in 0.0137 seconds
+2025-04-23 17:47:16,006 - INFO - [Profile] get_filtered_data_producao executed in 0.0526 seconds
+2025-04-23 17:47:16,024 - INFO - [Profile] get_filtered_data_producao executed in 0.0363 seconds
+2025-04-23 17:47:16,033 - INFO - [Profile] get_filtered_data_producao executed in 0.0322 seconds
+2025-04-23 17:47:16,204 - INFO - [Profile] get_filtered_data_producao executed in 0.0343 seconds
+2025-04-23 17:47:16,346 - INFO - [Profile] get_filtered_data_producao executed in 0.0109 seconds
+2025-04-23 17:47:16,482 - INFO - [Profile] get_filtered_data_hora executed in 0.0066 seconds
+2025-04-23 17:47:16,502 - INFO - [Profile] compute_truck_stats executed in 0.0187 seconds
+2025-04-23 17:47:16,527 - INFO - [Profile] get_filtered_data_producao executed in 0.0379 seconds
+2025-04-23 17:47:16,572 - INFO - [Profile] get_filtered_data_hora executed in 0.0037 seconds
+2025-04-23 17:47:16,577 - INFO - [Profile] compute_truck_stats executed in 0.0045 seconds
+2025-04-23 17:47:18,275 - INFO - [Profile] get_filtered_data_producao executed in 0.0218 seconds
+2025-04-23 17:47:18,292 - INFO - [Profile] get_filtered_data_producao executed in 0.0655 seconds
+2025-04-23 17:47:18,311 - INFO - [Profile] get_filtered_data_producao executed in 0.0335 seconds
+2025-04-23 17:47:18,348 - INFO - [Profile] get_filtered_data_producao executed in 0.0511 seconds
+2025-04-23 17:47:18,634 - INFO - [Profile] get_filtered_data_producao executed in 0.0112 seconds
+2025-04-23 17:47:18,678 - INFO - [Profile] get_filtered_data_hora executed in 0.0048 seconds
+2025-04-23 17:47:18,698 - INFO - [Profile] compute_truck_stats executed in 0.0169 seconds
+2025-04-23 17:47:18,818 - INFO - [Profile] get_filtered_data_producao executed in 0.0077 seconds
+2025-04-23 17:47:18,855 - INFO - [Profile] get_filtered_data_hora executed in 0.0037 seconds
+2025-04-23 17:47:18,860 - INFO - [Profile] compute_truck_stats executed in 0.0043 seconds
+2025-04-24 07:44:56,497 - INFO - [Profile] get_filtered_data_producao executed in 0.0065 seconds
+2025-04-24 07:44:56,524 - INFO - [Profile] get_filtered_data_producao executed in 0.0034 seconds
+2025-04-24 07:44:56,571 - INFO - [Profile] get_filtered_data_producao executed in 0.0546 seconds
+2025-04-24 07:44:56,657 - INFO - [Profile] get_filtered_data_producao executed in 0.0181 seconds
+2025-04-24 07:44:56,797 - INFO - [Profile] get_filtered_data_producao executed in 0.0035 seconds
+2025-04-24 07:44:56,877 - INFO - [Profile] get_filtered_data_producao executed in 0.0472 seconds
+2025-04-24 07:44:56,888 - INFO - [Profile] get_filtered_data_producao executed in 0.0019 seconds
+2025-04-24 07:44:56,901 - INFO - [Profile] get_filtered_data_producao executed in 0.0017 seconds
+2025-04-24 07:44:57,132 - INFO - [Profile] get_filtered_data_producao executed in 0.0057 seconds
+2025-04-24 07:44:57,155 - INFO - [Profile] get_filtered_data_producao executed in 0.0024 seconds
+2025-04-24 07:44:57,285 - INFO - [Profile] get_filtered_data_producao executed in 0.0081 seconds
+2025-04-24 07:44:57,363 - INFO - [Profile] get_filtered_data_producao executed in 0.0034 seconds
+2025-04-24 08:57:40,422 - INFO - [Profile] get_all_records_cached executada em 4.3803 segundos
+2025-04-24 08:57:41,914 - INFO - [Profile] get_current_state_records executada em 5.8750 segundos
+2025-04-24 08:57:42,070 - INFO - [Profile] create_tv_layout executada em 0.0519 segundos
+2025-04-24 09:02:40,522 - INFO - [Profile] get_all_records_cached executada em 4.5138 segundos
+2025-04-24 09:02:41,943 - INFO - [Profile] get_current_state_records executada em 5.9356 segundos
+2025-04-24 09:02:42,143 - INFO - [Profile] create_tv_layout executada em 0.0474 segundos
+2025-04-24 09:07:40,782 - INFO - [Profile] get_all_records_cached executada em 4.7604 segundos
+2025-04-24 09:07:42,190 - INFO - [Profile] get_current_state_records executada em 6.1681 segundos
+2025-04-24 09:07:42,360 - INFO - [Profile] create_tv_layout executada em 0.0523 segundos
+2025-04-24 15:00:32,398 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 15:33:28,333 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 15:38:55,803 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 16:10:52,523 - INFO - [Profile] get_all_records_cached executada em 5.0802 segundos
+2025-04-24 16:10:53,681 - INFO - [Profile] get_current_state_records executada em 6.2379 segundos
+2025-04-24 16:10:53,863 - INFO - [Profile] create_tv_layout executada em 0.0651 segundos
+2025-04-24 16:10:58,865 - INFO - [Profile] get_fato_hora executada em 0.3826 segundos
+2025-04-24 16:10:59,216 - INFO - [Profile] get_fato_hora executada em 0.7322 segundos
+2025-04-24 16:10:59,280 - INFO - [Profile] compute_segments executada em 0.0312 segundos
+2025-04-24 16:10:59,458 - INFO - [Profile] create_timeline_graph executada em 0.9738 segundos
+2025-04-24 16:11:23,411 - INFO - [Profile] get_filtered_data_producao executed in 0.0201 seconds
+2025-04-24 16:11:23,683 - INFO - [Profile] get_filtered_data_hora executed in 0.0313 seconds
+2025-04-24 16:11:23,724 - INFO - [Profile] get_filtered_data_producao executed in 0.0356 seconds
+2025-04-24 16:11:23,735 - INFO - [Profile] compute_truck_stats executed in 0.0485 seconds
+2025-04-24 16:11:23,752 - INFO - [Profile] get_filtered_data_producao executed in 0.0454 seconds
+2025-04-24 16:11:23,762 - INFO - [Profile] get_filtered_data_producao executed in 0.0653 seconds
+2025-04-24 16:11:23,792 - INFO - [Profile] get_filtered_data_producao executed in 0.0540 seconds
+2025-04-24 16:11:24,087 - INFO - [Profile] get_filtered_data_producao executed in 0.0210 seconds
+2025-04-24 16:11:24,162 - INFO - [Profile] get_filtered_data_hora executed in 0.0075 seconds
+2025-04-24 16:11:24,179 - INFO - [Profile] compute_truck_stats executed in 0.0142 seconds
+2025-04-24 16:11:26,697 - INFO - [Profile] get_current_state_records executada em 0.6330 segundos
+2025-04-24 16:11:26,854 - INFO - [Profile] create_tv_layout executada em 0.0484 segundos
+2025-04-24 16:11:29,732 - INFO - [Profile] get_fato_hora executada em 0.5762 segundos
+2025-04-24 16:11:29,844 - INFO - [Profile] get_fato_hora executada em 0.6869 segundos
+2025-04-24 16:11:29,897 - INFO - [Profile] compute_segments executada em 0.0235 segundos
+2025-04-24 16:11:30,007 - INFO - [Profile] create_timeline_graph executada em 0.8505 segundos
+2025-04-24 17:00:40,159 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 17:07:01,770 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 17:57:59,820 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 18:02:22,272 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 18:02:28,231 - INFO - [Profile] get_all_records_cached executada em 4.3851 segundos
+2025-04-24 18:02:29,404 - INFO - [Profile] get_current_state_records executada em 5.5579 segundos
+2025-04-24 18:02:29,616 - INFO - [Profile] create_tv_layout executada em 0.0811 segundos
+2025-04-24 18:02:37,891 - INFO - [Profile] get_filtered_data_producao executed in 0.0229 seconds
+2025-04-24 18:02:38,217 - INFO - [Profile] get_filtered_data_hora executed in 0.0553 seconds
+2025-04-24 18:02:38,247 - INFO - [Profile] get_filtered_data_producao executed in 0.0559 seconds
+2025-04-24 18:02:38,260 - INFO - [Profile] get_filtered_data_producao executed in 0.0788 seconds
+2025-04-24 18:02:38,260 - INFO - [Profile] get_filtered_data_producao executed in 0.0417 seconds
+2025-04-24 18:02:38,262 - INFO - [Profile] compute_truck_stats executed in 0.0307 seconds
+2025-04-24 18:02:38,299 - INFO - [Profile] get_filtered_data_producao executed in 0.0360 seconds
+2025-04-24 18:02:38,536 - INFO - [Profile] get_filtered_data_producao executed in 0.0120 seconds
+2025-04-24 18:02:38,646 - INFO - [Profile] get_filtered_data_hora executed in 0.0103 seconds
+2025-04-24 18:02:38,673 - INFO - [Profile] compute_truck_stats executed in 0.0223 seconds
+2025-04-24 18:02:45,055 - INFO - [Profile] get_filtered_data_producao executed in 0.0523 seconds
+2025-04-24 18:02:45,133 - INFO - [Profile] get_filtered_data_producao executed in 0.1441 seconds
+2025-04-24 18:02:45,141 - INFO - [Profile] get_filtered_data_producao executed in 0.0999 seconds
+2025-04-24 18:02:45,148 - INFO - [Profile] get_filtered_data_producao executed in 0.1160 seconds
+2025-04-24 18:02:45,733 - INFO - [Profile] get_filtered_data_producao executed in 0.0353 seconds
+2025-04-24 18:02:45,999 - INFO - [Profile] get_filtered_data_hora executed in 0.0156 seconds
+2025-04-24 18:02:46,023 - INFO - [Profile] compute_truck_stats executed in 0.0171 seconds
+2025-04-24 18:02:46,093 - INFO - [Profile] get_filtered_data_producao executed in 0.0198 seconds
+2025-04-24 18:02:46,189 - INFO - [Profile] get_filtered_data_hora executed in 0.0094 seconds
+2025-04-24 18:02:46,206 - INFO - [Profile] compute_truck_stats executed in 0.0105 seconds
+2025-04-24 18:02:48,465 - INFO - [Profile] get_filtered_data_producao executed in 0.0951 seconds
+2025-04-24 18:02:48,628 - INFO - [Profile] get_filtered_data_producao executed in 0.1487 seconds
+2025-04-24 18:02:48,769 - INFO - [Profile] get_filtered_data_producao executed in 0.1224 seconds
+2025-04-24 18:02:48,790 - INFO - [Profile] get_filtered_data_producao executed in 0.2012 seconds
+2025-04-24 18:02:49,391 - INFO - [Profile] get_filtered_data_producao executed in 0.1750 seconds
+2025-04-24 18:02:49,510 - INFO - [Profile] get_filtered_data_hora executed in 0.0076 seconds
+2025-04-24 18:02:49,512 - INFO - [Profile] get_filtered_data_producao executed in 0.0312 seconds
+2025-04-24 18:02:49,594 - INFO - [Profile] compute_truck_stats executed in 0.0768 seconds
+2025-04-24 18:02:49,731 - INFO - [Profile] get_filtered_data_hora executed in 0.0131 seconds
+2025-04-24 18:02:49,743 - INFO - [Profile] compute_truck_stats executed in 0.0101 seconds
+2025-04-24 18:02:51,417 - INFO - [Profile] get_filtered_data_producao executed in 0.0784 seconds
+2025-04-24 18:02:51,445 - INFO - [Profile] get_filtered_data_producao executed in 0.0516 seconds
+2025-04-24 18:02:51,697 - INFO - [Profile] get_filtered_data_producao executed in 0.1588 seconds
+2025-04-24 18:02:51,702 - INFO - [Profile] get_filtered_data_producao executed in 0.1769 seconds
+2025-04-24 18:02:52,099 - INFO - [Profile] get_filtered_data_producao executed in 0.0280 seconds
+2025-04-24 18:02:52,419 - INFO - [Profile] get_filtered_data_hora executed in 0.0133 seconds
+2025-04-24 18:02:52,458 - INFO - [Profile] compute_truck_stats executed in 0.0326 seconds
+2025-04-24 18:02:52,484 - INFO - [Profile] get_filtered_data_producao executed in 0.0470 seconds
+2025-04-24 18:02:52,625 - INFO - [Profile] get_filtered_data_hora executed in 0.0093 seconds
+2025-04-24 18:02:52,640 - INFO - [Profile] compute_truck_stats executed in 0.0113 seconds
+2025-04-24 18:06:01,777 - INFO - [Profile] get_fato_hora executada em 0.7180 segundos
+2025-04-24 18:06:01,827 - INFO - [Profile] compute_segments executada em 0.0140 segundos
+2025-04-24 18:06:01,980 - INFO - [Profile] create_timeline_graph executada em 0.9208 segundos
+2025-04-24 18:06:02,261 - INFO - [Profile] get_fato_hora executada em 1.2041 segundos
+2025-04-24 18:07:34,631 - INFO - [Profile] get_all_records_cached executada em 3.9807 segundos
+2025-04-24 18:07:35,901 - INFO - [Profile] get_current_state_records executada em 5.2511 segundos
+2025-04-24 18:07:36,053 - INFO - [Profile] create_tv_layout executada em 0.0418 segundos

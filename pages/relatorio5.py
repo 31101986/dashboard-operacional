@@ -1,12 +1,21 @@
 from datetime import datetime, timedelta
 import logging
-import pandas as pd
+import time
+
 import dash
 from dash import dcc, html, Output, Input
 import dash_bootstrap_components as dbc
+import dash_table
 import plotly.express as px
+import pandas as pd
+import numpy as np  # Para operações vetorizadas
+from dash.dash_table.Format import Format, Scheme
+from dash.dash_table import FormatTemplate
+from pandas.api.types import CategoricalDtype
 
+# Import da função para consultar o banco e das variáveis de meta, incluindo o fuso horário
 from db import query_to_df
+from config import META_MINERIO, META_ESTERIL, TIMEZONE
 
 # Configuração do log
 logging.basicConfig(level=logging.INFO)
@@ -33,10 +42,29 @@ COLOR_MAP = {
     "FORA DE FROTA": "red"
 }
 
-def get_fato_hora(start_dt, end_dt):
+# ============================================================
+# Decorador para Profiling
+# ============================================================
+def profile_time(func):
     """
-    Consulta os dados da tabela fato_hora para o período especificado.
-    Utiliza a procedure 'usp_fato_hora'.
+    Decorador para medir o tempo de execução da função e registrar no log.
+    """
+    def wrapper(*args, **kwargs):
+        t0 = time.perf_counter()
+        result = func(*args, **kwargs)
+        t1 = time.perf_counter()
+        logger.info(f"[Profile] {func.__name__} executada em {t1 - t0:.4f} segundos")
+        return result
+    return wrapper
+
+# ============================================================
+# Funções Auxiliares
+# ============================================================
+@profile_time
+def get_fato_hora(start_dt: datetime, end_dt: datetime) -> pd.DataFrame:
+    """
+    Consulta os dados da tabela fato_hora para o período especificado,
+    utilizando a procedure 'usp_fato_hora'.
     """
     query = (
         f"EXEC dw_sdp_mt_fas..usp_fato_hora "
@@ -48,53 +76,49 @@ def get_fato_hora(start_dt, end_dt):
         df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
     return df
 
-def compute_segments(df, end_dt):
+@profile_time
+def compute_segments(df: pd.DataFrame, end_dt: datetime) -> pd.DataFrame:
     """
     Divide os registros de cada equipamento em segmentos contínuos onde o estado e
     o tipo de estado permanecem inalterados. Para o último segmento, o período vai até end_dt.
-    Acrescenta a coluna 'duration' (em minutos) para cada segmento.
-
-    Versão otimizada utilizando operações vetorizadas.
+    Adiciona a coluna 'duration' (em minutos) para cada segmento.
     """
     # Ordena os dados por equipamento e tempo de registro
     df = df.sort_values(["nome_equipamento", "dt_registro"]).copy()
     
-    # Identifica onde há mudança de estado ou tipo de estado para cada equipamento
+    # Identifica mudanças de estado ou tipo de estado
     df["segment_change"] = (
         (df.groupby("nome_equipamento")["nome_estado"].shift() != df["nome_estado"]) |
         (df.groupby("nome_equipamento")["nome_tipo_estado"].shift() != df["nome_tipo_estado"])
     )
-    # Cria um identificador incremental de segmento para cada equipamento
+    # Cria identificador de segmento para cada equipamento
     df["segment_id"] = df.groupby("nome_equipamento")["segment_change"].cumsum()
     
-    # Agrega os dados de cada segmento: pega o primeiro estado, tipo e horário do segmento
+    # Agrega os dados de cada segmento
     segments = df.groupby(["nome_equipamento", "segment_id"], as_index=False).agg(
         nome_estado=("nome_estado", "first"),
         nome_tipo_estado=("nome_tipo_estado", "first"),
         start=("dt_registro", "first")
     )
     
-    # Para cada equipamento, o final de um segmento é o início do próximo;
-    # para o último segmento, utiliza-se end_dt
+    # Final de segmento: início do próximo ou end_dt
     segments["end"] = segments.groupby("nome_equipamento")["start"].shift(-1)
     segments["end"] = segments["end"].fillna(end_dt)
     
-    # Calcula a duração do segmento em minutos, arredondada para uma casa decimal
+    # Duração em minutos, arredondada para 1 casa decimal
     segments["duration"] = ((segments["end"] - segments["start"]).dt.total_seconds() / 60.0).round(1)
     
     return segments[["nome_equipamento", "nome_estado", "nome_tipo_estado", "start", "end", "duration"]]
 
-def create_timeline_graph(selected_day, equipment_filter=None):
+@profile_time
+def create_timeline_graph(selected_day: str, equipment_filter: list = None) -> px.timeline:
     """
-    Cria um gráfico de timeline (estilo Gantt) com:
-      - Tooltips enriquecidos com informações de início, fim e duração (em minutos)
-      - Range slider com botões de zoom para facilitar a navegação
-      - Filtro por equipamento, se informado
-      - Layout responsivo e barras com borda para melhor visualização
+    Cria um gráfico de timeline (estilo Gantt) com tooltips enriquecidos.
+    Dependendo da aba selecionada ("hoje" ou "ontem"), define o período.
+    Permite filtro opcional por equipamento e configura o layout responsivo.
     """
     if selected_day == "hoje":
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-        # Para "hoje", use o horário atual para o último registro
         day_end = datetime.now()
         title = "Timeline de Apontamentos - Hoje"
     elif selected_day == "ontem":
@@ -105,42 +129,46 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
         title = "Timeline de Apontamentos"
-
+    
+    # Converte para pd.Timestamp uma única vez
+    ts_start = pd.Timestamp(day_start)
+    ts_end = pd.Timestamp(day_end)
+    
     df = get_fato_hora(day_start, day_end)
     if df.empty:
         fig = px.timeline(title=title)
         fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
         return fig
 
-    df = df[(df["dt_registro_turno"] >= pd.Timestamp(day_start)) &
-            (df["dt_registro_turno"] < pd.Timestamp(day_end))]
-
+    # Filtra os registros dentro do período
+    df = df[(df["dt_registro_turno"] >= ts_start) & (df["dt_registro_turno"] < ts_end)]
+    
     # Padroniza os textos e converte para uppercase onde necessário
     df["nome_modelo"] = df["nome_modelo"].astype(str).str.strip()
     df["nome_equipamento"] = df["nome_equipamento"].astype(str).str.strip()
     df["nome_tipo_estado"] = df["nome_tipo_estado"].astype(str).str.strip().str.upper()
-
+    
     # Filtra os modelos permitidos e remove registros indesejados
     df = df[df["nome_modelo"].isin(ALLOWED_MODELS)]
     df = df[df["nome_equipamento"].str.upper() != "TRIMAK"]
-
     if equipment_filter:
         df = df[df["nome_equipamento"].isin(equipment_filter)]
-
+    
     if df.empty:
         fig = px.timeline(title=title)
         fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
         return fig
 
+    # Calcula os segmentos utilizando a função otimizada
     seg_df = compute_segments(df, day_end)
-
-    # Cria colunas formatadas para tooltip
+    
+    # Cria colunas de tooltip
     seg_df["start_str"] = seg_df["start"].dt.strftime("%H:%M:%S")
     seg_df["end_str"] = seg_df["end"].dt.strftime("%H:%M:%S")
-
+    
     all_equips = sorted(df["nome_equipamento"].unique())
     dynamic_height = max(600, len(all_equips) * 60 + 150)
-
+    
     fig = px.timeline(
         seg_df,
         x_start="start",
@@ -151,7 +179,6 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         title=title,
         custom_data=["nome_estado", "duration", "start_str", "end_str"]
     )
-
     fig.update_traces(
         hovertemplate=(
             "<b>Equipamento:</b> %{y}<br>" +
@@ -172,7 +199,6 @@ def create_timeline_graph(selected_day, equipment_filter=None):
         gridwidth=1,
         gridcolor="lightgray"
     )
-
     fig.update_layout(
         xaxis_title="Hora",
         yaxis_title="Equipamento",
@@ -200,7 +226,7 @@ layout = dbc.Container([
     dbc.Row(
         dbc.Col(
             html.H1(
-                "Relatório 5 – Timeline de Apontamentos por Equipamento",
+                "Timeline de Apontamentos por Equipamento",
                 className="text-center my-4",
                 style={"fontFamily": "Arial, sans-serif"}
             ),
@@ -241,11 +267,13 @@ layout = dbc.Container([
     )
 ], fluid=True)
 
+# ===================== CALLBACKS =====================
+
 @dash.callback(
     Output("rel5-equipment-dropdown", "options"),
     Input("rel5-tabs", "value")
 )
-def update_equipment_options(selected_day):
+def update_equipment_options(selected_day: str) -> list:
     if selected_day == "hoje":
         day_start = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = datetime.now()
@@ -267,5 +295,5 @@ def update_equipment_options(selected_day):
     Input("rel5-tabs", "value"),
     Input("rel5-equipment-dropdown", "value")
 )
-def update_graph(selected_day, equipment_filter):
+def update_graph(selected_day: str, equipment_filter: list) -> any:
     return create_timeline_graph(selected_day, equipment_filter)
