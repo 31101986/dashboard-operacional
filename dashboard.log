@@ -2676,3 +2676,176 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-04-24 18:07:34,631 - INFO - [Profile] get_all_records_cached executada em 3.9807 segundos
 2025-04-24 18:07:35,901 - INFO - [Profile] get_current_state_records executada em 5.2511 segundos
 2025-04-24 18:07:36,053 - INFO - [Profile] create_tv_layout executada em 0.0418 segundos
+2025-04-24 18:10:32,806 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-24 18:10:47,237 - INFO - [Profile] get_all_records_cached executada em 4.0375 segundos
+2025-04-24 18:10:48,067 - INFO - [Profile] get_current_state_records executada em 4.8681 segundos
+2025-04-24 18:10:48,291 - INFO - [Profile] create_tv_layout executada em 0.0632 segundos
+2025-04-24 18:15:47,208 - INFO - [Profile] get_all_records_cached executada em 3.6613 segundos
+2025-04-24 18:15:48,873 - INFO - [Profile] get_current_state_records executada em 5.3256 segundos
+2025-04-24 18:15:49,194 - INFO - [Profile] create_tv_layout executada em 0.1121 segundos
+2025-04-25 07:39:50,762 - INFO - [Profile] get_all_records_cached executada em 20.4226 segundos
+2025-04-25 07:39:51,795 - INFO - [Profile] get_current_state_records executada em 21.4553 segundos
+2025-04-25 09:18:17,615 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-28 07:44:03,856 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-28 16:27:35,836 - INFO - [Profile] calc_custo_por_faixa executada em 0.0757 segundos
+2025-04-28 16:27:46,556 - INFO - [Profile] calc_custo_por_faixa executada em 1.5675 segundos
+2025-04-28 16:27:47,132 - INFO - [Profile] calc_custo_adicional executada em 0.1752 segundos
+2025-04-28 16:27:51,740 - INFO - [Profile] calc_custo_por_faixa executada em 0.0310 segundos
+2025-04-28 16:27:51,869 - INFO - [Profile] calc_custo_por_faixa executada em 0.1284 segundos
+2025-04-28 16:27:52,005 - INFO - [Profile] calc_custo_adicional executada em 0.1351 segundos
+2025-04-28 16:27:52,006 - INFO - [Profile] calc_faturamento_transporte executada em 0.2971 segundos
+2025-04-28 16:27:54,421 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0347 segundos
+2025-04-28 17:41:54,696 - INFO - [Profile] calc_custo_por_faixa executada em 0.0515 segundos
+2025-04-28 17:41:54,906 - INFO - [Profile] calc_custo_por_faixa executada em 0.2065 segundos
+2025-04-28 17:41:55,105 - INFO - [Profile] calc_custo_adicional executada em 0.1943 segundos
+2025-04-28 17:41:55,132 - INFO - [Profile] calc_horas_locacao executada em 0.0273 segundos
+2025-04-28 17:41:55,201 - INFO - [Profile] calc_custo_por_faixa executada em 0.0418 segundos
+2025-04-28 17:41:55,422 - INFO - [Profile] calc_custo_por_faixa executada em 0.2203 segundos
+2025-04-28 17:41:55,598 - INFO - [Profile] calc_custo_adicional executada em 0.1754 segundos
+2025-04-28 17:41:55,599 - INFO - [Profile] calc_faturamento_transporte executada em 0.4398 segundos
+2025-04-28 17:41:55,614 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0149 segundos
+2025-04-28 18:14:16,306 - INFO - [Profile] get_all_records_cached executada em 16.8845 segundos
+2025-04-28 18:14:17,436 - INFO - [Profile] get_current_state_records executada em 18.0162 segundos
+2025-04-28 18:14:17,624 - INFO - [Profile] create_tv_layout executada em 0.0649 segundos
+2025-04-29 07:55:22,070 - INFO - [Profile] get_all_records_cached executada em 6.2165 segundos
+2025-04-29 07:55:24,381 - INFO - [Profile] get_current_state_records executada em 8.5347 segundos
+2025-04-29 07:55:24,648 - INFO - [Profile] create_tv_layout executada em 0.0911 segundos
+2025-04-29 08:11:37,958 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 07:46:02,751 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 11:39:46,596 - INFO - [Profile] get_all_records_cached executada em 4.9786 segundos
+2025-04-30 11:39:47,676 - INFO - [Profile] get_current_state_records executada em 6.0590 segundos
+2025-04-30 11:39:49,048 - INFO - [Profile] get_all_records_cached executada em 7.3714 segundos
+2025-04-30 11:39:50,196 - INFO - [Profile] get_current_state_records executada em 8.5187 segundos
+2025-04-30 11:39:50,450 - INFO - [Profile] create_tv_layout executada em 0.1247 segundos
+2025-04-30 11:40:22,560 - INFO - [Profile] get_fato_hora executada em 0.3286 segundos
+2025-04-30 11:40:22,647 - INFO - [Profile] compute_segments executada em 0.0310 segundos
+2025-04-30 11:40:22,657 - INFO - [Profile] get_fato_hora executada em 0.4277 segundos
+2025-04-30 11:40:22,872 - INFO - [Profile] create_timeline_graph executada em 0.6412 segundos
+2025-04-30 11:40:46,413 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 11:40:56,123 - INFO - [Profile] get_all_records_cached executada em 3.5929 segundos
+2025-04-30 11:40:57,385 - INFO - [Profile] get_current_state_records executada em 4.8550 segundos
+2025-04-30 11:40:57,608 - INFO - [Profile] create_tv_layout executada em 0.0793 segundos
+2025-04-30 11:44:15,810 - INFO - [Profile] get_current_state_records executada em 0.6589 segundos
+2025-04-30 11:44:16,009 - INFO - [Profile] create_tv_layout executada em 0.0598 segundos
+2025-04-30 11:49:18,051 - INFO - [Profile] get_all_records_cached executada em 2.3824 segundos
+2025-04-30 11:49:18,759 - INFO - [Profile] get_current_state_records executada em 3.0898 segundos
+2025-04-30 11:49:18,953 - INFO - [Profile] create_tv_layout executada em 0.0734 segundos
+2025-04-30 12:41:03,042 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 12:50:57,495 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 12:56:08,506 - INFO - [Profile] get_filtered_data_producao executed in 0.0086 seconds
+2025-04-30 12:56:08,664 - INFO - [Profile] get_filtered_data_producao executed in 0.0118 seconds
+2025-04-30 12:56:08,667 - INFO - [Profile] get_filtered_data_producao executed in 0.0267 seconds
+2025-04-30 12:56:08,698 - INFO - [Profile] get_filtered_data_producao executed in 0.0292 seconds
+2025-04-30 12:56:08,730 - INFO - [Profile] get_filtered_data_producao executed in 0.0086 seconds
+2025-04-30 12:56:08,743 - INFO - [Profile] get_filtered_data_hora executed in 0.0274 seconds
+2025-04-30 12:56:08,770 - INFO - [Profile] compute_truck_stats executed in 0.0241 seconds
+2025-04-30 12:56:08,918 - INFO - [Profile] get_filtered_data_producao executed in 0.0127 seconds
+2025-04-30 12:56:09,023 - INFO - [Profile] get_filtered_data_hora executed in 0.0100 seconds
+2025-04-30 12:56:09,043 - INFO - [Profile] compute_truck_stats executed in 0.0182 seconds
+2025-04-30 13:10:54,726 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 13:16:11,798 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 13:21:07,469 - INFO - [Profile] get_filtered_data_producao executed in 0.0251 seconds
+2025-04-30 13:21:07,470 - INFO - [Profile] get_filtered_data_producao executed in 0.0200 seconds
+2025-04-30 13:21:07,634 - INFO - [Profile] get_filtered_data_producao executed in 0.0303 seconds
+2025-04-30 13:21:07,642 - INFO - [Profile] get_filtered_data_producao executed in 0.0559 seconds
+2025-04-30 13:21:07,687 - INFO - [Profile] get_filtered_data_producao executed in 0.0098 seconds
+2025-04-30 13:21:07,734 - INFO - [Profile] get_filtered_data_hora executed in 0.0160 seconds
+2025-04-30 13:21:07,769 - INFO - [Profile] compute_truck_stats executed in 0.0341 seconds
+2025-04-30 13:21:07,912 - INFO - [Profile] get_filtered_data_producao executed in 0.0086 seconds
+2025-04-30 13:21:08,028 - INFO - [Profile] get_filtered_data_hora executed in 0.0058 seconds
+2025-04-30 13:21:08,034 - INFO - [Profile] compute_truck_stats executed in 0.0052 seconds
+2025-04-30 13:21:21,357 - INFO - [Profile] get_fato_hora executada em 0.2310 segundos
+2025-04-30 13:21:21,597 - INFO - [Profile] get_fato_hora executada em 0.4704 segundos
+2025-04-30 13:21:21,640 - INFO - [Profile] compute_segments executada em 0.0273 segundos
+2025-04-30 13:21:21,818 - INFO - [Profile] create_timeline_graph executada em 0.6908 segundos
+2025-04-30 13:21:29,502 - INFO - [Profile] get_all_records_cached executada em 2.7537 segundos
+2025-04-30 13:21:30,355 - INFO - [Profile] get_current_state_records executada em 3.6072 segundos
+2025-04-30 13:21:30,509 - INFO - [Profile] create_tv_layout executada em 0.0540 segundos
+2025-04-30 14:17:50,388 - INFO - [Profile] get_filtered_data_producao executed in 0.0421 seconds
+2025-04-30 14:17:50,427 - INFO - [Profile] get_filtered_data_producao executed in 0.0225 seconds
+2025-04-30 14:17:50,508 - INFO - [Profile] get_filtered_data_producao executed in 0.0480 seconds
+2025-04-30 14:17:50,551 - INFO - [Profile] get_filtered_data_producao executed in 0.0213 seconds
+2025-04-30 14:17:50,597 - INFO - [Profile] get_filtered_data_producao executed in 0.0308 seconds
+2025-04-30 14:17:50,633 - INFO - [Profile] get_filtered_data_hora executed in 0.0395 seconds
+2025-04-30 14:17:50,676 - INFO - [Profile] compute_truck_stats executed in 0.0318 seconds
+2025-04-30 14:17:50,985 - INFO - [Profile] get_filtered_data_producao executed in 0.0116 seconds
+2025-04-30 14:17:51,050 - INFO - [Profile] get_filtered_data_hora executed in 0.0133 seconds
+2025-04-30 14:17:51,076 - INFO - [Profile] compute_truck_stats executed in 0.0241 seconds
+2025-04-30 14:21:25,987 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 14:21:57,256 - INFO - [Profile] get_filtered_data_producao executed in 0.0099 seconds
+2025-04-30 14:21:57,363 - INFO - [Profile] get_filtered_data_producao executed in 0.0133 seconds
+2025-04-30 14:21:57,376 - INFO - [Profile] get_filtered_data_producao executed in 0.0193 seconds
+2025-04-30 14:21:57,431 - INFO - [Profile] get_filtered_data_producao executed in 0.0231 seconds
+2025-04-30 14:21:57,473 - INFO - [Profile] get_filtered_data_hora executed in 0.0808 seconds
+2025-04-30 14:21:57,492 - INFO - [Profile] get_filtered_data_producao executed in 0.0271 seconds
+2025-04-30 14:21:57,495 - INFO - [Profile] compute_truck_stats executed in 0.0178 seconds
+2025-04-30 14:21:57,657 - INFO - [Profile] get_filtered_data_producao executed in 0.0070 seconds
+2025-04-30 14:21:57,719 - INFO - [Profile] get_filtered_data_hora executed in 0.0064 seconds
+2025-04-30 14:21:57,728 - INFO - [Profile] compute_truck_stats executed in 0.0086 seconds
+2025-04-30 14:24:43,960 - INFO - [Profile] get_filtered_data_producao executed in 0.0149 seconds
+2025-04-30 14:24:44,078 - INFO - [Profile] get_filtered_data_producao executed in 0.0382 seconds
+2025-04-30 14:24:44,081 - INFO - [Profile] get_filtered_data_hora executed in 0.0289 seconds
+2025-04-30 14:24:44,117 - INFO - [Profile] compute_truck_stats executed in 0.0311 seconds
+2025-04-30 14:24:44,120 - INFO - [Profile] get_filtered_data_producao executed in 0.0189 seconds
+2025-04-30 14:24:44,201 - INFO - [Profile] get_filtered_data_producao executed in 0.0119 seconds
+2025-04-30 14:24:44,217 - INFO - [Profile] get_filtered_data_producao executed in 0.0110 seconds
+2025-04-30 14:24:44,376 - INFO - [Profile] get_filtered_data_producao executed in 0.0073 seconds
+2025-04-30 14:24:44,436 - INFO - [Profile] get_filtered_data_hora executed in 0.0056 seconds
+2025-04-30 14:24:44,446 - INFO - [Profile] compute_truck_stats executed in 0.0093 seconds
+2025-04-30 14:33:35,631 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 14:35:55,582 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-04-30 14:40:45,334 - INFO - [Profile] get_filtered_data_producao executed in 0.0416 seconds
+2025-04-30 14:40:45,407 - INFO - [Profile] get_filtered_data_producao executed in 0.0564 seconds
+2025-04-30 14:40:45,417 - INFO - [Profile] get_filtered_data_producao executed in 0.0257 seconds
+2025-04-30 14:40:45,464 - INFO - [Profile] get_filtered_data_producao executed in 0.0445 seconds
+2025-04-30 14:40:45,544 - INFO - [Profile] get_filtered_data_producao executed in 0.0116 seconds
+2025-04-30 14:40:45,573 - INFO - [Profile] get_filtered_data_hora executed in 0.0068 seconds
+2025-04-30 14:40:45,589 - INFO - [Profile] compute_truck_stats executed in 0.0146 seconds
+2025-04-30 14:40:45,728 - INFO - [Profile] get_filtered_data_producao executed in 0.0095 seconds
+2025-04-30 14:40:45,787 - INFO - [Profile] get_filtered_data_hora executed in 0.0098 seconds
+2025-04-30 14:40:45,796 - INFO - [Profile] compute_truck_stats executed in 0.0080 seconds
+2025-04-30 14:48:19,611 - INFO - [Profile] get_filtered_data_producao executed in 0.0249 seconds
+2025-04-30 14:48:19,791 - INFO - [Profile] get_filtered_data_producao executed in 0.0614 seconds
+2025-04-30 14:48:19,820 - INFO - [Profile] get_filtered_data_hora executed in 0.0404 seconds
+2025-04-30 14:48:19,874 - INFO - [Profile] get_filtered_data_producao executed in 0.0385 seconds
+2025-04-30 14:48:19,878 - INFO - [Profile] compute_truck_stats executed in 0.0549 seconds
+2025-04-30 14:48:19,884 - INFO - [Profile] get_filtered_data_producao executed in 0.0268 seconds
+2025-04-30 14:48:19,938 - INFO - [Profile] get_filtered_data_producao executed in 0.0161 seconds
+2025-04-30 14:48:20,096 - INFO - [Profile] get_filtered_data_producao executed in 0.0160 seconds
+2025-04-30 14:48:20,142 - INFO - [Profile] get_filtered_data_hora executed in 0.0063 seconds
+2025-04-30 14:48:20,165 - INFO - [Profile] compute_truck_stats executed in 0.0198 seconds
+2025-04-30 14:48:36,415 - INFO - [Profile] get_filtered_data_producao executed in 0.0100 seconds
+2025-04-30 14:48:36,526 - INFO - [Profile] get_filtered_data_producao executed in 0.0440 seconds
+2025-04-30 14:48:36,575 - INFO - [Profile] get_filtered_data_producao executed in 0.0103 seconds
+2025-04-30 14:48:36,625 - INFO - [Profile] get_filtered_data_producao executed in 0.0290 seconds
+2025-04-30 14:48:36,755 - INFO - [Profile] get_filtered_data_hora executed in 0.1713 seconds
+2025-04-30 14:48:36,861 - INFO - [Profile] compute_truck_stats executed in 0.0707 seconds
+2025-04-30 14:48:36,862 - INFO - [Profile] get_filtered_data_producao executed in 0.0476 seconds
+2025-04-30 14:48:37,240 - INFO - [Profile] get_filtered_data_producao executed in 0.0133 seconds
+2025-04-30 14:48:37,309 - INFO - [Profile] get_filtered_data_hora executed in 0.0074 seconds
+2025-04-30 14:48:37,321 - INFO - [Profile] compute_truck_stats executed in 0.0103 seconds
+2025-04-30 14:49:10,569 - INFO - [Profile] get_filtered_data_producao executed in 0.0149 seconds
+2025-04-30 14:49:10,723 - INFO - [Profile] get_filtered_data_producao executed in 0.0450 seconds
+2025-04-30 14:49:10,748 - INFO - [Profile] get_filtered_data_producao executed in 0.0138 seconds
+2025-04-30 14:49:10,847 - INFO - [Profile] get_filtered_data_producao executed in 0.0406 seconds
+2025-04-30 14:49:10,856 - INFO - [Profile] get_filtered_data_producao executed in 0.0333 seconds
+2025-04-30 14:49:10,885 - INFO - [Profile] get_filtered_data_hora executed in 0.0818 seconds
+2025-04-30 14:49:10,912 - INFO - [Profile] compute_truck_stats executed in 0.0235 seconds
+2025-04-30 14:49:11,101 - INFO - [Profile] get_filtered_data_producao executed in 0.0077 seconds
+2025-04-30 14:49:11,183 - INFO - [Profile] get_filtered_data_hora executed in 0.0064 seconds
+2025-04-30 14:49:11,193 - INFO - [Profile] compute_truck_stats executed in 0.0077 seconds
+2025-04-30 15:22:41,698 - INFO - Dash is running on http://0.0.0.0:8050/
+

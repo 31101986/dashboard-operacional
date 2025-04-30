@@ -78,6 +78,7 @@ import pages.relatorio1 as rel1  # noqa: E402
 import pages.relatorio4 as rel4  # noqa: E402
 import pages.relatorio5 as rel5  # noqa: E402
 import pages.relatorio6 as rel6  # noqa: E402
+import pages.relatorio7 as rel7  # noqa: E402
 
 # Mapeamento de rota → layout
 pages: Dict[str, html.Div] = {
@@ -86,7 +87,8 @@ pages: Dict[str, html.Div] = {
     #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
-    "/relatorio6": rel6.layout,  # Rota para o Relatório 6
+    "/relatorio6": rel6.layout,
+    "/relatorio7": rel7.layout,
 }
 
 # ---------------------------------------------------------------------------
@@ -110,11 +112,12 @@ def profile_time(func):
 # ---------------------------------------------------------------------------
 _PAGE_DEFS = [
     ("/relatorio1", "Ciclo", "Análise de Hora"),
-    ("/relatorio2", "Informativo de Produção", "Análise de Produção"),
-    ("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
+    #("/relatorio2", "Informativo de Produção", "Análise de Produção"),
+    #("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
     ("/relatorio4", "Produção - Indicadores", "Produção - Indicadores"),
     ("/relatorio5", "Timeline de Apontamentos", "Equipamentos de Produção"),
-    ("/relatorio6", "Relatório 6", "Novo Relatório")
+    ("/relatorio6", "Manutenção", "Novo Relatório"),
+    ("/relatorio7", "Produção Acumulada", "Análise de Produção"),
 ]
 
 _CARD_IMAGES = [
@@ -123,7 +126,8 @@ _CARD_IMAGES = [
     "/assets/mining3.jpg",
     "/assets/mining4.jpg",
     "/assets/mining5.jpg",
-    "/assets/mining6.jpg"
+    "/assets/mining6.jpg",
+    "/assets/mining7.jpg",
 ]
 
 def create_navbar() -> dbc.Navbar:
@@ -136,12 +140,13 @@ def create_navbar() -> dbc.Navbar:
                 dbc.Nav(
                     [
                         dbc.NavLink("Portal", href="/", active="exact"),
-                        dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
+                        #dbc.NavLink("Ciclo", href="/relatorio1", active="exact"),
                         #dbc.NavLink("Informativo de Produção", href="/relatorio2", active="exact"),
-                        #dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
+                        dbc.NavLink("Avanço Financeiro", href="/relatorio3", active="exact"),
                         dbc.NavLink("Produção", href="/relatorio4", active="exact"),
                         dbc.NavLink("Timeline de Apontamentos", href="/relatorio5", active="exact"),
                         dbc.NavLink("Manutenção", href="/relatorio6", active="exact"),
+                        dbc.NavLink("Produção Acumulada", href="/relatorio7", active="exact"),
                     ],
                     pills=True,
                     className="ms-auto",
@@ -238,7 +243,7 @@ home_layout = dbc.Container(
             ],
             className="my-4 justify-content-center"
         ),
-        # Segunda linha: 2 cards
+        # Segunda linha: 3 cards
         dbc.Row(
             [
                 dbc.Col(
@@ -248,6 +253,11 @@ home_layout = dbc.Container(
                 ),
                 dbc.Col(
                     create_card(_CARD_IMAGES[5], "Manutenção", "Novo Relatório", "Visualizar", "/relatorio6"),
+                    width=12, md=3,
+                    className="mt-4"
+                ),
+                dbc.Col(
+                    create_card(_CARD_IMAGES[6], "Produção Acumulada", "Análise de Produção", "Visualizar", "/relatorio7"),
                     width=12, md=3,
                     className="mt-4"
                 ),
@@ -287,7 +297,8 @@ pages: Dict[str, html.Div] = {
     #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
-    "/relatorio6": rel6.layout,  # Rota para o Relatório 6
+    "/relatorio6": rel6.layout,
+    "/relatorio7": rel7.layout,
 }
 
 @profile_time
@@ -319,3 +330,4 @@ if __name__ == "__main__":
     port: int = int(os.environ.get("PORT", 8050))
     logger.info("Executando o servidor no modo debug…" if debug_mode else "Executando o servidor...")
     app.run_server(debug=debug_mode, host="0.0.0.0", port=port)
+    
