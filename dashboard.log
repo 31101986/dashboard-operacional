@@ -3986,3 +3986,11 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-05-02 13:06:01,439 - INFO - [Profile] fetch_equipment_data executada em 6.8381 segundos
 2025-05-02 13:06:04,595 - INFO - [Profile] get_latest_records executada em 9.9944 segundos
 2025-05-02 13:06:04,752 - INFO - [Profile] create_tv_layout executada em 0.0445 segundos
+2025-05-02 13:08:20,212 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-02 13:08:33,636 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:08:35,419 - INFO - [Profile] fetch_equipment_data executada em 8.0692 segundos
+2025-05-02 13:08:41,239 - INFO - [Profile] get_latest_records executada em 13.8910 segundos
+2025-05-02 13:08:41,454 - INFO - [Profile] create_tv_layout executada em 0.0504 segundos
