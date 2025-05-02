@@ -3675,3 +3675,5 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-05-02 07:41:36,898 - INFO - [Profile] fetch_equipment_data executada em 6.9129 segundos
 2025-05-02 07:41:41,580 - INFO - [Profile] get_latest_records executada em 11.5951 segundos
 2025-05-02 07:41:41,755 - INFO - [Profile] create_tv_layout executada em 0.0482 segundos
+2025-05-02 08:48:45,132 - INFO - Dash is running on http://0.0.0.0:8050/
+
