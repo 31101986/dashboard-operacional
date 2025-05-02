@@ -5,11 +5,12 @@ relatorio6.py – Equipamentos por Estado
 
 Exibe o estado atual dos equipamentos em um layout de TV, com cartões agrupados por estado e tipo,
 incluindo imagens por modelo e escala de cores para duração. Otimizado para performance com cache robusto,
-operações vetorizadas e logs de depuração. Usa Horário de Brasília (UTC-3) para consultas e exibição.
+operações vetorizadas e logs de depuração. Usa TIMEZONE de config.py (ZoneInfo) para Horário de Brasília.
 
 Dependências:
   - Banco de dados via `db.query_to_df`
   - Cache via `app.cache`
+  - TIMEZONE de config.py
 """
 
 # ============================================================
@@ -27,6 +28,7 @@ import plotly.express as px
 
 from db import query_to_df
 from app import cache
+from config import TIMEZONE  # Importar TIMEZONE de config.py (ZoneInfo)
 
 # ============================================================
 # CONFIGURAÇÕES
@@ -36,8 +38,8 @@ from app import cache
 logging.basicConfig(level=logging.INFO, filename="dashboard.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Período para consulta: últimos 7 dias, usando Horário de Brasília (UTC-3)
-DAY_END: datetime = datetime.utcnow() - timedelta(hours=3)
+# Período para consulta: últimos 7 dias, usando TIMEZONE (Horário de Brasília)
+DAY_END: datetime = datetime.now(tz=TIMEZONE)
 DAY_START: datetime = DAY_END - timedelta(days=7)
 
 # Mapeamento de imagens por modelo
@@ -103,6 +105,7 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
         pd.DataFrame: Dados de equipamentos ou DataFrame vazio em caso de erro.
     """
     logger.debug(f"[DEBUG] Consultando dados de {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT), refresh={refresh}")
+    logger.debug(f"[DEBUG] Fuso horário de start_date: {start_date.tzinfo}, end_date: {end_date.tzinfo}")
 
     # Consultar estados dos equipamentos
     state_query = (
@@ -113,6 +116,10 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
         df_state = query_to_df(state_query)
         logger.debug(f"[DEBUG] Estados brutos retornados: {len(df_state)} linhas")
         logger.debug(f"[DEBUG] Colunas de df_state: {df_state.columns.tolist()}")
+        if df_state.empty:
+            logger.debug("[DEBUG] Consulta usp_fato_hora retornou DataFrame vazio")
+        else:
+            logger.debug(f"[DEBUG] Primeiras linhas de df_state: {df_state.head().to_dict()}")
     except Exception as e:
         logger.error(f"[DEBUG] Erro ao consultar usp_fato_hora com intervalo {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT): {str(e)}")
         df_state = pd.DataFrame()
@@ -129,6 +136,10 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
             df_equip = query_to_df(equip_query)
             logger.debug(f"[DEBUG] Equipamentos distintos retornados: {len(df_equip)}")
             logger.debug(f"[DEBUG] Colunas de df_equip: {df_equip.columns.tolist()}")
+            if df_equip.empty:
+                logger.debug("[DEBUG] Consulta de equipamentos distintos retornou DataFrame vazio")
+            else:
+                logger.debug(f"[DEBUG] Primeiras linhas de df_equip: {df_equip.head().to_dict()}")
         except Exception as e:
             logger.error(f"[DEBUG] Erro ao consultar equipamentos distintos com intervalo {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT): {str(e)}")
             df_equip = pd.DataFrame()
@@ -139,12 +150,16 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
             df_equip = query_to_df(equip_query)
             logger.debug(f"[DEBUG] Equipamentos retornados de tb_equipamentos: {len(df_equip)}")
             logger.debug(f"[DEBUG] Colunas de df_equip: {df_equip.columns.tolist()}")
+            if df_equip.empty:
+                logger.debug("[DEBUG] Consulta tb_equipamentos retornou DataFrame vazio")
+            else:
+                logger.debug(f"[DEBUG] Primeiras linhas de df_equip: {df_equip.head().to_dict()}")
         except Exception as e:
             logger.warning(f"[DEBUG] Tabela tb_equipamentos não acessível: {str(e)}, usando equipamentos de fato_hora")
             df_equip = df_state[["nome_equipamento", "nome_modelo"]].drop_duplicates()
 
     if df_equip.empty and df_state.empty:
-        logger.debug("[DEBUG] Nenhum dado retornado")
+        logger.debug("[DEBUG] Nenhum dado retornado de nenhuma consulta")
         return pd.DataFrame()
 
     # Combinar equipamentos com estados (LEFT JOIN)
@@ -155,6 +170,10 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
     )
     logger.debug(f"[DEBUG] Após merge: {len(df)} linhas")
     logger.debug(f"[DEBUG] Colunas de df após merge: {df.columns.tolist()}")
+    if df.empty:
+        logger.debug("[DEBUG] DataFrame resultante do merge está vazio")
+    else:
+        logger.debug(f"[DEBUG] Primeiras linhas de df após merge: {df.head().to_dict()}")
 
     # Preencher estados ausentes
     df["nome_estado"] = df["nome_estado"].fillna("DESCONHECIDO")
@@ -167,9 +186,11 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
         if col in df.columns:
             df[col] = df[col].str.strip().str.upper().astype("category")
 
-    # Converter dt_registro para datetime
+    # Converter dt_registro para datetime com fuso horário
     if "dt_registro" in df.columns:
         df["dt_registro"] = pd.to_datetime(df["dt_registro"], errors="coerce")
+        # Assumir que dt_registro está em BRT e associar TIMEZONE
+        df["dt_registro"] = df["dt_registro"].dt.tz_localize(TIMEZONE, ambiguous='raise', nonexistent='raise')
         invalid_dates = df["dt_registro"].isna().sum()
         logger.debug(f"[DEBUG] Linhas com datas inválidas (NaT): {invalid_dates}")
 
@@ -217,7 +238,7 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
     if df.empty:
         logger.debug("[DEBUG] DataFrame vazio em create_tv_layout")
         return html.Div(
-            "Sem dados para exibir. Verifique a disponibilidade de dados no banco de dados (Horário de Brasília) ou a conexão no Render.",
+            "Sem dados para exibir. Verifique a disponibilidade de dados no banco (Horário de Brasília) ou a conexão no Render.",
             className="text-center my-4"
         )
 
@@ -267,7 +288,8 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
     grouped = df.groupby(group_cols, as_index=False)
 
     rows = []
-    now = datetime.utcnow() - timedelta(hours=3)  # Usar Horário de Brasília
+    now = datetime.now(tz=TIMEZONE)  # Usar Horário de Brasília
+    logger.debug(f"[DEBUG] Fuso horário de now: {now.tzinfo}")
     for (estado, tipo), group_data in grouped:
         count_equip = len(group_data)
         left_col = [
@@ -283,7 +305,11 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
             model_name = row.get("nome_modelo", "")
 
             dt_val = pd.to_datetime(row.get("dt_registro_inicio"), errors="coerce")
+            logger.debug(f"[DEBUG] dt_val para {equip_name}: {dt_val}, fuso horário: {getattr(dt_val, 'tzinfo', 'None')}")
             if pd.notnull(dt_val):
+                # Garantir que dt_val seja tz-aware (assumir BRT se tz-naive)
+                if dt_val.tzinfo is None:
+                    dt_val = dt_val.tz_localize(TIMEZONE)
                 duration = now - dt_val
                 time_str = dt_val.strftime("%d/%m/%Y %H:%M:%S")
                 band_color, green_val = get_color_for_duration(duration)
@@ -358,6 +384,8 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
 
     logger.debug(f"[DEBUG] Layout criado com {len(rows)} grupos")
     return html.Div([header] + rows)
+
+# [O restante do código permanece idêntico ao fornecido anteriormente, incluindo NAVBAR, layout, e callbacks]
 
 # ============================================================
 # LAYOUT PRINCIPAL
@@ -549,7 +577,7 @@ def update_data(n_clicks: int, n_intervals: int) -> Tuple[Optional[str], str]:
         logger.error(f"[DEBUG] Erro ao serializar dados para JSON: {str(e)}")
         return None, "Erro ao processar dados no Render."
 
-    last_update_text = f"Última atualização: {(datetime.utcnow() - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M:%S')} (BRT)"
+    last_update_text = f"Última atualização: {datetime.now(tz=TIMEZONE).strftime('%d/%m/%Y %H:%M:%S')} (BRT)"
     return json_data, last_update_text
 
 @callback(
