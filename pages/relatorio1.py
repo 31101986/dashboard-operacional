@@ -281,18 +281,56 @@ def compute_truck_stats(df_prod_period, df_hora):
 # LAYOUT DO RELATÓRIO
 # =============================================================================
 
-# Navbar simples com título centralizado
-navbar = dbc.NavbarSimple(
-    brand="Dashboard Operacional",
-    color="primary",
+# Navbar personalizada com botão de retorno e horário local
+navbar = dbc.Navbar(
+    dbc.Container([
+        # Título com ícone estilizado
+        dbc.NavbarBrand([
+            html.I(className="fas fa-chart-line mr-2"),  # Ícone consistente com mineração
+            "Ciclo Operacional"
+        ], href="/relatorio1", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
+        # Botão de retorno à página inicial
+        dcc.Link([
+            html.I(className="fas fa-home mr-1"),  # Ícone de retorno
+            "Voltar"
+        ], href="/", className="btn btn-sm", style={
+            "borderRadius": "10px",
+            "background": "linear-gradient(45deg, #007bff, #00aaff)",
+            "color": "#fff",
+            "padding": "6px 12px",
+            "transition": "all 0.3s"
+        }),
+        # Horário local em badge
+        html.Div([
+            html.Span(id="local-time", style={
+                "fontWeight": "bold",
+                "fontSize": "0.85rem",
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "padding": "4px 8px",
+                "borderRadius": "12px",
+                "color": "#fff"
+            })
+        ], className="ms-auto me-3 d-flex align-items-center"),
+    ], fluid=True),
+    color="dark",
     dark=True,
-    fluid=True,
+    sticky="top",
+    style={
+        "background": "linear-gradient(90deg, #343a40, #495057)",  # Gradiente suave
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "padding": "0.5rem 0",
+        "fontSize": "0.9rem"
+    }
 )
 
 # Layout principal com cabeçalho, filtros e cards para gráficos e tabela
 layout = dbc.Container([
     navbar,
-    html.H3("Ciclo Operacional", className="text-center mt-4 mb-4", style={"fontFamily": "Arial, sans-serif"}),
+    html.H3("Ciclo Operacional", className="text-center mt-4 mb-4", style={
+        "fontFamily": "Arial, sans-serif",
+        "fontSize": "1.6rem",
+        "fontWeight": "500"
+    }),
 
     # Linha de filtros e botão de atualização
     dbc.Row([
@@ -304,51 +342,83 @@ layout = dbc.Container([
                 options=[],
                 persistence=True,
                 persistence_type="session",
-                style={"fontSize": "16px"}
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#f8f9fa",
+                    "padding": "4px"
+                }
             ),
-            width=10
+            width=12, sm=9
         ),
         dbc.Col(
-            dbc.Button("Atualizar", id="btn-atualizar", color="primary",
-                       className="w-100", style={"fontSize": "16px"}, title="Clique para atualizar os dados"),
-            width=2
+            dbc.Button([
+                html.I(className="fas fa-sync-alt mr-1"),  # Ícone de atualização
+                "Atualizar"
+            ], id="btn-atualizar", color="primary", className="w-100", style={
+                "fontSize": "0.9rem",
+                "borderRadius": "10px",
+                "background": "linear-gradient(45deg, #007bff, #00aaff)",
+                "transition": "all 0.3s",
+                "padding": "6px 12px"
+            }, title="Clique para atualizar os dados"),
+            width=12, sm=3
         ),
-    ], className="mb-4 align-items-center"),
+    ], className="mb-3 align-items-center"),
 
     # Informativo de Caminhões
     dbc.Row([
         dbc.Col(
-            html.Div(
-                id="truck-info",
-                style={
-                    "fontSize": "24px",
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                    "padding": "10px",
-                    "backgroundColor": "#e9ecef",
-                    "borderRadius": "5px"
-                }
-            ),
+            dbc.Card([
+                dbc.CardBody(
+                    html.Div(
+                        id="truck-info",
+                        style={
+                            "fontSize": "1.2rem",
+                            "fontWeight": "500",
+                            "textAlign": "center",
+                            "color": "#495057",
+                            "fontFamily": "Arial, sans-serif"
+                        }
+                    ),
+                    style={"padding": "0.8rem"}
+                )
+            ], style={
+                "borderRadius": "12px",
+                "background": "linear-gradient(90deg, #e9ecef, #f8f9fa)",
+                "border": "none"
+            }, className="shadow-md animate__animated animate__zoomIn"),
             width=12
         )
-    ], className="mb-4"),
+    ], className="mb-3"),
 
     # Gráfico: Caminhões Necessários por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
-                dbc.CardHeader(html.H5("Caminhões Necessários por Escavadeira", className="mb-0")),
+                dbc.CardHeader(
+                    html.H5("Caminhões Necessários por Escavadeira", className="mb-0", style={
+                        "fontSize": "1.1rem",
+                        "fontWeight": "500",
+                        "fontFamily": "Arial, sans-serif"
+                    }),
+                    style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
+                ),
                 dbc.CardBody(
                     dcc.Loading(
                         dcc.Graph(
                             id="truck-cards",
                             config={"displayModeBar": True, "responsive": True},
-                            style={"minHeight": "450px"}
+                            style={"minHeight": "40vh"}
                         ),
                         type="default"
-                    )
+                    ),
+                    style={"padding": "0.8rem"}
                 )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp")
+            ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+                "borderRadius": "12px",
+                "border": "none"
+            })
         )
     ]),
 
@@ -356,18 +426,29 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col(
             dbc.Card([
-                dbc.CardHeader(html.H5("Volume por Escavadeira", className="mb-0")),
+                dbc.CardHeader(
+                    html.H5("Volume por Escavadeira", className="mb-0", style={
+                        "fontSize": "1.1rem",
+                        "fontWeight": "500",
+                        "fontFamily": "Arial, sans-serif"
+                    }),
+                    style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
+                ),
                 dbc.CardBody(
                     dcc.Loading(
                         dcc.Graph(
                             id="volume-bar",
                             config={"displayModeBar": True, "responsive": True},
-                            style={"minHeight": "450px"}
+                            style={"minHeight": "40vh"}
                         ),
                         type="default"
-                    )
+                    ),
+                    style={"padding": "0.8rem"}
                 )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
+            ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+                "borderRadius": "12px",
+                "border": "none"
+            }),
             width=12
         )
     ]),
@@ -376,34 +457,56 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col(
             dbc.Card([
-                dbc.CardHeader(html.H5("Mapa de Carregamento (Detalhado)", className="mb-0")),
+                dbc.CardHeader(
+                    html.H5("Mapa de Carregamento (Detalhado)", className="mb-0", style={
+                        "fontSize": "1.1rem",
+                        "fontWeight": "500",
+                        "fontFamily": "Arial, sans-serif"
+                    }),
+                    style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
+                ),
                 dbc.CardBody(
                     dcc.Loading(
                         dcc.Graph(
                             id="map-carregamento",
                             config={"displayModeBar": True, "responsive": True},
-                            style={"minHeight": "400px"}
+                            style={"minHeight": "35vh"}
                         ),
                         type="default"
-                    )
+                    ),
+                    style={"padding": "0.8rem"}
                 )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
+            ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+                "borderRadius": "12px",
+                "border": "none"
+            }),
             width=12, md=6
         ),
         dbc.Col(
             dbc.Card([
-                dbc.CardHeader(html.H5("Mapa de Basculamento", className="mb-0")),
+                dbc.CardHeader(
+                    html.H5("Mapa de Basculamento", className="mb-0", style={
+                        "fontSize": "1.1rem",
+                        "fontWeight": "500",
+                        "fontFamily": "Arial, sans-serif"
+                    }),
+                    style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
+                ),
                 dbc.CardBody(
                     dcc.Loading(
                         dcc.Graph(
                             id="map-basculamento",
                             config={"displayModeBar": True, "responsive": True},
-                            style={"minHeight": "400px"}
+                            style={"minHeight": "35vh"}
                         ),
                         type="default"
-                    )
+                    ),
+                    style={"padding": "0.8rem"}
                 )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp"),
+            ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+                "borderRadius": "12px",
+                "border": "none"
+            }),
             width=12, md=6
         )
     ]),
@@ -413,8 +516,12 @@ layout = dbc.Container([
         dbc.Col(
             dbc.Card([
                 dbc.CardHeader(
-                    html.H5("Detalhamento Operacional do Dia", className="mb-0 text-white"),
-                    style={"backgroundColor": "#343a40"}
+                    html.H5("Detalhamento Operacional do Dia", className="mb-0 text-white", style={
+                        "fontSize": "1.1rem",
+                        "fontWeight": "500",
+                        "fontFamily": "Arial, sans-serif"
+                    }),
+                    style={"background": "linear-gradient(90deg, #343a40, #495057)"}
                 ),
                 dbc.CardBody(
                     dash_table.DataTable(
@@ -427,13 +534,20 @@ layout = dbc.Container([
                             ]
                         ],
                         data=[],
-                        style_cell={'textAlign': 'center', 'padding': '10px', 'fontFamily': 'Arial'},
+                        style_cell={
+                            'textAlign': 'center',
+                            'padding': '8px',
+                            'fontFamily': 'Arial',
+                            'fontSize': '0.9rem',
+                            'border': '1px solid #e9ecef'
+                        },
                         style_header={
                             'fontWeight': 'bold',
-                            'backgroundColor': '#343a40',
+                            'background': 'linear-gradient(90deg, #343a40, #495057)',
                             'color': 'white',
                             'fontFamily': 'Arial',
-                            'border': '1px solid #ddd'
+                            'fontSize': '0.9rem',
+                            'border': '1px solid #e9ecef'
                         },
                         tooltip_header={
                             'nome_origem': 'Origem da operação',
@@ -470,14 +584,23 @@ layout = dbc.Container([
                             },
                             {
                                 'if': {'state': 'active'},
-                                'backgroundColor': '#f1f1f1', 'border': '1px solid #ddd'
+                                'backgroundColor': '#f8f9fa',
+                                'border': '1px solid #e9ecef'
                             }
                         ],
                         page_size=10,
-                        style_table={'overflowX': 'auto', 'border': '1px solid #ddd', 'borderRadius': '5px'}
-                    )
+                        style_table={
+                            'overflowX': 'auto',
+                            'border': '1px solid #e9ecef',
+                            'borderRadius': '8px'
+                        }
+                    ),
+                    style={"padding": "0.8rem"}
                 )
-            ], className="shadow mb-4 animate__animated animate__fadeInUp")
+            ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+                "borderRadius": "12px",
+                "border": "none"
+            })
         )
     ]),
 

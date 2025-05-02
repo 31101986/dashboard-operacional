@@ -470,41 +470,99 @@ def build_export_excel_single_sheet(json_producao: Union[str, dict],
 
     return output.getvalue()
 
-# ===================== LAYOUT (inalterado, + nova Tabela) =====================
+# ===================== LAYOUT =====================
 common_table_style: Dict[str, Any] = {
     "style_table": {
         "overflowX": "auto",
         "width": "100%",
-        "margin": "auto"
+        "margin": "auto",
+        "borderRadius": "8px"
     },
     "style_cell": {
         "textAlign": "center",
-        "padding": "5px",
+        "padding": "8px",
         "fontFamily": "Arial, sans-serif",
-        "fontSize": "12px",
-        "whiteSpace": "normal"
+        "fontSize": "0.9rem",
+        "whiteSpace": "normal",
+        "border": "1px solid #e9ecef"
     },
     "style_header": {
-        "backgroundColor": "#f5f5f5",
-        "fontWeight": "bold"
+        "background": "linear-gradient(90deg, #343a40, #495057)",
+        "fontWeight": "bold",
+        "textAlign": "center",
+        "color": "white",
+        "fontFamily": "Arial, sans-serif",
+        "fontSize": "0.9rem",
+        "border": "1px solid #e9ecef"
     }
 }
 
+# Navbar personalizada com botão de retorno e horário local
+navbar = dbc.Navbar(
+    dbc.Container([
+        # Título com ícone estilizado
+        dbc.NavbarBrand([
+            html.I(className="fas fa-calculator mr-2"),  # Ícone representando boletim de medição
+            "Boletim de Medição"
+        ], href="/relatorio3", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
+        # Botão de retorno à página inicial
+        dcc.Link([
+            html.I(className="fas fa-home mr-1"),  # Ícone de retorno
+            "Voltar"
+        ], href="/", className="btn btn-sm", style={
+            "borderRadius": "10px",
+            "background": "linear-gradient(45deg, #007bff, #00aaff)",
+            "color": "#fff",
+            "padding": "6px 12px",
+            "transition": "all 0.3s"
+        }),
+        # Horário local em badge
+        html.Div([
+            html.Span(id="local-time", style={
+                "fontWeight": "bold",
+                "fontSize": "0.85rem",
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "padding": "4px 8px",
+                "borderRadius": "12px",
+                "color": "#fff"
+            })
+        ], className="ms-auto me-3 d-flex align-items-center"),
+    ], fluid=True),
+    color="dark",
+    dark=True,
+    sticky="top",
+    style={
+        "background": "linear-gradient(90deg, #343a40, #495057)",  # Gradiente suave
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "padding": "0.5rem 0",
+        "fontSize": "0.9rem"
+    }
+)
+
 layout = dbc.Container([
-    dbc.Row([
+    navbar,
+    dbc.Row(
         dbc.Col(
-            html.H2("Boletim de Medição", className="text-center text-primary", style={"fontFamily": "Arial, sans-serif"}),
-            xs=12, md=10
+            html.H3(
+                "Boletim de Medição",
+                className="text-center mt-4 mb-4",
+                style={
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "1.6rem",
+                    "fontWeight": "500"
+                }
+            ),
+            width=12
         ),
-        dbc.Col(
-            dbc.Button("Voltar ao Portal", href="/", color="secondary", className="w-100"),
-            xs=12, md=2
-        )
-    ], className="my-4"),
-    
+        className="mb-3"
+    ),
     dbc.Row([
         dbc.Col([
-            html.Label("Selecione o Período:", className="fw-bold text-secondary mb-1", style={"fontSize": "16px"}),
+            html.Label(
+                "Selecione o Período:",
+                className="fw-bold text-secondary",
+                style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
+            ),
             dcc.DatePickerRange(
                 id="rel3-date-picker-range",
                 min_date_allowed=datetime(2020, 1, 1).date(),
@@ -512,17 +570,46 @@ layout = dbc.Container([
                 start_date=start_default,
                 end_date=end_default,
                 display_format="DD/MM/YYYY",
-                className="mb-2"
+                className="mb-2",
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#f8f9fa",
+                    "width": "100%"
+                }
+            ),
+            dbc.Button(
+                [
+                    html.I(className="fas fa-filter mr-1"),  # Ícone de filtro
+                    "Aplicar Filtro"
+                ],
+                id="rel3-apply-button",
+                n_clicks=0,
+                className="w-100",
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "10px",
+                    "background": "linear-gradient(45deg, #007bff, #00aaff)",
+                    "color": "#fff",
+                    "transition": "all 0.3s",
+                    "padding": "6px 12px"
+                }
             )
-        ], xs=12, md=4),
-        dbc.Col(
-            dbc.Button("Aplicar Filtro", id="rel3-apply-button", color="primary", n_clicks=0, className="mt-4 w-100"),
-            xs=12, md=2
-        )
-    ], className="align-items-end mb-4"),
-
+        ], xs=12, md=4)
+    ], className="mb-3 align-items-end"),
+    dcc.Store(id="rel3-data-store"),
+    dcc.Store(id="rel3-fato-hora-store"),
+    dcc.Download(id="download-excel"),
+    html.Hr(),
     dbc.Card([
-        dbc.CardHeader("Manutenção do Canteiro de Serviços", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Manutenção do Canteiro de Serviços", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody(
             dash_table.DataTable(
                 id="rel3-manut-canteiro",
@@ -531,12 +618,19 @@ layout = dbc.Container([
                 page_action="none",
                 style_data_conditional=[{"if": {"filter_query": '{Item} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}],
                 **common_table_style
-            )
+            ),
+            style={"padding": "0.8rem"}
         )
-    ], className="shadow mb-4"),
-
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
     dbc.Card([
-        dbc.CardHeader("Serviços Eventuais", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Serviços Eventuais", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody(
             dash_table.DataTable(
                 id="rel3-servicos-eventuais",
@@ -545,14 +639,21 @@ layout = dbc.Container([
                 page_action="none",
                 style_data_conditional=[{"if": {"filter_query": '{Equipamento} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}],
                 **common_table_style
-            )
+            ),
+            style={"padding": "0.8rem"}
         )
-    ], className="shadow mb-4"),
-
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
     dbc.Card([
-        dbc.CardHeader("Custos de Movimentação", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Custos de Movimentação", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody([
-            html.H6("Movimentação Minério", className="mt-2"),
+            html.H6("Movimentação Minério", className="mt-2", style={"fontSize": "1rem"}),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-minero",
@@ -564,7 +665,7 @@ layout = dbc.Container([
                 )
             ),
             html.Hr(),
-            html.H6("Movimentação Estéril"),
+            html.H6("Movimentação Estéril", style={"fontSize": "1rem"}),
             dcc.Loading(
                 dash_table.DataTable(
                     id="rel3-custo-esteril",
@@ -575,11 +676,17 @@ layout = dbc.Container([
                     **common_table_style
                 )
             )
-        ])
-    ], className="shadow mb-4"),
-
+        ], style={"padding": "0.8rem"})
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
     dbc.Card([
-        dbc.CardHeader("Custos Adicionais", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Custos Adicionais", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -589,12 +696,19 @@ layout = dbc.Container([
                     page_action="none",
                     **common_table_style
                 )
-            )
+            ),
+            style={"padding": "0.8rem"}
         )
-    ], className="shadow mb-4"),
-
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
     dbc.Card([
-        dbc.CardHeader("Horas de Locação por Modelo", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Horas de Locação por Modelo", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -605,12 +719,19 @@ layout = dbc.Container([
                     style_data_conditional=[{"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}],
                     **common_table_style
                 )
-            )
+            ),
+            style={"padding": "0.8rem"}
         )
-    ], className="shadow mb-4"),
-
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
     dbc.Card([
-        dbc.CardHeader("Custo de Horas Paradas por Modelo (Preço 60%)", className="bg-light"),
+        dbc.CardHeader(
+            html.H5("Custo de Horas Paradas por Modelo (Preço 60%)", className="mb-0 text-white", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+        ),
         dbc.CardBody(
             dcc.Loading(
                 dash_table.DataTable(
@@ -621,30 +742,56 @@ layout = dbc.Container([
                     style_data_conditional=[{"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}],
                     **common_table_style
                 )
+            ),
+            style={"padding": "0.8rem"}
+        )
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+    dbc.Card([
+        dbc.CardHeader(
+            html.H5("Faturamento Final", className="mb-0", style={
+                "fontSize": "1.1rem",
+                "fontWeight": "500",
+                "fontFamily": "Arial, sans-serif"
+            }),
+            style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
+        ),
+        dbc.CardBody(
+            dcc.Loading(
+                dash_table.DataTable(
+                    id="rel3-total-geral",
+                    columns=[
+                        {"name": "Descrição", "id": "Descrição"},
+                        {"name": "Valor (R$)", "id": "Valor", "type": "numeric", "format": FormatTemplate.money(2)}
+                    ],
+                    data=[],
+                    page_action="none",
+                    style_data_conditional=[{"if": {"filter_query": '{Descrição} = "Faturamento Total"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}],
+                    **common_table_style
+                )
+            ),
+            style={"padding": "0.8rem"}
+        )
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+    dbc.Card([
+        dbc.CardBody(
+            dbc.Button(
+                [
+                    html.I(className="fas fa-file-excel mr-1"),  # Ícone de exportação
+                    "Exportar para Excel (1 Aba)"
+                ],
+                id="export-excel-button",
+                className="w-100",
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "10px",
+                    "background": "linear-gradient(45deg, #28a745, #34c759)",
+                    "color": "#fff",
+                    "transition": "all 0.3s",
+                    "padding": "6px 12px"
+                }
             )
         )
-    ], className="shadow mb-4"),
-
-    dbc.Card([
-        dbc.CardHeader("Faturamento Final", className="bg-light"),
-        dbc.CardBody(
-            html.Div(
-                id="rel3-total-geral",
-                style={"fontWeight": "bold", "backgroundColor": "#fff9c4", "padding": "10px", "fontFamily": "Arial, sans-serif", "fontSize": "12px"}
-            )
-        )
-    ], className="shadow mb-4"),
-
-    dbc.Card([
-        dbc.CardBody(
-            dbc.Button("Exportar para Excel (1 Aba)", id="export-excel-button", color="success", className="w-100")
-        )
-    ], className="shadow mb-4"),
-
-    dcc.Store(id="rel3-data-store"),
-    dcc.Store(id="rel3-fato-hora-store"),
-    dcc.Download(id="download-excel")
-
+    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"})
 ], fluid=True)
 
 # ===================== CALLBACKS =====================
@@ -876,11 +1023,11 @@ def update_horas_paradas_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dic
     return data, columns
 
 @dash.callback(
-    Output("rel3-total-geral", "children"),
+    Output("rel3-total-geral", "data"),
     Input("rel3-data-store", "data"),
     Input("rel3-fato-hora-store", "data")
 )
-def update_faturamento_final_cb(json_producao: Union[str, dict], json_hora: Union[str, dict]) -> html.Div:
+def update_faturamento_final_cb(json_producao: Union[str, dict], json_hora: Union[str, dict]) -> List[Dict]:
     if not json_producao or isinstance(json_producao, dict):
         fat_transporte: float = 0.0
     else:
@@ -897,13 +1044,23 @@ def update_faturamento_final_cb(json_producao: Union[str, dict], json_hora: Unio
     serv_event_total = df_servicos_eventuais.loc[df_servicos_eventuais["Equipamento"] == "TOTAL", "Valor Total (R$)"].values[0]
     fat_total = fat_transporte + fat_horas + manut_total + serv_event_total
 
-    return html.Div([
-        html.Div(f"Faturamento (Escavação e Transporte): R$ {fat_transporte:,.2f}", style={"padding": "5px", "marginBottom": "5px"}),
-        html.Div(f"Faturamento Hora 60%: R$ {fat_horas:,.2f}", style={"padding": "5px", "marginBottom": "5px"}),
-        html.Div(f"Manutenção do Canteiro de Serviços: R$ {manut_total:,.2f}", style={"padding": "5px", "marginBottom": "5px"}),
-        html.Div(f"Serviços Eventuais: R$ {serv_event_total:,.2f}", style={"padding": "5px", "marginBottom": "5px"}),
-        html.Div(f"Faturamento Total: R$ {fat_total:,.2f}", style={"padding": "5px"})
-    ])
+    df_faturamento = pd.DataFrame({
+        "Descrição": [
+            "Faturamento (Escavação e Transporte)",
+            "Faturamento Hora 60%",
+            "Manutenção do Canteiro de Serviços",
+            "Serviços Eventuais",
+            "Faturamento Total"
+        ],
+        "Valor": [
+            fat_transporte,
+            fat_horas,
+            manut_total,
+            serv_event_total,
+            fat_total
+        ]
+    })
+    return df_faturamento.to_dict("records")
 
 @dash.callback(
     Output("download-excel", "data"),

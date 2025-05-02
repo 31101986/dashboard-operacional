@@ -1,9 +1,10 @@
 import json
+import gzip
 from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple, List, Union
 
 import dash
-from dash import dcc, html, callback, Input, Output, State
+from dash import dcc, html, callback, Input, Output, State, callback_context
 import dash_bootstrap_components as dbc
 from dash.dash_table import DataTable, FormatTemplate
 import plotly.express as px
@@ -11,32 +12,39 @@ import pandas as pd
 import numpy as np
 from dash.dash_table.Format import Format, Scheme
 
-# Import da função para consultar o banco e das variáveis de meta
+# Import da função para consultar o banco, variáveis de meta e cache
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
+from app import cache  # Assumindo que cache está definido em app.py
 
 # Formato numérico com 2 casas decimais e separador de milhar
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
 
-
 # ==================== FUNÇÕES AUXILIARES ====================
 
+@cache.memoize(timeout=300)
+def cached_query(query: str) -> pd.DataFrame:
+    """Consulta o banco com cache de 300 segundos."""
+    return query_to_df(query)
+
 def convert_date_columns(df: pd.DataFrame, date_cols: List[str]) -> pd.DataFrame:
-    """Converte as colunas de data do DataFrame para datetime, se necessário."""
+    """Converte colunas de data para datetime, apenas se necessário."""
     for col in date_cols:
-        if col in df.columns and not np.issubdtype(df[col].dtype, np.datetime64):
+        if col in df.columns and not df[col].dtype == "datetime64[ns]":
             df[col] = pd.to_datetime(df[col], errors="coerce")
     return df
 
 def filter_by_date(df: pd.DataFrame, date_col: str, start_date: datetime, end_date: datetime) -> pd.DataFrame:
-    """Filtra o DataFrame pela coluna de data entre start_date e end_date."""
+    """Filtra o DataFrame por intervalo de datas usando máscara booleana."""
     if date_col in df.columns:
-        df = df.dropna(subset=[date_col])
-        df = df.loc[(df[date_col] >= start_date) & (df[date_col] <= end_date)]
+        mask = (df[date_col].notna()) & (df[date_col] >= start_date) & (df[date_col] <= end_date)
+        df = df.loc[mask]
     return df
 
 def group_movimentacao(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
-    """Agrupa o DataFrame para a tabela de movimentação (viagens, volume e massa)."""
+    """Agrupa o DataFrame para movimentação, otimizando com categoria."""
+    if group_col in df.columns:
+        df[group_col] = df[group_col].astype("category")
     grouped = df.groupby(group_col, as_index=False).agg(
         viagens=(group_col, "size"),
         volume=("volume", "sum"),
@@ -45,7 +53,7 @@ def group_movimentacao(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
     return grouped
 
 def format_total_row(df_group: pd.DataFrame, group_col: str) -> pd.DataFrame:
-    """Calcula a linha de total para os grupos e a concatena ao DataFrame."""
+    """Calcula a linha de total para os grupos."""
     total = pd.DataFrame({
         group_col: ["TOTAL"],
         "viagens": [df_group["viagens"].sum()],
@@ -54,55 +62,88 @@ def format_total_row(df_group: pd.DataFrame, group_col: str) -> pd.DataFrame:
     })
     return pd.concat([df_group, total], ignore_index=True)
 
+@cache.memoize(timeout=300)
 def load_df(json_data: Union[str, Dict]) -> pd.DataFrame:
-    """
-    Converte a string JSON ou dicionário para DataFrame. 
-    Se o dado for vazio ou contiver um erro, retorna um DataFrame vazio.
-    """
+    """Converte JSON comprimido para DataFrame, com cache."""
     if not json_data or (isinstance(json_data, dict) and "error" in json_data):
         return pd.DataFrame()
     try:
-        # Considera que os dados foram serializados com orient="records"
-        return pd.read_json(json_data, orient="records")
+        if isinstance(json_data, str):
+            decompressed = gzip.decompress(bytes.fromhex(json_data)).decode("utf-8")
+            df = pd.read_json(decompressed, orient="records")
+        else:
+            df = pd.DataFrame(json_data)
+        # Converter colunas categóricas imediatamente
+        for col in ["nome_operacao", "nome_modelo", "nome_tipo_equipamento"]:
+            if col in df.columns:
+                df[col] = df[col].astype("category")
+        return df
     except Exception:
         return pd.DataFrame()
 
+def compress_json(df: pd.DataFrame) -> str:
+    """Comprime DataFrame para JSON usando gzip."""
+    json_str = df.to_json(date_format="iso", orient="records")
+    compressed = gzip.compress(json_str.encode("utf-8"))
+    return compressed.hex()
 
 # ==================== LAYOUT ====================
 
-header = dbc.Row(
-    [
-        dbc.Col(
-            html.H1(
-                "Informativo de Produção",
-                className="text-center my-4 text-primary",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "28px"}
-            ),
-            xs=10
-        ),
-        dbc.Col(
-            dbc.Button("Voltar ao Portal", href="/", color="secondary", className="mt-4"),
-            xs=2,
-            style={"textAlign": "right"}
-        )
-    ],
-    align="center",
-    className="mb-4"
+navbar = dbc.Navbar(
+    dbc.Container([
+        dbc.NavbarBrand([
+            html.I(className="fas fa-industry mr-2"),
+            "Informativo de Produção"
+        ], href="/relatorio2", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
+        dcc.Link([
+            html.I(className="fas fa-home mr-1"),
+            "Voltar"
+        ], href="/", className="btn btn-sm", style={
+            "borderRadius": "10px",
+            "background": "linear-gradient(45deg, #007bff, #00aaff)",
+            "color": "#fff",
+            "padding": "6px 12px",
+            "transition": "all 0.3s"
+        }),
+        html.Div([
+            html.Span(id="local-time", style={
+                "fontWeight": "bold",
+                "fontSize": "0.85rem",
+                "backgroundColor": "rgba(255,255,255,0.1)",
+                "padding": "4px 8px",
+                "borderRadius": "12px",
+                "color": "#fff"
+            })
+        ], className="ms-auto me-3 d-flex align-items-center"),
+    ], fluid=True),
+    color="dark",
+    dark=True,
+    sticky="top",
+    style={
+        "background": "linear-gradient(90deg, #343a40, #495057)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)",
+        "padding": "0.5rem 0",
+        "fontSize": "0.9rem"
+    }
 )
 
 layout = dbc.Container(
     [
-        header,
+        navbar,
         dbc.Row(
             dbc.Col(
-                html.H5(
-                    "Análise de Produção e Indicadores no Período Selecionado",
-                    className="text-center text-muted",
-                    style={"fontFamily": "Arial, sans-serif"}
+                html.H3(
+                    "Informativo de Produção",
+                    className="text-center mt-4 mb-4",
+                    style={
+                        "fontFamily": "Arial, sans-serif",
+                        "fontSize": "1.6rem",
+                        "fontWeight": "500"
+                    }
                 ),
                 width=12
             ),
-            className="mb-4"
+            className="mb-3"
         ),
         dbc.Row(
             [
@@ -111,7 +152,7 @@ layout = dbc.Container(
                         html.Label(
                             "Selecione o Período:",
                             className="fw-bold text-secondary",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
                         ),
                         dcc.DatePickerRange(
                             id="date-picker-range",
@@ -121,14 +162,29 @@ layout = dbc.Container(
                             end_date=datetime.today().date(),
                             display_format="DD/MM/YYYY",
                             className="mb-2",
-                            style={"width": "100%"}
+                            style={
+                                "fontSize": "0.9rem",
+                                "borderRadius": "8px",
+                                "backgroundColor": "#f8f9fa",
+                                "width": "100%"
+                            }
                         ),
                         dbc.Button(
-                            "Aplicar Filtro",
+                            [
+                                html.I(className="fas fa-filter mr-1"),
+                                "Aplicar Filtro"
+                            ],
                             id="apply-button",
                             n_clicks=0,
-                            className="btn btn-primary mt-2",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
+                            className="w-100",
+                            style={
+                                "fontSize": "0.9rem",
+                                "borderRadius": "10px",
+                                "background": "linear-gradient(45deg, #007bff, #00aaff)",
+                                "color": "#fff",
+                                "transition": "all 0.3s",
+                                "padding": "6px 12px"
+                            }
                         )
                     ],
                     xs=12, md=4
@@ -138,20 +194,25 @@ layout = dbc.Container(
                         html.Label(
                             "Filtrar Operações (opcional):",
                             className="fw-bold text-secondary",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
                         ),
                         dcc.Dropdown(
                             id="operacao-dropdown",
                             placeholder="Selecione uma ou mais operações",
                             multi=True,
                             className="mb-2",
-                            style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
+                            style={
+                                "fontSize": "0.9rem",
+                                "borderRadius": "8px",
+                                "backgroundColor": "#f8f9fa",
+                                "width": "100%"
+                            }
                         )
                     ],
                     xs=12, md=8
                 )
             ],
-            className="my-2"
+            className="mb-3 align-items-end"
         ),
         dcc.Store(id="data-store"),
         dcc.Store(id="data-store-hora"),
@@ -162,9 +223,12 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Movimentação (Último dia)", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Movimentação (Último dia)", className="mb-0 text-white", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
@@ -176,23 +240,32 @@ layout = dbc.Container(
                                             {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto", "width": "100%"},
+                                        style_table={"overflowX": "auto", "width": "100%", "borderRadius": "8px"},
                                         style_header={
-                                            "backgroundColor": "#f8f9fa",
+                                            "background": "linear-gradient(90deg, #343a40, #495057)",
                                             "fontWeight": "bold",
-                                            "textAlign": "center"
+                                            "textAlign": "center",
+                                            "color": "white",
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "border": "1px solid #e9ecef"
                                         },
                                         style_cell={
                                             "textAlign": "center",
                                             "whiteSpace": "normal",
-                                            "fontFamily": "Arial, sans-serif"
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "padding": "8px",
+                                            "border": "1px solid #e9ecef"
                                         }
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp"
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=6
                 ),
@@ -200,9 +273,12 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Movimentação (Acumulado)", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Movimentação (Acumulado)", className="mb-0 text-white", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
@@ -214,23 +290,32 @@ layout = dbc.Container(
                                             {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
                                             {"name": "Massa", "id": "massa", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto", "width": "100%"},
+                                        style_table={"overflowX": "auto", "width": "100%", "borderRadius": "8px"},
                                         style_header={
-                                            "backgroundColor": "#f8f9fa",
+                                            "background": "linear-gradient(90deg, #343a40, #495057)",
                                             "fontWeight": "bold",
-                                            "textAlign": "center"
+                                            "textAlign": "center",
+                                            "color": "white",
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "border": "1px solid #e9ecef"
                                         },
                                         style_cell={
                                             "textAlign": "center",
                                             "whiteSpace": "normal",
-                                            "fontFamily": "Arial, sans-serif"
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "padding": "8px",
+                                            "border": "1px solid #e9ecef"
                                         }
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp"
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=6
                 )
@@ -244,23 +329,27 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Gráfico de Volume", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Gráfico de Volume", className="mb-0", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(
                                         id="grafico-volume",
                                         config={"displayModeBar": False, "responsive": True},
-                                        style={"minHeight": "450px"}
+                                        style={"minHeight": "40vh"}
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp",
-                        style={"marginBottom": "30px"}
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=12
                 )
@@ -273,23 +362,27 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Gráfico de Massa", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Gráfico de Massa", className="mb-0", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(
                                         id="grafico-massa",
                                         config={"displayModeBar": False, "responsive": True},
-                                        style={"minHeight": "450px"}
+                                        style={"minHeight": "40vh"}
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp",
-                        style={"marginBottom": "30px"}
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=12
                 )
@@ -302,23 +395,27 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Viagens por Hora Trabalhada (Último Dia)", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Viagens por Hora Trabalhada (Último Dia)", className="mb-0", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #f8f9fa, #e9ecef)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
                                     dcc.Graph(
                                         id="grafico-viagens-hora",
                                         config={"displayModeBar": False, "responsive": True},
-                                        style={"minHeight": "450px"}
+                                        style={"minHeight": "40vh"}
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp",
-                        style={"marginBottom": "30px"}
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=12
                 )
@@ -332,13 +429,18 @@ layout = dbc.Container(
                     html.Label(
                         "Filtrar por Modelo (Indicadores):",
                         className="fw-bold text-secondary",
-                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px"}
+                        style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
                     ),
                     dcc.Dropdown(
                         id="modelo-dropdown",
                         placeholder="(Opcional) Selecione um ou mais modelos (Equipamento)",
                         multi=True,
-                        style={"fontFamily": "Arial, sans-serif", "fontSize": "16px", "width": "100%"}
+                        style={
+                            "fontSize": "0.9rem",
+                            "borderRadius": "8px",
+                            "backgroundColor": "#f8f9fa",
+                            "width": "100%"
+                        }
                     )
                 ],
                 xs=12
@@ -352,9 +454,12 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Indicadores - Último Dia", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Indicadores - Último Dia", className="mb-0 text-white", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
@@ -366,23 +471,31 @@ layout = dbc.Container(
                                             {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto", "width": "100%"},
+                                        style_table={"overflowX": "auto", "width": "100%", "borderRadius": "8px"},
                                         style_header={
-                                            "backgroundColor": "#f8f9fa",
+                                            "background": "linear-gradient(90deg, #343a40, #495057)",
                                             "fontWeight": "bold",
-                                            "textAlign": "center"
+                                            "textAlign": "center",
+                                            "color": "white",
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "border": "1px solid #e9ecef"
                                         },
                                         style_cell={
                                             "textAlign": "center",
-                                            "fontFamily": "Arial, sans-serif"
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "padding": "8px",
+                                            "border": "1px solid #e9ecef"
                                         }
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp",
-                        style={"marginBottom": "30px"}
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=6
                 ),
@@ -390,9 +503,12 @@ layout = dbc.Container(
                     dbc.Card(
                         [
                             dbc.CardHeader(
-                                html.H5("Indicadores - Acumulado", className="mb-0"),
-                                className="bg-light",
-                                style={"fontFamily": "Arial, sans-serif"}
+                                html.H5("Indicadores - Acumulado", className="mb-0 text-white", style={
+                                    "fontSize": "1.1rem",
+                                    "fontWeight": "500",
+                                    "fontFamily": "Arial, sans-serif"
+                                }),
+                                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
                             ),
                             dbc.CardBody(
                                 dcc.Loading(
@@ -404,23 +520,31 @@ layout = dbc.Container(
                                             {"name": "Utilização (%)", "id": "utilizacao", "type": "numeric", "format": num_format},
                                             {"name": "Rendimento (%)", "id": "rendimento", "type": "numeric", "format": num_format}
                                         ],
-                                        style_table={"overflowX": "auto", "width": "100%"},
+                                        style_table={"overflowX": "auto", "width": "100%", "borderRadius": "8px"},
                                         style_header={
-                                            "backgroundColor": "#f8f9fa",
+                                            "background": "linear-gradient(90deg, #343a40, #495057)",
                                             "fontWeight": "bold",
-                                            "textAlign": "center"
+                                            "textAlign": "center",
+                                            "color": "white",
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "border": "1px solid #e9ecef"
                                         },
                                         style_cell={
                                             "textAlign": "center",
-                                            "fontFamily": "Arial, sans-serif"
+                                            "fontFamily": "Arial, sans-serif",
+                                            "fontSize": "0.9rem",
+                                            "padding": "8px",
+                                            "border": "1px solid #e9ecef"
                                         }
                                     ),
                                     type="default"
-                                )
+                                ),
+                                style={"padding": "0.8rem"}
                             )
                         ],
-                        className="mb-4 shadow animate__animated animate__fadeInUp",
-                        style={"marginBottom": "30px"}
+                        className="shadow-md mb-3 animate__animated animate__zoomIn",
+                        style={"borderRadius": "12px", "border": "none"}
                     ),
                     xs=12, md=6
                 )
@@ -430,7 +554,6 @@ layout = dbc.Container(
     ],
     fluid=True
 )
-
 
 # ==================== CALLBACKS ====================
 
@@ -443,9 +566,7 @@ layout = dbc.Container(
     prevent_initial_call=True
 )
 def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, Any]:
-    """
-    Consulta os dados de produção e hora entre as datas selecionadas e armazena-os em JSON.
-    """
+    """Consulta os dados e armazena em JSON comprimido."""
     if not start_date or not end_date:
         return {}, {}
 
@@ -460,29 +581,41 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
         '{end_date_str}'
     """
     try:
-        df_prod = query_to_df(query_prod)
+        df_prod = cached_query(query_prod)
     except Exception as e:
-        return ({"error": f"Erro ao consultar Produção: {str(e)}"}, {})
+        return {"error": f"Erro ao consultar Produção: {str(e)}"}, {}
 
-    if not df_prod.empty and "dt_registro_turno" in df_prod.columns:
+    needed_prod_cols = {"dt_registro_turno", "nome_operacao", "volume", "massa", "nome_equipamento_utilizado"}
+    if not df_prod.empty and needed_prod_cols.issubset(df_prod.columns):
         df_prod = convert_date_columns(df_prod, ["dt_registro_turno"])
         df_prod = filter_by_date(df_prod, "dt_registro_turno", start_date_obj, end_date_obj)
         if "nome_operacao" in df_prod.columns:
             df_prod = df_prod.dropna(subset=["nome_operacao"])
-    data_prod_json = df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {}
+        df_prod = df_prod[list(needed_prod_cols)]  # Selecionar apenas colunas necessárias
+        df_prod["nome_operacao"] = df_prod["nome_operacao"].astype("category")
+    else:
+        return {"error": "Dados de produção inválidos ou colunas ausentes"}, {}
+
+    data_prod_json = compress_json(df_prod) if not df_prod.empty else {}
 
     query_hora = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{start_date_str}', '{end_date_str}'"
     try:
-        df_h = query_to_df(query_hora)
+        df_h = cached_query(query_hora)
     except Exception as e:
         return data_prod_json, {"error": f"Erro ao consultar Hora: {str(e)}"}
 
-    if not df_h.empty:
-        df_h = convert_date_columns(df_h, ["dt_registro", "dt_registro_turno"])
-    data_hora_json = df_h.to_json(date_format="iso", orient="records") if not df_h.empty else {}
+    needed_hora_cols = {"dt_registro_turno", "nome_modelo", "nome_tipo_estado", "tempo_hora", "nome_equipamento", "nome_tipo_equipamento"}
+    if not df_h.empty and needed_hora_cols.issubset(df_h.columns):
+        df_h = convert_date_columns(df_h, ["dt_registro_turno"])
+        df_h = df_h[list(needed_hora_cols)]  # Selecionar apenas colunas necessárias
+        for col in ["nome_modelo", "nome_tipo_estado", "nome_tipo_equipamento"]:
+            if col in df_h.columns:
+                df_h[col] = df_h[col].astype("category")
+    else:
+        return data_prod_json, {"error": "Dados de horas inválidos ou colunas ausentes"}
 
+    data_hora_json = compress_json(df_h) if not df_h.empty else {}
     return data_prod_json, data_hora_json
-
 
 @callback(
     Output("operacao-dropdown", "options"),
@@ -490,35 +623,26 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
 )
 def update_operacoes_options(json_data: Union[str, dict]) -> List[Dict[str, str]]:
     df = load_df(json_data)
-    if df.empty:
+    if df.empty or "nome_operacao" not in df.columns:
         return []
-    df["nome_operacao"] = df["nome_operacao"].astype("category")
     ops_unicas = sorted(df["nome_operacao"].dropna().unique())
     return [{"label": op, "value": op} for op in ops_unicas]
 
-
-@callback(
-    Output("tabela-1", "data"),
-    Output("tabela-1", "columns"),
-    Output("tabela-1", "style_data_conditional"),
-    Output("tabela-2", "data"),
-    Output("tabela-2", "columns"),
-    Output("tabela-2", "style_data_conditional"),
-    Input("data-store", "data"),
-    Input("operacao-dropdown", "value"),
-    State("date-picker-range", "start_date"),
-    State("date-picker-range", "end_date")
-)
-def update_tables(json_data: Union[str, dict], operacoes_selecionadas: List[str],
-                  start_date: str, end_date: str
-                  ) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict], List[Dict], List[Dict]]:
+@cache.memoize(timeout=300)
+def _update_tables(json_data: str, operacoes_selecionadas: str, start_date: str, end_date: str):
+    """Função auxiliar cacheada para update_tables."""
     df = load_df(json_data)
     if df.empty or "dt_registro_turno" not in df.columns:
         return [], [], [], [], [], []
 
     df = convert_date_columns(df, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
-    if operacoes_selecionadas:
-        df = df.loc[df["nome_operacao"].isin(operacoes_selecionadas)]
+    if operacoes_selecionadas and isinstance(operacoes_selecionadas, str):
+        try:
+            operacoes = json.loads(operacoes_selecionadas)
+            if operacoes:  # Verifica se a lista não está vazia
+                df = df.loc[df["nome_operacao"].isin(operacoes)]
+        except json.JSONDecodeError:
+            pass  # Ignora se operacoes_selecionadas não for um JSON válido
     if df.empty:
         return [], [], [], [], [], []
 
@@ -577,22 +701,45 @@ def update_tables(json_data: Union[str, dict], operacoes_selecionadas: List[str]
     data_t2 = df_t2.to_dict("records")
     return data_t1, columns, style_cond_t1, data_t2, columns, style_cond_t2
 
-
 @callback(
-    Output("grafico-volume", "figure"),
-    Output("grafico-massa", "figure"),
+    Output("tabela-1", "data"),
+    Output("tabela-1", "columns"),
+    Output("tabela-1", "style_data_conditional"),
+    Output("tabela-2", "data"),
+    Output("tabela-2", "columns"),
+    Output("tabela-2", "style_data_conditional"),
     Input("data-store", "data"),
-    Input("operacao-dropdown", "value")
+    Input("operacao-dropdown", "value"),
+    State("date-picker-range", "start_date"),
+    State("date-picker-range", "end_date")
 )
-def update_graphs(json_data: Union[str, dict], operacoes_selecionadas: List[str]):
+def update_tables(json_data: Union[str, dict], operacoes_selecionadas: List[str],
+                  start_date: str, end_date: str):
+    """Atualiza tabelas com controle de contexto."""
+    ctx = callback_context
+    if not ctx.triggered:
+        return [], [], [], [], [], []
+
+    # Converter operacoes_selecionadas para string para cache
+    operacoes_str = json.dumps(operacoes_selecionadas, sort_keys=True)
+    return _update_tables(json_data, operacoes_str, start_date, end_date)
+
+@cache.memoize(timeout=300)
+def _update_graphs(json_data: str, operacoes_selecionadas: str):
+    """Função auxiliar cacheada para update_graphs."""
     df = load_df(json_data)
     if df.empty:
         fig_empty = px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
         return fig_empty, fig_empty
 
     df = convert_date_columns(df, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
-    if operacoes_selecionadas:
-        df = df.loc[df["nome_operacao"].isin(operacoes_selecionadas)]
+    if operacoes_selecionadas and isinstance(operacoes_selecionadas, str):
+        try:
+            operacoes = json.loads(operacoes_selecionadas)
+            if operacoes:  # Verifica se a lista não está vazia
+                df = df.loc[df["nome_operacao"].isin(operacoes)]
+        except json.JSONDecodeError:
+            pass  # Ignora se operacoes_selecionadas não for um JSON válido
     if df.empty:
         fig_empty = px.bar(title="Sem dados para esse filtro.", template="plotly_white")
         return fig_empty, fig_empty
@@ -649,25 +796,33 @@ def update_graphs(json_data: Union[str, dict], operacoes_selecionadas: List[str]
     fig_massa.update_yaxes(tickformat="0,0.00")
     return fig_volume, fig_massa
 
-
 @callback(
-    Output("grafico-viagens-hora", "figure"),
+    Output("grafico-volume", "figure"),
+    Output("grafico-massa", "figure"),
     Input("data-store", "data"),
-    Input("data-store-hora", "data"),
-    Input("date-picker-range", "end_date"),
     Input("operacao-dropdown", "value")
 )
-def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict],
-                                end_date: str, operacoes_selecionadas: List[str]):
+def update_graphs(json_data: Union[str, dict], operacoes_selecionadas: List[str]):
+    """Atualiza gráficos com controle de contexto."""
+    ctx = callback_context
+    if not ctx.triggered:
+        fig_empty = px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
+        return fig_empty, fig_empty
+
+    operacoes_str = json.dumps(operacoes_selecionadas, sort_keys=True)
+    return _update_graphs(json_data, operacoes_str)
+
+@cache.memoize(timeout=300)
+def _update_grafico_viagens_hora(json_prod: str, json_hora: str, end_date: str, operacoes_selecionadas: str):
+    """Função auxiliar cacheada para update_grafico_viagens_hora."""
     df_prod = load_df(json_prod)
     df_hora = load_df(json_hora)
     if df_prod.empty or df_hora.empty or not end_date:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
-    # Verifica se há mensagens de erro nos dados
-    if "error" in (json_prod if isinstance(json_prod, dict) else {}):
+    if isinstance(json_prod, dict) and "error" in json_prod:
         return px.bar(title=json_prod["error"], template="plotly_white")
-    if "error" in (json_hora if isinstance(json_hora, dict) else {}):
+    if isinstance(json_hora, dict) and "error" in json_hora:
         return px.bar(title=json_hora["error"], template="plotly_white")
 
     try:
@@ -680,8 +835,13 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     df_prod = df_prod.loc[df_prod["dt_registro_turno"].dt.date == filtro_dia]
     df_hora = df_hora.loc[df_hora["dt_registro_turno"].dt.date == filtro_dia]
 
-    if operacoes_selecionadas:
-        df_prod = df_prod.loc[df_prod["nome_operacao"].isin(operacoes_selecionadas)]
+    if operacoes_selecionadas and isinstance(operacoes_selecionadas, str):
+        try:
+            operacoes = json.loads(operacoes_selecionadas)
+            if operacoes:  # Verifica se a lista não está vazia
+                df_prod = df_prod.loc[df_prod["nome_operacao"].isin(operacoes)]
+        except json.JSONDecodeError:
+            pass  # Ignora se operacoes_selecionadas não for um JSON válido
     if df_prod.empty or df_hora.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
@@ -702,7 +862,6 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     if df_merged.empty:
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
-    # Evita divisão por zero usando replace e fillna
     df_merged["horas_trabalhadas"] = df_merged["horas_trabalhadas"].replace(0, np.nan)
     df_merged["viagens_por_hora"] = (df_merged["viagens"] / df_merged["horas_trabalhadas"]).fillna(0)
     df_merged.sort_values("viagens_por_hora", inplace=True)
@@ -726,6 +885,22 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     )
     return fig
 
+@callback(
+    Output("grafico-viagens-hora", "figure"),
+    Input("data-store", "data"),
+    Input("data-store-hora", "data"),
+    Input("date-picker-range", "end_date"),
+    Input("operacao-dropdown", "value")
+)
+def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict],
+                                end_date: str, operacoes_selecionadas: List[str]):
+    """Atualiza gráfico de viagens por hora com controle de contexto."""
+    ctx = callback_context
+    if not ctx.triggered:
+        return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
+
+    operacoes_str = json.dumps(operacoes_selecionadas, sort_keys=True)
+    return _update_grafico_viagens_hora(json_prod, json_hora, end_date, operacoes_str)
 
 @callback(
     Output("modelo-dropdown", "options"),
@@ -735,26 +910,12 @@ def load_modelos_options(json_data_hora: Union[str, dict]) -> List[Dict[str, str
     df_h = load_df(json_data_hora)
     if df_h.empty or "nome_modelo" not in df_h.columns:
         return []
-    df_h["nome_modelo"] = df_h["nome_modelo"].astype("category")
     modelos_unicos = sorted(df_h["nome_modelo"].dropna().unique())
     return [{"label": m, "value": m} for m in modelos_unicos]
 
-
-@callback(
-    Output("tabela-ind-ultimo", "data"),
-    Output("tabela-ind-ultimo", "columns"),
-    Output("tabela-ind-ultimo", "style_data_conditional"),
-    Output("tabela-ind-acum", "data"),
-    Output("tabela-ind-acum", "columns"),
-    Output("tabela-ind-acum", "style_data_conditional"),
-    Input("data-store-hora", "data"),
-    Input("modelo-dropdown", "value"),
-    State("date-picker-range", "end_date")
-)
-def update_tabelas_indicadores(json_data_hora: Union[str, dict],
-                               lista_modelos: List[str],
-                               end_date: str
-                               ) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict], List[Dict], List[Dict]]:
+@cache.memoize(timeout=300)
+def _update_tabelas_indicadores(json_data_hora: str, lista_modelos: str, end_date: str):
+    """Função auxiliar cacheada para update_tabelas_indicadores."""
     df_h = load_df(json_data_hora)
     if df_h.empty:
         return [], [], [], [], [], []
@@ -764,18 +925,20 @@ def update_tabelas_indicadores(json_data_hora: Union[str, dict],
     # Ajuste para modelos específicos de perfuração
     perfuracao_modelos = ["PERFURATRIZ HIDRAULICA SANDVIK DP1500I", "PERFURATRIZ HIDRAULICA SANDVIK DX800"]
     mask_perf = df_h["nome_modelo"].isin(perfuracao_modelos)
-    df_h.loc[mask_perf, "nome_tipo_equipamento"] = "Perfuração"
+    if mask_perf.any():
+        # Adicionar "Perfuração" às categorias antes da atribuição
+        df_h["nome_tipo_equipamento"] = df_h["nome_tipo_equipamento"].cat.add_categories(["Perfuração"])
+        df_h.loc[mask_perf, "nome_tipo_equipamento"] = "Perfuração"
     
-    # Convertendo colunas de filtro para categoria
-    if "nome_modelo" in df_h.columns:
-        df_h["nome_modelo"] = df_h["nome_modelo"].astype("category")
-    if "nome_tipo_equipamento" in df_h.columns:
-        df_h["nome_tipo_equipamento"] = df_h["nome_tipo_equipamento"].astype("category")
-    
-    if lista_modelos:
-        df_h = df_h.loc[df_h["nome_modelo"].isin(lista_modelos)]
-        if df_h.empty:
-            return [], [], [], [], [], []
+    if lista_modelos and isinstance(lista_modelos, str):
+        try:
+            modelos = json.loads(lista_modelos)
+            if modelos:  # Verifica se a lista não está vazia
+                df_h = df_h.loc[df_h["nome_modelo"].isin(modelos)]
+        except json.JSONDecodeError:
+            pass  # Ignora se lista_modelos não for um JSON válido
+    if df_h.empty:
+        return [], [], [], [], [], []
 
     df_h["tempo_hora"] = pd.to_numeric(df_h["tempo_hora"], errors="coerce").fillna(0)
 
@@ -859,3 +1022,23 @@ def update_tabelas_indicadores(json_data_hora: Union[str, dict],
         {"if": {"filter_query": '{nome_tipo_equipamento} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
     ]
     return data_t1, columns_ind, style_cond, data_t2, columns_ind, style_cond
+
+@callback(
+    Output("tabela-ind-ultimo", "data"),
+    Output("tabela-ind-ultimo", "columns"),
+    Output("tabela-ind-ultimo", "style_data_conditional"),
+    Output("tabela-ind-acum", "data"),
+    Output("tabela-ind-acum", "columns"),
+    Output("tabela-ind-acum", "style_data_conditional"),
+    Input("data-store-hora", "data"),
+    Input("modelo-dropdown", "value"),
+    State("date-picker-range", "end_date")
+)
+def update_tabelas_indicadores(json_data_hora: Union[str, dict], lista_modelos: List[str], end_date: str):
+    """Atualiza tabelas de indicadores com controle de contexto."""
+    ctx = callback_context
+    if not ctx.triggered:
+        return [], [], [], [], [], []
+
+    modelos_str = json.dumps(lista_modelos, sort_keys=True)
+    return _update_tabelas_indicadores(json_data_hora, modelos_str, end_date)
