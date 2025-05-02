@@ -5,7 +5,7 @@ relatorio6.py – Equipamentos por Estado
 
 Exibe o estado atual dos equipamentos em um layout de TV, com cartões agrupados por estado e tipo,
 incluindo imagens por modelo e escala de cores para duração. Otimizado para performance com cache robusto,
-operações vetorizadas e logs de depuração.
+operações vetorizadas e logs de depuração. Usa Horário de Brasília (UTC-3) para consultas e exibição.
 
 Dependências:
   - Banco de dados via `db.query_to_df`
@@ -36,8 +36,8 @@ from app import cache
 logging.basicConfig(level=logging.INFO, filename="dashboard.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Período para consulta: últimos 7 dias
-DAY_END: datetime = datetime.now()
+# Período para consulta: últimos 7 dias, usando Horário de Brasília (UTC-3)
+DAY_END: datetime = datetime.utcnow() - timedelta(hours=3)
 DAY_START: datetime = DAY_END - timedelta(days=7)
 
 # Mapeamento de imagens por modelo
@@ -45,22 +45,22 @@ MODEL_IMAGES: Dict[str, str] = {
     "VOLVO FMX 500 8X4": "/assets/VOLVO FMX 500 8X4.jpg",
     "MERCEDES BENZ AROCS 4851/45 8X4": "/assets/MERCEDES_BENZ_AROCS 4851_45_8X4.jpg",
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": "/assets/MERCEDES BENZ AXOR 3344 6X4 (PIPA).jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 374DL": "/assets/ESCAVADEIRA_HIDRÁULICA_CAT_374DL.jpg",
-    "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": "/assets/ESCAVADEIRA_HIDRÁULICA_VOLVO_EC750DL.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 374DL": "/assets/ESCAVADEIRA_HIDRAULICA_CAT_374DL.jpg",
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": "/assets/ESCAVADEIRA_HIDRAULICA_VOLVO_EC750DL.jpg",
     "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": "/assets/PERFURATRIZ HIDRAULICA SANDVIK DP1500I.jpg",
     "PERFURATRIZ HIDRAULICA SANDVIK DX800": "/assets/PERFURATRIZ HIDRAULICA SANDVIK DP1500I.jpg",
     "TRATOR DE ESTEIRAS CAT D7": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS CAT D6T": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS CAT D8": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS KOMATSU D155": "/assets/TRATOR DE ESTEIRAS KOMATSU D155.jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 320": "/assets/ESCAVADEIRA_HIDRÁULICA CAT 320.jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)": "/assets/ESCAVADEIRA_HIDRÁULICA CAT 320 (ROMPEDOR).jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 352": "/assets/ESCAVADEIRA HIDRÁULICA CAT 320.jpg",
-    "ESCAVADEIRA HIDRAULICA CAT 336NGX": "/assets/ESCAVADEIRA_HIDRÁULICA CAT 320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 320": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320 (ROMPEDOR).jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 352": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
+    "ESCAVADEIRA HIDRAULICA CAT 336NGX": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
     "ESCAVADEIRA HIDRAULICA SANY SY750H": "/assets/ESCAVADEIRA HIDRAULICA SANY SY750H.jpg",
-    "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": "/assets/ESCAVADEIRA_HIDRÁULICA_VOLVO_EC480DL.jpg",
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": "/assets/ESCAVADEIRA_HIDRAULICA_VOLVO_EC480DL.jpg",
     "MOTONIVELADORA CAT 140K": "/assets/MOTONIVELADORA CAT 140K.jpg",
-    "PÁ CARREGADEIRA CAT 966L": "/assets/PÁ CARREGADEIRA CAT 966L.jpg",
+    "PÁ CARREGADEIRA CAT 966L": "/assets/PA CARREGADEIRA CAT 966L.jpg",
     "RETRO ESCAVADEIRA CAT 416F2": "/assets/RETRO ESCAVADEIRA CAT 416F2.jpg",
 }
 
@@ -95,14 +95,14 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
     Consulta todos os equipamentos e seus estados no banco, com cache.
 
     Args:
-        start_date (datetime): Data inicial.
-        end_date (datetime): Data final.
+        start_date (datetime): Data inicial (Horário de Brasília).
+        end_date (datetime): Data final (Horário de Brasília).
         refresh (bool): Força atualização do cache.
 
     Returns:
         pd.DataFrame: Dados de equipamentos ou DataFrame vazio em caso de erro.
     """
-    logger.debug(f"[DEBUG] Consultando dados de {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S}, refresh={refresh}")
+    logger.debug(f"[DEBUG] Consultando dados de {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT), refresh={refresh}")
 
     # Consultar estados dos equipamentos
     state_query = (
@@ -114,7 +114,7 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
         logger.debug(f"[DEBUG] Estados brutos retornados: {len(df_state)} linhas")
         logger.debug(f"[DEBUG] Colunas de df_state: {df_state.columns.tolist()}")
     except Exception as e:
-        logger.error(f"[DEBUG] Erro ao consultar usp_fato_hora: {str(e)}")
+        logger.error(f"[DEBUG] Erro ao consultar usp_fato_hora com intervalo {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT): {str(e)}")
         df_state = pd.DataFrame()
 
     # Se não houver dados, tentar lista de equipamentos distinta
@@ -130,7 +130,7 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
             logger.debug(f"[DEBUG] Equipamentos distintos retornados: {len(df_equip)}")
             logger.debug(f"[DEBUG] Colunas de df_equip: {df_equip.columns.tolist()}")
         except Exception as e:
-            logger.error(f"[DEBUG] Erro ao consultar equipamentos distintos: {str(e)}")
+            logger.error(f"[DEBUG] Erro ao consultar equipamentos distintos com intervalo {start_date:%d/%m/%Y %H:%M:%S} a {end_date:%d/%m/%Y %H:%M:%S} (BRT): {str(e)}")
             df_equip = pd.DataFrame()
     else:
         # Tentar consultar tb_equipamentos
@@ -162,9 +162,10 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
     df["id_lancamento"] = df["id_lancamento"].fillna(-1)
     df["dt_registro"] = df["dt_registro"].fillna(pd.Timestamp("1900-01-01"))
 
-    # Normalizar nome_tipo_estado para consistência com o filtro
-    if "nome_tipo_estado" in df.columns:
-        df["nome_tipo_estado"] = df["nome_tipo_estado"].str.strip().str.upper()
+    # Normalizar colunas de texto uma única vez
+    for col in ["nome_equipamento", "nome_modelo", "nome_estado", "nome_tipo_estado"]:
+        if col in df.columns:
+            df[col] = df[col].str.strip().str.upper().astype("category")
 
     # Converter dt_registro para datetime
     if "dt_registro" in df.columns:
@@ -172,10 +173,11 @@ def fetch_equipment_data(start_date: datetime, end_date: datetime, refresh: bool
         invalid_dates = df["dt_registro"].isna().sum()
         logger.debug(f"[DEBUG] Linhas com datas inválidas (NaT): {invalid_dates}")
 
-    # Converter colunas de texto para category
-    for col in ["nome_equipamento", "nome_modelo", "nome_estado", "nome_tipo_estado"]:
-        if col in df.columns:
-            df[col] = df[col].astype("category")
+    # Verificar colunas esperadas
+    expected_cols = ["nome_equipamento", "nome_modelo", "nome_estado", "nome_tipo_estado", "dt_registro", "id_lancamento"]
+    missing_cols = [col for col in expected_cols if col not in df.columns]
+    if missing_cols:
+        logger.warning(f"[DEBUG] Colunas esperadas ausentes: {missing_cols}")
 
     return df
 
@@ -214,15 +216,10 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
     """
     if df.empty:
         logger.debug("[DEBUG] DataFrame vazio em create_tv_layout")
-        return html.Div("Sem dados para exibir.", className="text-center my-4")
-
-    # Normalizar colunas de texto
-    df = df.assign(
-        nome_equipamento=df["nome_equipamento"].str.strip().str.upper(),
-        nome_tipo_estado=df["nome_tipo_estado"].str.strip().str.upper(),
-        nome_estado=df["nome_estado"].str.strip().str.upper(),
-        nome_modelo=df.get("nome_modelo", "").str.strip().str.upper()
-    )
+        return html.Div(
+            "Sem dados para exibir. Verifique a disponibilidade de dados no banco de dados (Horário de Brasília) ou a conexão no Render.",
+            className="text-center my-4"
+        )
 
     # Remover registros do equipamento TRIMAK
     df = df[df["nome_equipamento"] != "TRIMAK"]
@@ -230,14 +227,17 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
 
     # Aplicar filtro de nome_tipo_estado, se fornecido e não vazio
     if filter_values and filter_values != [""]:
-        filter_values_upper = [v.strip().upper() for v in filter_values]
+        filter_values_upper = [v.strip().upper() for v in filter_values if v]
         logger.debug(f"[DEBUG] Aplicando filtro: {filter_values_upper}")
         df = df[df["nome_tipo_estado"].isin(filter_values_upper)]
         logger.debug(f"[DEBUG] Após filtro por nome_tipo_estado: {len(df)} linhas")
 
     if df.empty:
         logger.debug("[DEBUG] Nenhum equipamento corresponde ao filtro")
-        return html.Div("Nenhum equipamento corresponde ao filtro selecionado.", className="text-center my-4")
+        return html.Div(
+            "Nenhum equipamento corresponde ao filtro selecionado.",
+            className="text-center my-4"
+        )
 
     # Ordenar dados
     df = df.sort_values(["nome_estado", "nome_tipo_estado", "nome_equipamento"])
@@ -267,7 +267,7 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
     grouped = df.groupby(group_cols, as_index=False)
 
     rows = []
-    now = datetime.now()
+    now = datetime.utcnow() - timedelta(hours=3)  # Usar Horário de Brasília
     for (estado, tipo), group_data in grouped:
         count_equip = len(group_data)
         left_col = [
@@ -523,12 +523,17 @@ def update_data(n_clicks: int, n_intervals: int) -> Tuple[Optional[str], str]:
     """
     Atualiza os dados com os registros mais recentes por equipamento.
     """
-    # Forçar atualização do cache ao clicar em Atualizar
-    refresh = n_clicks is not None
-    latest = get_latest_records()
+    # Forçar atualização do cache na primeira carga ou ao clicar em Atualizar
+    refresh = n_clicks is not None or n_intervals == 0
+    try:
+        latest = get_latest_records()
+    except Exception as e:
+        logger.error(f"[DEBUG] Erro ao obter registros mais recentes: {str(e)}")
+        return None, "Erro ao carregar dados. Verifique a conexão com o banco ou a disponibilidade de dados (Horário de Brasília) no Render."
+
     if latest.empty:
         logger.debug("[DEBUG] Nenhum dado retornado por get_latest_records")
-        return None, "Sem dados"
+        return None, "Sem dados. Verifique a disponibilidade de dados no banco (Horário de Brasília) no Render."
 
     latest = latest[latest["nome_equipamento"] != "TRIMAK"]
     logger.debug(f"[DEBUG] Após remover TRIMAK em update_data: {len(latest)} linhas")
@@ -538,8 +543,13 @@ def update_data(n_clicks: int, n_intervals: int) -> Tuple[Optional[str], str]:
         if col in latest.columns:
             latest[col] = latest[col].astype("category")
 
-    json_data = latest.to_json(orient="records", date_format="iso")
-    last_update_text = f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+    try:
+        json_data = latest.to_json(orient="records", date_format="iso")
+    except Exception as e:
+        logger.error(f"[DEBUG] Erro ao serializar dados para JSON: {str(e)}")
+        return None, "Erro ao processar dados no Render."
+
+    last_update_text = f"Última atualização: {(datetime.utcnow() - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M:%S')} (BRT)"
     return json_data, last_update_text
 
 @callback(
@@ -561,13 +571,16 @@ def update_filter_options(json_data: Optional[Union[str, dict]]) -> Tuple[List[D
         logger.debug("[DEBUG] Nenhum dado em update_filter_options")
         return [], []
 
-    df = pd.read_json(json_data, orient="records")
+    try:
+        df = pd.read_json(json_data, orient="records")
+    except Exception as e:
+        logger.error(f"[DEBUG] Erro ao ler JSON em update_filter_options: {str(e)}")
+        return [], []
+
     if df.empty or "nome_tipo_estado" not in df.columns:
         logger.debug("[DEBUG] DataFrame vazio ou sem nome_tipo_estado")
         return [], []
 
-    # Normalizar nome_tipo_estado
-    df["nome_tipo_estado"] = df["nome_tipo_estado"].str.strip().str.upper()
     tipos = sorted(df["nome_tipo_estado"].dropna().unique())
     logger.debug(f"[DEBUG] Tipos de estado disponíveis: {tipos}")
     options = [{"label": t, "value": t} for t in tipos]
@@ -579,9 +592,6 @@ def update_filter_options(json_data: Optional[Union[str, dict]]) -> Tuple[List[D
         "MANUTENÇÃO OPERACIONAL",
         "FORA DE FROTA"
     ]
-    # Normalizar valores predefinidos
-    default_preselection = [v.strip().upper() for v in default_preselection]
-    # Selecionar apenas os valores que existem nos dados
     default_value = [t for t in default_preselection if t in tipos]
     logger.debug(f"[DEBUG] Valores predefinidos aplicados: {default_value}")
 
@@ -598,13 +608,27 @@ def render_tv_layout(json_data: Optional[Union[str, dict]], filter_values: Optio
     """
     if not json_data:
         logger.debug("[DEBUG] Nenhum dado em render_tv_layout")
-        return html.Div("Clique em 'Atualizar' para carregar os dados.", className="text-center my-4")
+        return html.Div(
+            "Erro ao carregar dados. Verifique a conexão com o banco, a disponibilidade de dados (Horário de Brasília) ou clique em 'Atualizar' no Render.",
+            className="text-center my-4"
+        )
 
-    df = pd.read_json(json_data, orient="records")
+    try:
+        df = pd.read_json(json_data, orient="records")
+    except Exception as e:
+        logger.error(f"[DEBUG] Erro ao ler JSON em render_tv_layout: {str(e)}")
+        return html.Div(
+            "Erro ao processar dados no Render. Verifique o log para detalhes.",
+            className="text-center my-4"
+        )
+
     logger.debug(f"[DEBUG] Dados recebidos em render_tv_layout: {len(df)} linhas")
     logger.debug(f"[DEBUG] Filter values: {filter_values}")
     if df.empty:
         logger.debug("[DEBUG] DataFrame vazio em render_tv_layout")
-        return html.Div("Sem dados para exibir.", className="text-center my-4")
+        return html.Div(
+            "Sem dados para exibir. Verifique a disponibilidade de dados no banco (Horário de Brasília) no Render.",
+            className="text-center my-4"
+        )
 
     return create_tv_layout(df, filter_values)

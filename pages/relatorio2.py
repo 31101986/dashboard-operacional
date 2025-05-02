@@ -11,11 +11,21 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 from dash.dash_table.Format import Format, Scheme
+import logging
 
 # Import da função para consultar o banco, variáveis de meta e cache
 from db import query_to_df
 from config import META_MINERIO, META_ESTERIL
 from app import cache  # Assumindo que cache está definido em app.py
+
+# Configuração do log
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="dashboard.log",
+    filemode="a",
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Formato numérico com 2 casas decimais e separador de milhar
 num_format = Format(precision=2, scheme=Scheme.fixed, group=True)
@@ -43,13 +53,24 @@ def filter_by_date(df: pd.DataFrame, date_col: str, start_date: datetime, end_da
 
 def group_movimentacao(df: pd.DataFrame, group_col: str) -> pd.DataFrame:
     """Agrupa o DataFrame para movimentação, otimizando com categoria."""
-    if group_col in df.columns:
-        df[group_col] = df[group_col].astype("category")
+    if df.empty or group_col not in df.columns:
+        logger.debug(f"[DEBUG] DataFrame vazio ou sem {group_col} em group_movimentacao")
+        return pd.DataFrame(columns=[group_col, "viagens", "volume", "massa"])
+
+    # Garantir que nome_operacao seja categórica e limpar categorias não usadas
+    df[group_col] = df[group_col].astype("category").cat.remove_unused_categories()
+    
+    # Agrupar e calcular métricas
     grouped = df.groupby(group_col, as_index=False).agg(
         viagens=(group_col, "size"),
         volume=("volume", "sum"),
         massa=("massa", "sum")
     )
+    
+    # Remover linhas com todas as métricas zeradas
+    grouped = grouped[(grouped["viagens"] > 0) | (grouped["volume"] > 0) | (grouped["massa"] > 0)]
+    logger.debug(f"[DEBUG] Após group_movimentacao por {group_col}: {len(grouped)} linhas")
+    
     return grouped
 
 def format_total_row(df_group: pd.DataFrame, group_col: str) -> pd.DataFrame:
@@ -66,6 +87,7 @@ def format_total_row(df_group: pd.DataFrame, group_col: str) -> pd.DataFrame:
 def load_df(json_data: Union[str, Dict]) -> pd.DataFrame:
     """Converte JSON comprimido para DataFrame, com cache."""
     if not json_data or (isinstance(json_data, dict) and "error" in json_data):
+        logger.debug("[DEBUG] Nenhum dado válido em load_df")
         return pd.DataFrame()
     try:
         if isinstance(json_data, str):
@@ -76,9 +98,11 @@ def load_df(json_data: Union[str, Dict]) -> pd.DataFrame:
         # Converter colunas categóricas imediatamente
         for col in ["nome_operacao", "nome_modelo", "nome_tipo_equipamento"]:
             if col in df.columns:
-                df[col] = df[col].astype("category")
+                df[col] = df[col].astype("category").cat.remove_unused_categories()
+        logger.debug(f"[DEBUG] DataFrame carregado em load_df: {len(df)} linhas, colunas: {df.columns.tolist()}")
         return df
-    except Exception:
+    except Exception as e:
+        logger.error(f"[DEBUG] Erro ao carregar DataFrame em load_df: {str(e)}")
         return pd.DataFrame()
 
 def compress_json(df: pd.DataFrame) -> str:
@@ -568,6 +592,7 @@ layout = dbc.Container(
 def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, Any]:
     """Consulta os dados e armazena em JSON comprimido."""
     if not start_date or not end_date:
+        logger.debug("[DEBUG] Data inicial ou final não fornecida em apply_filter")
         return {}, {}
 
     start_date_obj = datetime.fromisoformat(start_date)
@@ -582,7 +607,9 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
     """
     try:
         df_prod = cached_query(query_prod)
+        logger.debug(f"[DEBUG] Dados de produção retornados: {len(df_prod)} linhas")
     except Exception as e:
+        logger.error(f"[DEBUG] Erro ao consultar Produção: {str(e)}")
         return {"error": f"Erro ao consultar Produção: {str(e)}"}, {}
 
     needed_prod_cols = {"dt_registro_turno", "nome_operacao", "volume", "massa", "nome_equipamento_utilizado"}
@@ -592,8 +619,10 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
         if "nome_operacao" in df_prod.columns:
             df_prod = df_prod.dropna(subset=["nome_operacao"])
         df_prod = df_prod[list(needed_prod_cols)]  # Selecionar apenas colunas necessárias
-        df_prod["nome_operacao"] = df_prod["nome_operacao"].astype("category")
+        df_prod["nome_operacao"] = df_prod["nome_operacao"].astype("category").cat.remove_unused_categories()
+        logger.debug(f"[DEBUG] Dados de produção após filtro: {len(df_prod)} linhas")
     else:
+        logger.debug("[DEBUG] Dados de produção inválidos ou colunas ausentes")
         return {"error": "Dados de produção inválidos ou colunas ausentes"}, {}
 
     data_prod_json = compress_json(df_prod) if not df_prod.empty else {}
@@ -601,7 +630,9 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
     query_hora = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{start_date_str}', '{end_date_str}'"
     try:
         df_h = cached_query(query_hora)
+        logger.debug(f"[DEBUG] Dados de hora retornados: {len(df_h)} linhas")
     except Exception as e:
+        logger.error(f"[DEBUG] Erro ao consultar Hora: {str(e)}")
         return data_prod_json, {"error": f"Erro ao consultar Hora: {str(e)}"}
 
     needed_hora_cols = {"dt_registro_turno", "nome_modelo", "nome_tipo_estado", "tempo_hora", "nome_equipamento", "nome_tipo_equipamento"}
@@ -610,8 +641,10 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
         df_h = df_h[list(needed_hora_cols)]  # Selecionar apenas colunas necessárias
         for col in ["nome_modelo", "nome_tipo_estado", "nome_tipo_equipamento"]:
             if col in df_h.columns:
-                df_h[col] = df_h[col].astype("category")
+                df_h[col] = df_h[col].astype("category").cat.remove_unused_categories()
+        logger.debug(f"[DEBUG] Dados de hora após processamento: {len(df_h)} linhas")
     else:
+        logger.debug("[DEBUG] Dados de horas inválidos ou colunas ausentes")
         return data_prod_json, {"error": "Dados de horas inválidos ou colunas ausentes"}
 
     data_hora_json = compress_json(df_h) if not df_h.empty else {}
@@ -624,8 +657,10 @@ def apply_filter(n_clicks: int, start_date: str, end_date: str) -> Tuple[Any, An
 def update_operacoes_options(json_data: Union[str, dict]) -> List[Dict[str, str]]:
     df = load_df(json_data)
     if df.empty or "nome_operacao" not in df.columns:
+        logger.debug("[DEBUG] Nenhum dado ou nome_operacao ausente em update_operacoes_options")
         return []
     ops_unicas = sorted(df["nome_operacao"].dropna().unique())
+    logger.debug(f"[DEBUG] Operações únicas para dropdown: {ops_unicas}")
     return [{"label": op, "value": op} for op in ops_unicas]
 
 @cache.memoize(timeout=300)
@@ -633,31 +668,50 @@ def _update_tables(json_data: str, operacoes_selecionadas: str, start_date: str,
     """Função auxiliar cacheada para update_tables."""
     df = load_df(json_data)
     if df.empty or "dt_registro_turno" not in df.columns:
+        logger.debug("[DEBUG] DataFrame vazio ou sem dt_registro_turno em update_tables")
         return [], [], [], [], [], []
 
+    # Log inicial
+    logger.debug(f"[DEBUG] Dados brutos carregados: {len(df)} linhas, operações únicas: {sorted(df['nome_operacao'].unique())}")
+
+    # Converter colunas de data e remover linhas com dt_registro_turno nulo
     df = convert_date_columns(df, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
+    
+    # Aplicar filtro de operações selecionadas
     if operacoes_selecionadas and isinstance(operacoes_selecionadas, str):
         try:
             operacoes = json.loads(operacoes_selecionadas)
             if operacoes:  # Verifica se a lista não está vazia
                 df = df.loc[df["nome_operacao"].isin(operacoes)]
+                df["nome_operacao"] = df["nome_operacao"].astype("category").cat.remove_unused_categories()
+                logger.debug(f"[DEBUG] Após filtro de operações {operacoes}: {len(df)} linhas, operações: {sorted(df['nome_operacao'].unique())}")
         except json.JSONDecodeError:
-            pass  # Ignora se operacoes_selecionadas não for um JSON válido
+            logger.warning("[DEBUG] Erro ao decodificar operacoes_selecionadas, ignorando filtro")
+    
     if df.empty:
+        logger.debug("[DEBUG] DataFrame vazio após filtro")
         return [], [], [], [], [], []
 
+    # Filtrar pelo último dia
     ultimo_dia = df["dt_registro_turno"].dt.date.max()
     df_last_day = df.loc[df["dt_registro_turno"].dt.date == ultimo_dia]
+    logger.debug(f"[DEBUG] Dados do último dia: {len(df_last_day)} linhas")
+
+    # Agrupar dados do último dia
     df_t1 = group_movimentacao(df_last_day, "nome_operacao")
     df_t1 = format_total_row(df_t1, "nome_operacao")
+    logger.debug(f"[DEBUG] Tabela 1 (Último Dia): {df_t1.to_dict('records')}")
 
+    # Agrupar dados acumulados
     df_t2 = group_movimentacao(df, "nome_operacao")
     df_t2 = format_total_row(df_t2, "nome_operacao")
+    logger.debug(f"[DEBUG] Tabela 2 (Acumulada): {df_t2.to_dict('records')}")
 
+    # Definir estilos condicionais
     meta_total_last = META_MINERIO + META_ESTERIL
     style_cond_t1 = [
         {
-            "if": {"filter_query": f'{{nome_operacao}} = "TOTAL" && {{volume}} >= {meta_total_last}', "column_id": "volume"},
+            "if": {"filter_query": f'{{CryptographicError: Invalid initialization vector. Must be 16 bytesnome_operacao}} = "TOTAL" && {{volume}} >= {meta_total_last}', "column_id": "volume"},
             "color": "rgb(0,55,158)"
         },
         {
@@ -718,6 +772,7 @@ def update_tables(json_data: Union[str, dict], operacoes_selecionadas: List[str]
     """Atualiza tabelas com controle de contexto."""
     ctx = callback_context
     if not ctx.triggered:
+        logger.debug("[DEBUG] Nenhum callback disparado em update_tables")
         return [], [], [], [], [], []
 
     # Converter operacoes_selecionadas para string para cache
@@ -729,6 +784,7 @@ def _update_graphs(json_data: str, operacoes_selecionadas: str):
     """Função auxiliar cacheada para update_graphs."""
     df = load_df(json_data)
     if df.empty:
+        logger.debug("[DEBUG] DataFrame vazio em _update_graphs")
         fig_empty = px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
         return fig_empty, fig_empty
 
@@ -738,9 +794,12 @@ def _update_graphs(json_data: str, operacoes_selecionadas: str):
             operacoes = json.loads(operacoes_selecionadas)
             if operacoes:  # Verifica se a lista não está vazia
                 df = df.loc[df["nome_operacao"].isin(operacoes)]
+                df["nome_operacao"] = df["nome_operacao"].astype("category").cat.remove_unused_categories()
+                logger.debug(f"[DEBUG] Dados filtrados para gráficos: {len(df)} linhas, operações: {sorted(df['nome_operacao'].unique())}")
         except json.JSONDecodeError:
-            pass  # Ignora se operacoes_selecionadas não for um JSON válido
+            logger.warning("[DEBUG] Erro ao decodificar operacoes_selecionadas em _update_graphs, ignorando filtro")
     if df.empty:
+        logger.debug("[DEBUG] DataFrame vazio após filtro em _update_graphs")
         fig_empty = px.bar(title="Sem dados para esse filtro.", template="plotly_white")
         return fig_empty, fig_empty
 
@@ -806,6 +865,7 @@ def update_graphs(json_data: Union[str, dict], operacoes_selecionadas: List[str]
     """Atualiza gráficos com controle de contexto."""
     ctx = callback_context
     if not ctx.triggered:
+        logger.debug("[DEBUG] Nenhum callback disparado em update_graphs")
         fig_empty = px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
         return fig_empty, fig_empty
 
@@ -818,17 +878,21 @@ def _update_grafico_viagens_hora(json_prod: str, json_hora: str, end_date: str, 
     df_prod = load_df(json_prod)
     df_hora = load_df(json_hora)
     if df_prod.empty or df_hora.empty or not end_date:
+        logger.debug("[DEBUG] Dados vazios ou end_date ausente em _update_grafico_viagens_hora")
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
     if isinstance(json_prod, dict) and "error" in json_prod:
+        logger.debug(f"[DEBUG] Erro em json_prod: {json_prod['error']}")
         return px.bar(title=json_prod["error"], template="plotly_white")
     if isinstance(json_hora, dict) and "error" in json_hora:
+        logger.debug(f"[DEBUG] Erro em json_hora: {json_hora['error']}")
         return px.bar(title=json_hora["error"], template="plotly_white")
 
     try:
         df_prod = convert_date_columns(df_prod, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
         df_hora = convert_date_columns(df_hora, ["dt_registro_turno"]).dropna(subset=["dt_registro_turno"])
     except Exception as e:
+        logger.error(f"[DEBUG] Erro ao carregar dados em _update_grafico_viagens_hora: {str(e)}")
         return px.bar(title=f"Erro ao carregar dados: {str(e)}", template="plotly_white")
 
     filtro_dia = datetime.fromisoformat(end_date).date()
@@ -840,9 +904,12 @@ def _update_grafico_viagens_hora(json_prod: str, json_hora: str, end_date: str, 
             operacoes = json.loads(operacoes_selecionadas)
             if operacoes:  # Verifica se a lista não está vazia
                 df_prod = df_prod.loc[df_prod["nome_operacao"].isin(operacoes)]
+                df_prod["nome_operacao"] = df_prod["nome_operacao"].astype("category").cat.remove_unused_categories()
+                logger.debug(f"[DEBUG] Dados filtrados para viagens/hora: {len(df_prod)} linhas")
         except json.JSONDecodeError:
-            pass  # Ignora se operacoes_selecionadas não for um JSON válido
+            logger.warning("[DEBUG] Erro ao decodificar operacoes_selecionadas em _update_grafico_viagens_hora, ignorando filtro")
     if df_prod.empty or df_hora.empty:
+        logger.debug("[DEBUG] DataFrame vazio após filtro em _update_grafico_viagens_hora")
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
     df_viagens = df_prod.groupby("nome_equipamento_utilizado", as_index=False).agg(
@@ -860,6 +927,7 @@ def _update_grafico_viagens_hora(json_prod: str, json_hora: str, end_date: str, 
         how="inner"
     )
     if df_merged.empty:
+        logger.debug("[DEBUG] Nenhum dado após merge em _update_grafico_viagens_hora")
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
     df_merged["horas_trabalhadas"] = df_merged["horas_trabalhadas"].replace(0, np.nan)
@@ -897,6 +965,7 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     """Atualiza gráfico de viagens por hora com controle de contexto."""
     ctx = callback_context
     if not ctx.triggered:
+        logger.debug("[DEBUG] Nenhum callback disparado em update_grafico_viagens_hora")
         return px.bar(title="Sem dados para gerar o gráfico de Viagens por Hora Trabalhada.", template="plotly_white")
 
     operacoes_str = json.dumps(operacoes_selecionadas, sort_keys=True)
@@ -909,8 +978,10 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
 def load_modelos_options(json_data_hora: Union[str, dict]) -> List[Dict[str, str]]:
     df_h = load_df(json_data_hora)
     if df_h.empty or "nome_modelo" not in df_h.columns:
+        logger.debug("[DEBUG] Nenhum dado ou nome_modelo ausente em load_modelos_options")
         return []
     modelos_unicos = sorted(df_h["nome_modelo"].dropna().unique())
+    logger.debug(f"[DEBUG] Modelos únicos para dropdown: {modelos_unicos}")
     return [{"label": m, "value": m} for m in modelos_unicos]
 
 @cache.memoize(timeout=300)
@@ -918,6 +989,7 @@ def _update_tabelas_indicadores(json_data_hora: str, lista_modelos: str, end_dat
     """Função auxiliar cacheada para update_tabelas_indicadores."""
     df_h = load_df(json_data_hora)
     if df_h.empty:
+        logger.debug("[DEBUG] DataFrame vazio em _update_tabelas_indicadores")
         return [], [], [], [], [], []
 
     df_h = convert_date_columns(df_h, ["dt_registro_turno"])
@@ -935,9 +1007,12 @@ def _update_tabelas_indicadores(json_data_hora: str, lista_modelos: str, end_dat
             modelos = json.loads(lista_modelos)
             if modelos:  # Verifica se a lista não está vazia
                 df_h = df_h.loc[df_h["nome_modelo"].isin(modelos)]
+                df_h["nome_modelo"] = df_h["nome_modelo"].astype("category").cat.remove_unused_categories()
+                logger.debug(f"[DEBUG] Dados filtrados por modelos em _update_tabelas_indicadores: {len(df_h)} linhas")
         except json.JSONDecodeError:
-            pass  # Ignora se lista_modelos não for um JSON válido
+            logger.warning("[DEBUG] Erro ao decodificar lista_modelos em _update_tabelas_indicadores, ignorando filtro")
     if df_h.empty:
+        logger.debug("[DEBUG] DataFrame vazio após filtro por modelos em _update_tabelas_indicadores")
         return [], [], [], [], [], []
 
     df_h["tempo_hora"] = pd.to_numeric(df_h["tempo_hora"], errors="coerce").fillna(0)
@@ -1038,6 +1113,7 @@ def update_tabelas_indicadores(json_data_hora: Union[str, dict], lista_modelos: 
     """Atualiza tabelas de indicadores com controle de contexto."""
     ctx = callback_context
     if not ctx.triggered:
+        logger.debug("[DEBUG] Nenhum callback disparado em update_tabelas_indicadores")
         return [], [], [], [], [], []
 
     modelos_str = json.dumps(lista_modelos, sort_keys=True)

@@ -111,8 +111,8 @@ CARD_IMAGES = [
 NAVBAR_ICONS = {
     "/": "fa-home",
     "/relatorio1": "fa-clock",
-    "/relatorio2": "fa-industry",
-    "/relatorio3": "fa-dollar-sign",
+    #"/relatorio2": "fa-industry",
+    #"/relatorio3": "fa-dollar-sign",
     "/relatorio4": "fa-chart-bar",
     "/relatorio5": "fa-timeline",
     "/relatorio6": "fa-wrench",
