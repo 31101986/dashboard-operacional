@@ -3994,3 +3994,23 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-05-02 13:08:35,419 - INFO - [Profile] fetch_equipment_data executada em 8.0692 segundos
 2025-05-02 13:08:41,239 - INFO - [Profile] get_latest_records executada em 13.8910 segundos
 2025-05-02 13:08:41,454 - INFO - [Profile] create_tv_layout executada em 0.0504 segundos
+2025-05-02 13:17:41,170 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-02 13:20:52,432 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:20:53,350 - INFO - [Profile] fetch_equipment_data executada em 6.0819 segundos
+2025-05-02 13:20:56,475 - INFO - [Profile] get_latest_records executada em 9.2066 segundos
+2025-05-02 13:20:56,715 - INFO - [Profile] create_tv_layout executada em 0.0593 segundos
+2025-05-02 13:25:17,465 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:25:18,146 - INFO - [Profile] fetch_equipment_data executada em 4.1356 segundos
+2025-05-02 13:25:20,362 - INFO - [Profile] get_latest_records executada em 6.3525 segundos
+2025-05-02 13:25:20,543 - INFO - [Profile] create_tv_layout executada em 0.0551 segundos
+2025-05-02 13:26:45,815 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:26:46,584 - INFO - [Profile] fetch_equipment_data executada em 4.5876 segundos
+2025-05-02 13:26:48,864 - INFO - [Profile] get_latest_records executada em 6.8679 segundos
+2025-05-02 13:26:49,090 - INFO - [Profile] create_tv_layout executada em 0.0540 segundos

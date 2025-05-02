@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 # Período para consulta: últimos 7 dias, usando TIMEZONE (Horário de Brasília)
 DAY_END: datetime = datetime.now(tz=TIMEZONE)
-DAY_START: datetime = DAY_END - timedelta(days=7)
+DAY_START: datetime = DAY_END - timedelta(days=3)
 
 # Mapeamento de imagens por modelo
 MODEL_IMAGES: Dict[str, str] = {
