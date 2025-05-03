@@ -19,3 +19,4 @@ SQLAlchemy==2.0.38
 python-dotenv==1.0.1
 pyodbc==4.0.34
 Flask-Caching==1.11.1
+psutil==6.0.0

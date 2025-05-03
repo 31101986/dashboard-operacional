@@ -4014,3 +4014,758 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-05-02 13:26:46,584 - INFO - [Profile] fetch_equipment_data executada em 4.5876 segundos
 2025-05-02 13:26:48,864 - INFO - [Profile] get_latest_records executada em 6.8679 segundos
 2025-05-02 13:26:49,090 - INFO - [Profile] create_tv_layout executada em 0.0540 segundos
+2025-05-02 13:28:12,609 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-02 13:28:17,724 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:28:18,491 - INFO - [Profile] fetch_equipment_data executada em 4.3299 segundos
+2025-05-02 13:28:20,603 - INFO - [Profile] get_latest_records executada em 6.4425 segundos
+2025-05-02 13:28:20,795 - INFO - [Profile] create_tv_layout executada em 0.0530 segundos
+2025-05-02 13:33:17,301 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:33:18,054 - INFO - [Profile] fetch_equipment_data executada em 3.4410 segundos
+2025-05-02 13:33:20,327 - INFO - [Profile] get_latest_records executada em 5.7158 segundos
+2025-05-02 13:33:20,524 - INFO - [Profile] create_tv_layout executada em 0.0479 segundos
+2025-05-02 13:38:17,734 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:38:18,445 - INFO - [Profile] fetch_equipment_data executada em 3.8227 segundos
+2025-05-02 13:38:20,708 - INFO - [Profile] get_latest_records executada em 6.0860 segundos
+2025-05-02 13:38:20,952 - INFO - [Profile] create_tv_layout executada em 0.0588 segundos
+2025-05-02 13:43:17,425 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:43:17,940 - INFO - [Profile] fetch_equipment_data executada em 3.3441 segundos
+2025-05-02 13:43:19,372 - INFO - [Profile] get_latest_records executada em 4.7766 segundos
+2025-05-02 13:43:19,559 - INFO - [Profile] create_tv_layout executada em 0.0444 segundos
+2025-05-02 13:48:18,560 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:48:19,065 - INFO - [Profile] fetch_equipment_data executada em 3.4745 segundos
+2025-05-02 13:48:21,318 - INFO - [Profile] get_latest_records executada em 5.7282 segundos
+2025-05-02 13:48:21,533 - INFO - [Profile] create_tv_layout executada em 0.0433 segundos
+2025-05-02 13:50:05,945 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:50:06,410 - INFO - [Profile] fetch_equipment_data executada em 3.5667 segundos
+2025-05-02 13:50:07,809 - INFO - [Profile] get_latest_records executada em 4.9660 segundos
+2025-05-02 13:50:08,005 - INFO - [Profile] create_tv_layout executada em 0.0572 segundos
+2025-05-02 13:55:05,251 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 13:55:05,666 - INFO - [Profile] fetch_equipment_data executada em 2.0626 segundos
+2025-05-02 13:55:06,957 - INFO - [Profile] get_latest_records executada em 3.3545 segundos
+2025-05-02 13:55:07,125 - INFO - [Profile] create_tv_layout executada em 0.0368 segundos
+2025-05-02 14:00:05,320 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:00:05,767 - INFO - [Profile] fetch_equipment_data executada em 2.1504 segundos
+2025-05-02 14:00:06,972 - INFO - [Profile] get_latest_records executada em 3.3558 segundos
+2025-05-02 14:00:07,135 - INFO - [Profile] create_tv_layout executada em 0.0379 segundos
+2025-05-02 14:05:05,676 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:05:06,161 - INFO - [Profile] fetch_equipment_data executada em 2.5592 segundos
+2025-05-02 14:05:07,448 - INFO - [Profile] get_latest_records executada em 3.8472 segundos
+2025-05-02 14:05:07,630 - INFO - [Profile] create_tv_layout executada em 0.0401 segundos
+2025-05-02 14:10:04,670 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:10:05,125 - INFO - [Profile] fetch_equipment_data executada em 2.2692 segundos
+2025-05-02 14:10:06,537 - INFO - [Profile] get_latest_records executada em 3.6811 segundos
+2025-05-02 14:10:06,726 - INFO - [Profile] create_tv_layout executada em 0.0453 segundos
+2025-05-02 14:15:07,736 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:15:08,186 - INFO - [Profile] fetch_equipment_data executada em 5.3264 segundos
+2025-05-02 14:15:09,411 - INFO - [Profile] get_latest_records executada em 6.5523 segundos
+2025-05-02 14:15:09,581 - INFO - [Profile] create_tv_layout executada em 0.0491 segundos
+2025-05-02 14:17:14,850 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:17:15,119 - INFO - [Profile] fetch_equipment_data executada em 2.0700 segundos
+2025-05-02 14:17:16,005 - INFO - [Profile] get_latest_records executada em 2.9564 segundos
+2025-05-02 14:17:16,159 - INFO - [Profile] create_tv_layout executada em 0.0384 segundos
+2025-05-02 14:17:32,817 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:17:33,193 - INFO - [Profile] fetch_equipment_data executada em 2.4449 segundos
+2025-05-02 14:17:34,382 - INFO - [Profile] get_latest_records executada em 3.6348 segundos
+2025-05-02 14:17:34,552 - INFO - [Profile] create_tv_layout executada em 0.0490 segundos
+2025-05-02 14:22:33,251 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:22:33,564 - INFO - [Profile] fetch_equipment_data executada em 1.9537 segundos
+2025-05-02 14:22:35,006 - INFO - [Profile] get_latest_records executada em 3.3962 segundos
+2025-05-02 14:22:35,190 - INFO - [Profile] create_tv_layout executada em 0.0369 segundos
+2025-05-02 14:27:33,719 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:27:34,048 - INFO - [Profile] fetch_equipment_data executada em 2.4495 segundos
+2025-05-02 14:27:34,963 - INFO - [Profile] get_latest_records executada em 3.3654 segundos
+2025-05-02 14:27:35,108 - INFO - [Profile] create_tv_layout executada em 0.0360 segundos
+2025-05-02 14:32:33,198 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:32:33,523 - INFO - [Profile] fetch_equipment_data executada em 1.9203 segundos
+2025-05-02 14:32:34,548 - INFO - [Profile] get_latest_records executada em 2.9462 segundos
+2025-05-02 14:32:34,722 - INFO - [Profile] create_tv_layout executada em 0.0412 segundos
+2025-05-02 14:37:34,362 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:37:34,681 - INFO - [Profile] fetch_equipment_data executada em 2.0852 segundos
+2025-05-02 14:37:35,655 - INFO - [Profile] get_latest_records executada em 3.0598 segundos
+2025-05-02 14:37:35,834 - INFO - [Profile] create_tv_layout executada em 0.0465 segundos
+2025-05-02 14:43:20,074 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:43:20,435 - INFO - [Profile] fetch_equipment_data executada em 1.8398 segundos
+2025-05-02 14:43:21,637 - INFO - [Profile] get_latest_records executada em 3.0425 segundos
+2025-05-02 14:43:21,807 - INFO - [Profile] create_tv_layout executada em 0.0377 segundos
+2025-05-02 14:48:20,377 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:48:20,716 - INFO - [Profile] fetch_equipment_data executada em 2.1187 segundos
+2025-05-02 14:48:21,809 - INFO - [Profile] get_latest_records executada em 3.2126 segundos
+2025-05-02 14:48:21,960 - INFO - [Profile] create_tv_layout executada em 0.0331 segundos
+2025-05-02 14:52:33,079 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:52:33,593 - INFO - [Profile] fetch_equipment_data executada em 2.8374 segundos
+2025-05-02 14:52:35,354 - INFO - [Profile] get_latest_records executada em 4.5986 segundos
+2025-05-02 14:52:35,601 - INFO - [Profile] create_tv_layout executada em 0.0638 segundos
+2025-05-02 14:57:32,642 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 14:57:32,954 - INFO - [Profile] fetch_equipment_data executada em 2.1896 segundos
+2025-05-02 14:57:33,990 - INFO - [Profile] get_latest_records executada em 3.2259 segundos
+2025-05-02 14:57:34,174 - INFO - [Profile] create_tv_layout executada em 0.0616 segundos
+2025-05-02 15:03:20,076 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:03:20,416 - INFO - [Profile] fetch_equipment_data executada em 1.8180 segundos
+2025-05-02 15:03:21,417 - INFO - [Profile] get_latest_records executada em 2.8204 segundos
+2025-05-02 15:03:21,566 - INFO - [Profile] create_tv_layout executada em 0.0467 segundos
+2025-05-02 15:08:21,027 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:08:21,366 - INFO - [Profile] fetch_equipment_data executada em 2.7800 segundos
+2025-05-02 15:08:22,393 - INFO - [Profile] get_latest_records executada em 3.8077 segundos
+2025-05-02 15:08:22,542 - INFO - [Profile] create_tv_layout executada em 0.0374 segundos
+2025-05-02 15:13:21,064 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:13:21,410 - INFO - [Profile] fetch_equipment_data executada em 2.8235 segundos
+2025-05-02 15:13:22,660 - INFO - [Profile] get_latest_records executada em 4.0738 segundos
+2025-05-02 15:13:22,861 - INFO - [Profile] create_tv_layout executada em 0.0546 segundos
+2025-05-02 15:18:24,712 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:18:25,204 - INFO - [Profile] fetch_equipment_data executada em 6.6157 segundos
+2025-05-02 15:18:26,498 - INFO - [Profile] get_latest_records executada em 7.9106 segundos
+2025-05-02 15:18:26,671 - INFO - [Profile] create_tv_layout executada em 0.0418 segundos
+2025-05-02 15:22:34,417 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:22:34,915 - INFO - [Profile] fetch_equipment_data executada em 4.1454 segundos
+2025-05-02 15:22:36,572 - INFO - [Profile] get_latest_records executada em 5.8034 segundos
+2025-05-02 15:22:36,741 - INFO - [Profile] create_tv_layout executada em 0.0570 segundos
+2025-05-02 15:27:37,940 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:27:38,507 - INFO - [Profile] fetch_equipment_data executada em 7.7476 segundos
+2025-05-02 15:27:40,177 - INFO - [Profile] get_latest_records executada em 9.4190 segundos
+2025-05-02 15:27:40,384 - INFO - [Profile] create_tv_layout executada em 0.0437 segundos
+2025-05-02 15:30:58,277 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 15:30:58,757 - INFO - [Profile] fetch_equipment_data executada em 3.2784 segundos
+2025-05-02 15:31:00,308 - INFO - [Profile] get_latest_records executada em 4.8293 segundos
+2025-05-02 15:31:00,484 - INFO - [Profile] create_tv_layout executada em 0.0424 segundos
+2025-05-02 16:57:17,177 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-02 17:10:45,291 - WARNING - [DEBUG] Módulo psutil não encontrado. Monitoramento de memória desativado.
+2025-05-02 17:10:56,636 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '01/05/2025 17:10:45' AND '02/05/2025 17:10:45'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 17:10:56,715 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 17:10:56,717 - INFO - [Profile] fetch_equipment_data executada em 0.6535 segundos
+2025-05-02 17:11:35,205 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:11:35,767 - INFO - [Profile] fetch_equipment_data executada em 4.1093 segundos
+2025-05-02 17:11:37,573 - INFO - [Profile] get_latest_records executada em 5.9159 segundos
+2025-05-02 17:11:37,786 - INFO - [Profile] create_tv_layout executada em 0.0580 segundos
+2025-05-02 17:14:55,624 - WARNING - [DEBUG] Módulo psutil não encontrado. Monitoramento de memória desativado.
+2025-05-02 17:14:56,484 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '01/05/2025 17:14:55' AND '02/05/2025 17:14:55'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 17:14:56,563 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 17:14:56,564 - INFO - [Profile] fetch_equipment_data executada em 0.6506 segundos
+2025-05-02 17:15:51,687 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:15:52,424 - INFO - [Profile] fetch_equipment_data executada em 20.6149 segundos
+2025-05-02 17:15:54,464 - INFO - [Profile] get_latest_records executada em 22.6558 segundos
+2025-05-02 17:15:54,658 - INFO - [Profile] create_tv_layout executada em 0.0442 segundos
+2025-05-02 17:20:35,265 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:20:35,651 - INFO - [Profile] fetch_equipment_data executada em 3.0442 segundos
+2025-05-02 17:20:36,752 - INFO - [Profile] get_latest_records executada em 4.1457 segundos
+2025-05-02 17:20:36,944 - INFO - [Profile] create_tv_layout executada em 0.0491 segundos
+2025-05-02 17:25:36,624 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:25:37,117 - INFO - [Profile] fetch_equipment_data executada em 4.5058 segundos
+2025-05-02 17:25:38,754 - INFO - [Profile] get_latest_records executada em 6.1439 segundos
+2025-05-02 17:25:38,931 - INFO - [Profile] create_tv_layout executada em 0.0359 segundos
+2025-05-02 17:30:35,315 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:30:35,824 - INFO - [Profile] fetch_equipment_data executada em 3.2140 segundos
+2025-05-02 17:30:37,570 - INFO - [Profile] get_latest_records executada em 4.9613 segundos
+2025-05-02 17:30:37,764 - INFO - [Profile] create_tv_layout executada em 0.0559 segundos
+2025-05-02 17:35:35,363 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:35:35,808 - INFO - [Profile] fetch_equipment_data executada em 2.2140 segundos
+2025-05-02 17:35:37,366 - INFO - [Profile] get_latest_records executada em 3.7722 segundos
+2025-05-02 17:35:37,558 - INFO - [Profile] create_tv_layout executada em 0.0338 segundos
+2025-05-02 17:41:20,770 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:41:21,283 - INFO - [Profile] fetch_equipment_data executada em 2.6875 segundos
+2025-05-02 17:41:22,844 - INFO - [Profile] get_latest_records executada em 4.2499 segundos
+2025-05-02 17:41:23,017 - INFO - [Profile] create_tv_layout executada em 0.0469 segundos
+2025-05-02 17:46:21,087 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:46:21,639 - INFO - [Profile] fetch_equipment_data executada em 3.0516 segundos
+2025-05-02 17:46:23,364 - INFO - [Profile] get_latest_records executada em 4.7771 segundos
+2025-05-02 17:46:23,535 - INFO - [Profile] create_tv_layout executada em 0.0434 segundos
+2025-05-02 17:51:21,122 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:51:21,729 - INFO - [Profile] fetch_equipment_data executada em 3.1344 segundos
+2025-05-02 17:51:23,838 - INFO - [Profile] get_latest_records executada em 5.2432 segundos
+2025-05-02 17:51:24,042 - INFO - [Profile] create_tv_layout executada em 0.0581 segundos
+2025-05-02 17:56:20,862 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 17:56:21,272 - INFO - [Profile] fetch_equipment_data executada em 2.6722 segundos
+2025-05-02 17:56:22,685 - INFO - [Profile] get_latest_records executada em 4.0848 segundos
+2025-05-02 17:56:22,887 - INFO - [Profile] create_tv_layout executada em 0.0535 segundos
+2025-05-02 18:01:21,059 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:01:21,550 - INFO - [Profile] fetch_equipment_data executada em 2.9621 segundos
+2025-05-02 18:01:23,146 - INFO - [Profile] get_latest_records executada em 4.5591 segundos
+2025-05-02 18:01:23,345 - INFO - [Profile] create_tv_layout executada em 0.0630 segundos
+2025-05-02 18:06:20,460 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:06:20,928 - INFO - [Profile] fetch_equipment_data executada em 2.3348 segundos
+2025-05-02 18:06:22,407 - INFO - [Profile] get_latest_records executada em 3.8147 segundos
+2025-05-02 18:06:22,598 - INFO - [Profile] create_tv_layout executada em 0.0568 segundos
+2025-05-02 18:07:47,586 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-02 18:08:21,058 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:08:21,494 - INFO - [Profile] fetch_equipment_data executada em 3.6195 segundos
+2025-05-02 18:08:23,632 - INFO - [Profile] get_latest_records executada em 5.7568 segundos
+2025-05-02 18:08:23,823 - INFO - [Profile] create_tv_layout executada em 0.0441 segundos
+2025-05-02 18:09:11,851 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '01/05/2025 18:09:11' AND '02/05/2025 18:09:11'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 18:09:11,935 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 18:09:11,937 - INFO - [Profile] fetch_equipment_data executada em 0.6486 segundos
+2025-05-02 18:09:42,908 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:09:43,452 - INFO - [Profile] fetch_equipment_data executada em 3.5069 segundos
+2025-05-02 18:09:45,115 - INFO - [Profile] get_latest_records executada em 5.1701 segundos
+2025-05-02 18:09:45,289 - INFO - [Profile] create_tv_layout executada em 0.0426 segundos
+2025-05-02 18:11:41,850 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '01/05/2025 18:11:40' AND '02/05/2025 18:11:40'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 18:11:41,931 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-02 18:11:41,931 - INFO - [Profile] fetch_equipment_data executada em 0.6782 segundos
+2025-05-02 18:13:12,707 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:13:13,295 - INFO - [Profile] fetch_equipment_data executada em 3.3289 segundos
+2025-05-02 18:13:14,916 - INFO - [Profile] get_latest_records executada em 4.9504 segundos
+2025-05-02 18:13:15,132 - INFO - [Profile] create_tv_layout executada em 0.0650 segundos
+2025-05-02 18:18:14,102 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-02 18:18:14,607 - INFO - [Profile] fetch_equipment_data executada em 4.0004 segundos
+2025-05-02 18:18:15,973 - INFO - [Profile] get_latest_records executada em 5.3664 segundos
+2025-05-02 18:18:16,129 - INFO - [Profile] create_tv_layout executada em 0.0393 segundos
+2025-05-03 07:42:31,053 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 07:42:32,155 - INFO - [Profile] fetch_equipment_data executada em 10.3562 segundos
+2025-05-03 07:42:35,046 - INFO - [Profile] get_latest_records executada em 13.2479 segundos
+2025-05-03 07:43:33,335 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 07:43:34,234 - INFO - [Profile] fetch_equipment_data executada em 5.1876 segundos
+2025-05-03 07:43:36,570 - INFO - [Profile] get_latest_records executada em 7.5242 segundos
+2025-05-03 07:43:36,792 - INFO - [Profile] create_tv_layout executada em 0.0564 segundos
+2025-05-03 07:48:10,672 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 07:48:11,171 - INFO - [Profile] fetch_equipment_data executada em 5.4775 segundos
+2025-05-03 07:48:12,766 - INFO - [Profile] get_latest_records executada em 7.0729 segundos
+2025-05-03 07:48:13,009 - INFO - [Profile] create_tv_layout executada em 0.0543 segundos
+2025-05-03 07:59:31,183 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '02/05/2025 07:59:24' AND '03/05/2025 07:59:24'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 07:59:31,264 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 07:59:31,265 - INFO - [Profile] fetch_equipment_data executada em 0.7163 segundos
+2025-05-03 08:05:15,684 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '02/05/2025 08:05:12' AND '03/05/2025 08:05:12'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 08:05:15,763 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 08:05:15,764 - INFO - [Profile] fetch_equipment_data executada em 0.6983 segundos
+2025-05-03 08:05:45,618 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:05:45,862 - INFO - [Profile] fetch_equipment_data executada em 1.8438 segundos
+2025-05-03 08:05:46,678 - INFO - [Profile] get_latest_records executada em 2.6603 segundos
+2025-05-03 08:05:46,853 - INFO - [Profile] create_tv_layout executada em 0.0484 segundos
+2025-05-03 08:16:21,941 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-03 08:39:31,322 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: 
+    WITH RankedRecords AS (
+        SELECT 
+            nome_equipamento,
+            nome_modelo,
+            nome_estado,
+            nome_tipo_estado,
+            dt_registro,
+            id_lancamento,
+            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn
+        FROM dw_sdp_mt_fas..fato_hora
+        WHERE dt_registro BETWEEN '02/05/2025 08:38:37' AND '03/05/2025 08:38:37'
+    )
+    SELECT 
+        nome_equipamento,
+        nome_modelo,
+        nome_estado,
+        nome_tipo_estado,
+        dt_registro,
+        id_lancamento
+    FROM RankedRecords
+    WHERE rn = 1
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 08:39:31,411 - ERROR - [DEBUG] Erro ao consultar tb_equipamentos: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 08:39:31,411 - INFO - [Profile] fetch_equipment_data executada em 0.7825 segundos
+2025-05-03 08:39:31,412 - INFO - [Profile] get_latest_records executada em 0.7832 segundos
+2025-05-03 08:39:49,721 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:39:50,014 - INFO - [Profile] fetch_equipment_data executada em 1.7273 segundos
+2025-05-03 08:39:51,101 - INFO - [Profile] get_latest_records executada em 2.8148 segundos
+2025-05-03 08:39:51,423 - INFO - [Profile] create_tv_layout executada em 0.0682 segundos
+2025-05-03 08:44:50,259 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:44:50,489 - INFO - [Profile] fetch_equipment_data executada em 1.8185 segundos
+2025-05-03 08:44:51,093 - INFO - [Profile] get_latest_records executada em 2.4233 segundos
+2025-05-03 08:44:51,320 - INFO - [Profile] create_tv_layout executada em 0.0612 segundos
+2025-05-03 08:49:49,560 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:49:49,750 - INFO - [Profile] fetch_equipment_data executada em 1.0777 segundos
+2025-05-03 08:49:50,224 - INFO - [Profile] get_latest_records executada em 1.5521 segundos
+2025-05-03 08:49:50,366 - INFO - [Profile] create_tv_layout executada em 0.0457 segundos
+2025-05-03 08:54:49,426 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:54:49,601 - INFO - [Profile] fetch_equipment_data executada em 0.9396 segundos
+2025-05-03 08:54:50,116 - INFO - [Profile] get_latest_records executada em 1.4544 segundos
+2025-05-03 08:54:50,279 - INFO - [Profile] create_tv_layout executada em 0.0346 segundos
+2025-05-03 08:59:49,766 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 08:59:49,958 - INFO - [Profile] fetch_equipment_data executada em 1.2874 segundos
+2025-05-03 08:59:50,483 - INFO - [Profile] get_latest_records executada em 1.8130 segundos
+2025-05-03 08:59:50,630 - INFO - [Profile] create_tv_layout executada em 0.0409 segundos
+2025-05-03 09:04:49,606 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:04:49,821 - INFO - [Profile] fetch_equipment_data executada em 1.1543 segundos
+2025-05-03 09:04:50,309 - INFO - [Profile] get_latest_records executada em 1.6431 segundos
+2025-05-03 09:04:50,444 - INFO - [Profile] create_tv_layout executada em 0.0326 segundos
+2025-05-03 09:09:50,869 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:09:51,075 - INFO - [Profile] fetch_equipment_data executada em 1.4122 segundos
+2025-05-03 09:09:51,552 - INFO - [Profile] get_latest_records executada em 1.8907 segundos
+2025-05-03 09:09:51,689 - INFO - [Profile] create_tv_layout executada em 0.0397 segundos
+2025-05-03 09:15:12,643 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-03 09:19:03,658 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:19:03,796 - ERROR - [DEBUG] Erro ao obter registros mais recentes: Cannot setitem on a Categorical with a new category (DESCONHECIDO), set the categories first
+2025-05-03 09:19:08,464 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:19:08,603 - ERROR - [DEBUG] Erro ao obter registros mais recentes: Cannot setitem on a Categorical with a new category (DESCONHECIDO), set the categories first
+2025-05-03 09:20:28,923 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:20:29,214 - INFO - [Profile] fetch_equipment_data executada em 2.0033 segundos
+2025-05-03 09:20:29,942 - INFO - [Profile] get_latest_records executada em 2.7320 segundos
+2025-05-03 09:20:30,103 - INFO - [Profile] create_tv_layout executada em 0.0523 segundos
+2025-05-03 09:25:28,590 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:25:28,805 - INFO - [Profile] fetch_equipment_data executada em 1.1258 segundos
+2025-05-03 09:25:29,351 - INFO - [Profile] get_latest_records executada em 1.6730 segundos
+2025-05-03 09:25:29,522 - INFO - [Profile] create_tv_layout executada em 0.0497 segundos
+2025-05-03 09:30:29,063 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:30:29,323 - INFO - [Profile] fetch_equipment_data executada em 1.6580 segundos
+2025-05-03 09:30:30,031 - INFO - [Profile] get_latest_records executada em 2.3669 segundos
+2025-05-03 09:30:30,228 - INFO - [Profile] create_tv_layout executada em 0.0418 segundos
+2025-05-03 09:33:26,085 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento FROM (    SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento,            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn     FROM dw_sdp_mt_fas..fato_hora     WHERE dt_registro BETWEEN '02/05/2025 21:33:25' AND '03/05/2025 09:33:25') t WHERE rn = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 09:33:26,086 - INFO - [Profile] fetch_equipment_data executada em 0.6144 segundos
+2025-05-03 09:33:26,086 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:33:26,087 - INFO - [Profile] get_latest_records executada em 0.6151 segundos
+2025-05-03 09:33:26,087 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:33:26,150 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:33:28,546 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:33:28,547 - INFO - [Profile] get_latest_records executada em 0.0012 segundos
+2025-05-03 09:33:28,547 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:33:28,605 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:33:29,322 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:33:29,328 - INFO - [Profile] get_latest_records executada em 0.0063 segundos
+2025-05-03 09:33:29,329 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:33:29,389 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:33:29,898 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:33:29,900 - INFO - [Profile] get_latest_records executada em 0.0022 segundos
+2025-05-03 09:33:29,900 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:33:29,958 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:33:35,281 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:33:35,283 - INFO - [Profile] get_latest_records executada em 0.0025 segundos
+2025-05-03 09:33:35,283 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:33:35,366 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:33:49,458 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:33:49,668 - INFO - [Profile] fetch_equipment_data executada em 1.9023 segundos
+2025-05-03 09:33:50,281 - INFO - [Profile] get_latest_records executada em 2.5154 segundos
+2025-05-03 09:33:50,445 - INFO - [Profile] create_tv_layout executada em 0.0503 segundos
+2025-05-03 09:37:35,707 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento FROM (    SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento,            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn     FROM dw_sdp_mt_fas..fato_hora     WHERE dt_registro BETWEEN '02/05/2025 09:37:34' AND '03/05/2025 09:37:34') t WHERE rn = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 09:37:35,708 - INFO - [Profile] fetch_equipment_data executada em 0.6751 segundos
+2025-05-03 09:37:35,708 - ERROR - [DEBUG] Nenhum dado retornado por fetch_equipment_data
+2025-05-03 09:37:35,709 - INFO - [Profile] get_latest_records executada em 0.6764 segundos
+2025-05-03 09:37:35,709 - ERROR - [DEBUG] Nenhum dado retornado por get_latest_records
+2025-05-03 09:37:35,770 - ERROR - [DEBUG] Nenhum dado em render_tv_layout
+2025-05-03 09:39:21,392 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento FROM (    SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento,            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn     FROM dw_sdp_mt_fas..fato_hora     WHERE dt_registro BETWEEN '01/05/2025 09:39:20' AND '03/05/2025 09:39:20') t WHERE rn = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 09:39:21,396 - ERROR - [DEBUG] Nenhum dado retornado para exibição
+2025-05-03 09:41:49,538 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento FROM (    SELECT nome_equipamento, nome_modelo, nome_estado, nome_tipo_estado, dt_registro, id_lancamento,            ROW_NUMBER() OVER (PARTITION BY nome_equipamento ORDER BY dt_registro DESC) as rn     FROM dw_sdp_mt_fas..fato_hora     WHERE dt_registro >= '26/04/2025 09:41:48' AND dt_registro <= '03/05/2025 09:41:48') t WHERE rn = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 09:41:49,540 - ERROR - [DEBUG] Nenhum dado retornado para exibição
+2025-05-03 09:42:05,023 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:42:05,210 - INFO - [Profile] fetch_equipment_data executada em 2.4296 segundos
+2025-05-03 09:42:05,836 - INFO - [Profile] get_latest_records executada em 3.0551 segundos
+2025-05-03 09:42:06,015 - INFO - [Profile] create_tv_layout executada em 0.0467 segundos
+2025-05-03 09:45:56,008 - ERROR - [DEBUG] Erro ao consultar fato_hora: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..fato_hora'. (208) (SQLExecDirectW)")
+[SQL: SELECT TOP 1000 * FROM dw_sdp_mt_fas..fato_hora]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-05-03 09:45:56,009 - ERROR - [DEBUG] Nenhum dado retornado para exibição
+2025-05-03 09:47:18,219 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:47:18,556 - INFO - [Profile] fetch_equipment_data executada em 2.0574 segundos
+2025-05-03 09:47:19,636 - INFO - [Profile] get_latest_records executada em 3.1373 segundos
+2025-05-03 09:47:19,801 - INFO - [Profile] create_tv_layout executada em 0.0479 segundos
+2025-05-03 09:57:01,092 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-03 09:57:26,515 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 09:57:26,747 - INFO - [Profile] fetch_equipment_data executada em 1.7719 segundos
+2025-05-03 09:57:27,529 - INFO - [Profile] get_latest_records executada em 2.5549 segundos
+2025-05-03 09:57:27,732 - INFO - [Profile] create_tv_layout executada em 0.0628 segundos
+2025-05-03 10:00:36,053 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-03 10:02:08,998 - INFO - [Profile] get_filtered_data_producao executed in 0.0117 seconds
+2025-05-03 10:02:09,090 - INFO - [Profile] get_filtered_data_producao executed in 0.0360 seconds
+2025-05-03 10:02:09,168 - INFO - [Profile] get_filtered_data_producao executed in 0.0234 seconds
+2025-05-03 10:02:09,212 - INFO - [Profile] get_filtered_data_hora executed in 0.0148 seconds
+2025-05-03 10:02:09,249 - INFO - [Profile] compute_truck_stats executed in 0.0343 seconds
+2025-05-03 10:02:09,253 - INFO - [Profile] get_filtered_data_producao executed in 0.0311 seconds
+2025-05-03 10:02:09,272 - INFO - [Profile] get_filtered_data_producao executed in 0.0091 seconds
+2025-05-03 10:02:09,419 - INFO - [Profile] get_filtered_data_producao executed in 0.0110 seconds
+2025-05-03 10:02:09,470 - INFO - [Profile] get_filtered_data_hora executed in 0.0121 seconds
+2025-05-03 10:02:09,488 - INFO - [Profile] compute_truck_stats executed in 0.0158 seconds
+2025-05-03 10:02:21,191 - INFO - [Profile] get_filtered_data_producao executed in 0.0098 seconds
+2025-05-03 10:02:21,212 - INFO - [Profile] get_filtered_data_producao executed in 0.0117 seconds
+2025-05-03 10:02:21,391 - INFO - [Profile] get_filtered_data_producao executed in 0.1100 seconds
+2025-05-03 10:02:21,392 - INFO - [Profile] get_filtered_data_producao executed in 0.0727 seconds
+2025-05-03 10:02:21,761 - INFO - [Profile] get_filtered_data_producao executed in 0.0171 seconds
+2025-05-03 10:02:21,886 - INFO - [Profile] get_filtered_data_producao executed in 0.0105 seconds
+2025-05-03 10:02:21,925 - INFO - [Profile] get_filtered_data_hora executed in 0.0106 seconds
+2025-05-03 10:02:21,944 - INFO - [Profile] compute_truck_stats executed in 0.0183 seconds
+2025-05-03 10:02:22,062 - INFO - [Profile] get_filtered_data_hora executed in 0.0140 seconds
+2025-05-03 10:02:22,084 - INFO - [Profile] compute_truck_stats executed in 0.0204 seconds
+2025-05-03 10:04:36,230 - INFO - [Profile] fetch_equipment_data executada em 3.3106 segundos
+2025-05-03 10:04:36,457 - INFO - [Profile] fetch_equipment_data executada em 3.7166 segundos
+2025-05-03 10:04:36,546 - INFO - [Profile] create_tv_layout executada em 0.0843 segundos
+2025-05-03 10:06:36,965 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:06:37,297 - INFO - [Profile] fetch_equipment_data executada em 2.5064 segundos
+2025-05-03 10:06:38,129 - INFO - [Profile] get_latest_records executada em 3.3383 segundos
+2025-05-03 10:06:38,320 - INFO - [Profile] create_tv_layout executada em 0.0411 segundos
+2025-05-03 10:08:03,413 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:08:03,941 - INFO - [Profile] fetch_equipment_data executada em 3.6852 segundos
+2025-05-03 10:08:05,823 - INFO - [Profile] get_latest_records executada em 5.5675 segundos
+2025-05-03 10:08:06,021 - INFO - [Profile] create_tv_layout executada em 0.0527 segundos
+2025-05-03 10:10:15,999 - INFO - [Profile] fetch_equipment_data executada em 2.4468 segundos
+2025-05-03 10:10:37,749 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:10:38,307 - INFO - [Profile] fetch_equipment_data executada em 3.5003 segundos
+2025-05-03 10:10:40,060 - INFO - [Profile] get_latest_records executada em 5.2535 segundos
+2025-05-03 10:10:40,265 - INFO - [Profile] create_tv_layout executada em 0.0621 segundos
+2025-05-03 10:13:52,278 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-03 10:14:02,139 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:14:02,361 - INFO - [Profile] fetch_equipment_data executada em 2.5820 segundos
+2025-05-03 10:14:03,217 - INFO - [Profile] get_latest_records executada em 3.4386 segundos
+2025-05-03 10:14:03,366 - INFO - [Profile] create_tv_layout executada em 0.0366 segundos
+2025-05-03 10:14:06,567 - INFO - [Profile] get_filtered_data_producao executed in 0.0089 seconds
+2025-05-03 10:14:06,593 - INFO - [Profile] get_filtered_data_producao executed in 0.0087 seconds
+2025-05-03 10:14:06,603 - INFO - [Profile] get_filtered_data_producao executed in 0.0093 seconds
+2025-05-03 10:14:06,635 - INFO - [Profile] get_filtered_data_producao executed in 0.0139 seconds
+2025-05-03 10:14:06,765 - INFO - [Profile] get_filtered_data_producao executed in 0.0094 seconds
+2025-05-03 10:14:06,874 - INFO - [Profile] get_filtered_data_producao executed in 0.0068 seconds
+2025-05-03 10:14:06,909 - INFO - [Profile] get_filtered_data_hora executed in 0.0128 seconds
+2025-05-03 10:14:06,937 - INFO - [Profile] compute_truck_stats executed in 0.0262 seconds
+2025-05-03 10:14:06,947 - INFO - [Profile] get_filtered_data_hora executed in 0.0196 seconds
+2025-05-03 10:14:06,969 - INFO - [Profile] compute_truck_stats executed in 0.0175 seconds
+2025-05-03 10:14:15,586 - INFO - [Profile] fetch_fato_hora executada em 0.4492 segundos
+2025-05-03 10:14:15,693 - INFO - [Profile] fetch_fato_hora executada em 0.5467 segundos
+2025-05-03 10:14:15,736 - INFO - [Profile] compute_segments executada em 0.0249 segundos
+2025-05-03 10:14:15,928 - INFO - [Profile] create_timeline_graph executada em 0.7818 segundos
+2025-05-03 10:14:19,383 - INFO - [Profile] get_latest_records executada em 0.7676 segundos
+2025-05-03 10:14:19,564 - INFO - [Profile] create_tv_layout executada em 0.0408 segundos
+2025-05-03 10:20:30,884 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:20:31,265 - INFO - [Profile] fetch_equipment_data executada em 1.6665 segundos
+2025-05-03 10:20:32,222 - INFO - [Profile] get_latest_records executada em 2.6241 segundos
+2025-05-03 10:20:32,468 - INFO - [Profile] create_tv_layout executada em 0.0786 segundos
+2025-05-03 10:25:30,567 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:25:30,805 - INFO - [Profile] fetch_equipment_data executada em 1.1256 segundos
+2025-05-03 10:25:31,466 - INFO - [Profile] get_latest_records executada em 1.7881 segundos
+2025-05-03 10:25:31,633 - INFO - [Profile] create_tv_layout executada em 0.0421 segundos
+2025-05-03 10:30:31,559 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:30:31,894 - INFO - [Profile] fetch_equipment_data executada em 2.2167 segundos
+2025-05-03 10:30:32,580 - INFO - [Profile] get_latest_records executada em 2.9024 segundos
+2025-05-03 10:30:32,756 - INFO - [Profile] create_tv_layout executada em 0.0406 segundos
+2025-05-03 10:33:56,946 - INFO - [Profile] fetch_fato_hora executada em 1.7471 segundos
+2025-05-03 10:33:56,989 - INFO - [Profile] fetch_fato_hora executada em 1.1630 segundos
+2025-05-03 10:33:57,051 - INFO - [Profile] compute_segments executada em 0.0212 segundos
+2025-05-03 10:33:57,269 - INFO - [Profile] fetch_fato_hora executada em 2.0672 segundos
+2025-05-03 10:33:57,312 - INFO - [Profile] compute_segments executada em 0.0219 segundos
+2025-05-03 10:33:57,857 - INFO - [Profile] fetch_fato_hora executada em 2.0344 segundos
+2025-05-03 10:33:58,549 - INFO - [Profile] create_timeline_graph executada em 2.7240 segundos
+2025-05-03 10:33:58,555 - INFO - [Profile] create_timeline_graph executada em 3.3532 segundos
+2025-05-03 10:48:37,000 - WARNING - [DEBUG] Tabela tb_equipamentos não acessível: (pyodbc.ProgrammingError) ('42S02', "[42S02] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]Invalid object name 'dw_sdp_mt_fas..tb_equipamentos'. (208) (SQLExecDirectW)")
+[SQL: SELECT nome_equipamento, nome_modelo FROM dw_sdp_mt_fas..tb_equipamentos WHERE ativo = 1]
+(Background on this error at: https://sqlalche.me/e/20/f405), usando equipamentos de fato_hora
+2025-05-03 10:48:37,190 - INFO - [Profile] fetch_equipment_data executada em 2.3156 segundos
+2025-05-03 10:48:37,726 - INFO - [Profile] get_latest_records executada em 2.8519 segundos
+2025-05-03 10:48:37,883 - INFO - [Profile] create_tv_layout executada em 0.0336 segundos
+2025-05-03 11:18:12,739 - INFO - [Profile] get_filtered_data_producao executed in 0.0100 seconds
+2025-05-03 11:18:12,841 - INFO - [Profile] get_filtered_data_producao executed in 0.0094 seconds
+2025-05-03 11:18:12,876 - INFO - [Profile] get_filtered_data_producao executed in 0.0339 seconds
+2025-05-03 11:18:12,904 - INFO - [Profile] get_filtered_data_hora executed in 0.0157 seconds
+2025-05-03 11:18:12,931 - INFO - [Profile] compute_truck_stats executed in 0.0247 seconds
+2025-05-03 11:18:12,943 - INFO - [Profile] get_filtered_data_producao executed in 0.0223 seconds
+2025-05-03 11:18:12,967 - INFO - [Profile] get_filtered_data_producao executed in 0.0155 seconds
+2025-05-03 11:18:13,100 - INFO - [Profile] get_filtered_data_producao executed in 0.0061 seconds
+2025-05-03 11:18:13,151 - INFO - [Profile] get_filtered_data_hora executed in 0.0090 seconds
+2025-05-03 11:18:13,163 - INFO - [Profile] compute_truck_stats executed in 0.0104 seconds
+2025-05-03 11:18:22,433 - INFO - [Profile] fetch_fato_hora executada em 0.3374 segundos
+2025-05-03 11:18:22,687 - INFO - [Profile] fetch_fato_hora executada em 0.5891 segundos
+2025-05-03 11:18:22,748 - INFO - [Profile] compute_segments executada em 0.0224 segundos
+2025-05-03 11:18:22,950 - INFO - [Profile] create_timeline_graph executada em 0.8528 segundos
