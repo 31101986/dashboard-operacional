@@ -6,10 +6,13 @@ app.py – Portal de Relatórios (versão otimizada)
 Mantém todas as funcionalidades originais do portal de mineração, com melhorias em performance e organização.
 As datas são manipuladas em UTC no backend, com conversão para o fuso local no frontend via JavaScript,
 garantindo que o horário exibido seja o do usuário.
+Adiciona seleção de projetos na página inicial para alternar entre 5 bancos de dados.
 
-Para executar:
-  - Execute `python app.py`
-  - Ou aponte o Gunicorn para `app:server`
+Otimizações de performance:
+- Cache aplicado ao layout da página inicial e navbar.
+- Intervalo de atualização do horário movido para navbar e reduzido para 5s.
+- Timeout do cache aumentado para 30 minutos.
+- Sugestões para relatórios: cache em callbacks, filtros iniciais, paginação, agregação de dados.
 """
 
 # ============================================================
@@ -26,7 +29,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html
 from flask_caching import Cache
 
-from config import logger as root_logger, TIMEZONE
+from config import logger as root_logger, TIMEZONE, PROJECTS_CONFIG, PROJECT_LABELS
 
 # ============================================================
 # CONFIGURAÇÕES INICIAIS
@@ -55,16 +58,16 @@ app = dash.Dash(
 )
 server = app.server
 
-# Configuração do cache (movido para antes das importações dos relatórios)
-cache = Cache(app.server, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
+# Configuração do cache (timeout aumentado para 30 minutos)
+cache = Cache(app.server, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 1800})
 
 # Expor o módulo como "app" para compatibilidade
 sys.modules.setdefault("app", sys.modules[__name__])
 
-# Importação dos relatórios (após definição do cache)
+# Importação dos relatórios (restaurada como no original)
 import pages.relatorio1 as rel1
-#import pages.relatorio2 as rel2
-#import pages.relatorio3 as rel3
+import pages.relatorio2 as rel2
+import pages.relatorio3 as rel3
 import pages.relatorio4 as rel4
 import pages.relatorio5 as rel5
 import pages.relatorio6 as rel6
@@ -77,8 +80,8 @@ import pages.relatorio7 as rel7
 # Mapeamento de rotas para layouts
 PAGES: Dict[str, html.Div] = {
     "/relatorio1": rel1.layout,
-    #"/relatorio2": rel2.layout,
-    #"/relatorio3": rel3.layout,
+    "/relatorio2": rel2.layout,
+    "/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
     "/relatorio6": rel6.layout,
@@ -88,8 +91,8 @@ PAGES: Dict[str, html.Div] = {
 # Definições de cards (rota, título, subtítulo)
 PAGE_DEFS = [
     ("/relatorio1", "Ciclo", "Análise de Hora"),
-    #("/relatorio2", "Informativo de Produção", "Análise de Produção"),
-    #("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
+    ("/relatorio2", "Informativo de Produção", "Análise de Produção"),
+    ("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
     ("/relatorio4", "Produção - Indicadores", "Produção - Indicadores"),
     ("/relatorio5", "Timeline de Apontamentos", "Equipamentos de Produção"),
     ("/relatorio6", "Manutenção", "Novo Relatório"),
@@ -111,10 +114,10 @@ CARD_IMAGES = [
 NAVBAR_ICONS = {
     "/": "fa-home",
     "/relatorio1": "fa-clock",
-    #"/relatorio2": "fa-industry",
-    #"/relatorio3": "fa-dollar-sign",
+    "/relatorio2": "fa-industry",
+    "/relatorio3": "fa-dollar-sign",
     "/relatorio4": "fa-chart-bar",
-    "/relatorio5": "fa-timeline",
+    "/relatorio5": "fa-stream",
     "/relatorio6": "fa-wrench",
     "/relatorio7": "fa-chart-pie",
 }
@@ -146,6 +149,7 @@ def profile_time(func):
 def create_navbar() -> dbc.Navbar:
     """
     Cria a navbar com links, ícones, horário local e gradiente suave.
+    Inclui dcc.Interval para atualizar o horário local a cada 5s.
 
     Returns:
         dbc.Navbar: Componente de navegação.
@@ -158,8 +162,8 @@ def create_navbar() -> dbc.Navbar:
         for path, title in [
             ("/", "Portal"),
             ("/relatorio1", "Ciclo"),
-            #("/relatorio2", "Informativo"),
-            #("/relatorio3", "Financeiro"),
+            ("/relatorio2", "Informativo"),
+            ("/relatorio3", "Financeiro"),
             ("/relatorio4", "Produção"),
             ("/relatorio5", "Timeline"),
             ("/relatorio6", "Manutenção"),
@@ -168,29 +172,32 @@ def create_navbar() -> dbc.Navbar:
     ]
 
     return dbc.Navbar(
-        dbc.Container([
-            dbc.NavbarBrand([
-                html.I(className="fas fa-chart-line mr-2"),
-                "Mineração"
-            ], href="/", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
-            html.Div([
-                html.Span(id="local-time", style={
-                    "fontWeight": "bold",
-                    "fontSize": "0.85rem",
-                    "backgroundColor": "rgba(255,255,255,0.1)",
-                    "padding": "4px 8px",
-                    "borderRadius": "12px",
-                    "color": "#fff"
-                })
-            ], className="ms-auto me-3 d-flex align-items-center"),
-            dbc.NavbarToggler(id="navbar-toggler"),
-            dbc.Collapse(
-                dbc.Nav(nav_links, pills=True, className="ms-auto", navbar=True),
-                id="navbar-collapse",
-                navbar=True,
-                is_open=False
-            )
-        ], fluid=True),
+        [
+            dbc.Container([
+                dbc.NavbarBrand([
+                    html.I(className="fas fa-chart-line mr-2"),
+                    "Mineração"
+                ], href="/", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
+                html.Div([
+                    html.Span(id="local-time", style={
+                        "fontWeight": "bold",
+                        "fontSize": "0.85rem",
+                        "backgroundColor": "rgba(255,255,255,0.1)",
+                        "padding": "4px 8px",
+                        "borderRadius": "12px",
+                        "color": "#fff"
+                    })
+                ], className="ms-auto me-3 d-flex align-items-center"),
+                dbc.NavbarToggler(id="navbar-toggler"),
+                dbc.Collapse(
+                    dbc.Nav(nav_links, pills=True, className="ms-auto", navbar=True),
+                    id="navbar-collapse",
+                    navbar=True,
+                    is_open=False
+                )
+            ], fluid=True),
+            dcc.Interval(id="time-interval", interval=5000, n_intervals=0)  # Restaurado para 5s
+        ],
         color="dark",
         dark=True,
         sticky="top",
@@ -201,6 +208,9 @@ def create_navbar() -> dbc.Navbar:
             "fontSize": "0.9rem"
         }
     )
+
+# Definir navbar como constante global para evitar recriação
+NAVBAR = create_navbar()
 
 @cache.memoize()
 def create_card(img_src: str, title: str, subtitle: str, link_text: str, href: str) -> dbc.Card:
@@ -258,7 +268,8 @@ def create_card(img_src: str, title: str, subtitle: str, link_text: str, href: s
 @cache.memoize()
 def create_home_layout() -> dbc.Container:
     """
-    Cria o layout da página inicial com cards para navegação.
+    Cria o layout da página inicial com cards para navegação e seleção de projetos.
+    Cacheado para reduzir tempo de renderização.
 
     Returns:
         dbc.Container: Layout do portal.
@@ -268,7 +279,7 @@ def create_home_layout() -> dbc.Container:
             [
                 dbc.Col(
                     create_card(img_src, title, subtitle, "Visualizar", href),
-                    width=12, sm=6, md=3, className="mb-2"
+                    className="col-12 col-sm-6 col-md-3 mb-2"  # Ajustado para classes Bootstrap fixas
                 )
                 for (href, title, subtitle), img_src in zip(PAGE_DEFS[i:i+4], CARD_IMAGES[i:i+4])
             ],
@@ -282,26 +293,75 @@ def create_home_layout() -> dbc.Container:
             dbc.Row(
                 dbc.Col(
                     html.H1("Portal de Relatórios para Mineração", className="text-center my-4", style={"fontSize": "1.6rem", "fontWeight": "500"}),
-                    width=12
+                    className="col-12"  # Ajustado para classe Bootstrap fixa
                 )
             ),
-            dcc.Interval(id="time-interval", interval=1000, n_intervals=0),
+            dbc.Row(
+                dbc.Col(
+                    dbc.Card(
+                        [
+                            dbc.CardBody(
+                                [
+                                    html.Label(
+                                        "Selecionar Obra",
+                                        style={"fontSize": "1rem", "fontWeight": "500", "color": "#495057", "marginBottom": "0.5rem"}
+                                    ),
+                                    dbc.Select(
+                                        id='projeto-dropdown',
+                                        options=[
+                                            {'value': projeto, 'label': PROJECT_LABELS[projeto]}
+                                            for projeto in PROJECTS_CONFIG.keys()
+                                        ],
+                                        value=None,
+                                        placeholder="Selecione uma obra",
+                                        className="form-control-lg",
+                                        style={
+                                            "borderRadius": "6px",
+                                            "borderColor": "#17a2b8",
+                                            "backgroundColor": "#fff",
+                                            "fontSize": "1rem",
+                                            "fontWeight": "400",
+                                            "transition": "all 0.4s ease",
+                                            "cursor": "pointer"
+                                        }
+                                    )
+                                ],
+                                style={"padding": "0.75rem"}
+                            )
+                        ],
+                        style={
+                            "maxWidth": "400px",
+                            "marginLeft": "20px",
+                            "marginBottom": "30px",
+                            "borderRadius": "6px",
+                            "border": "1px solid #dee2e6",
+                            "boxShadow": "0 2px 8px rgba(0,0,0,0.1)",
+                            "transition": "transform 0.4s ease, box-shadow 0.4s ease",
+                            "backgroundColor": "#f8f9fa"
+                        },
+                        className="animate__animated animate__fadeInUp"
+                    ),
+                    className="col-12 col-sm-6 col-md-4"  # Ajustado para classes Bootstrap fixas
+                ),
+                justify="start"
+            ),
             *card_rows,
             dbc.Row(
                 dbc.Col(
                     html.Footer([
                         html.I(className="fas fa-copyright mr-1"),
-                        " 2025 RL SISTEMAS E SOLUÇÕES PARA MINERAÇÃO"
+                        " 2025 Raphael Leal Sistemas e Soluções para Mineração"
                     ], className="text-center py-3", style={
                         "background": "linear-gradient(90deg, #f8f9fa, #e9ecef)",
                         "color": "#495057",
                         "fontSize": "0.9rem"
                     }),
-                    width=12
+                    className="col-12"  # Ajustado para classe Bootstrap fixa
                 )
             )
         ],
-        fluid=True
+        fluid=True,
+        className="p-0"  # Garantido como string
     )
 
 # ============================================================
@@ -311,12 +371,14 @@ def create_home_layout() -> dbc.Container:
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
-        create_navbar(),
+        NAVBAR,  # Usar navbar pré-renderizada
+        dcc.Store(id='projeto-store', data=None),  # Armazena o projeto selecionado globalmente
         dbc.Spinner(
             html.Div(id="page-content"),
             size="sm",
             color="primary",
-            fullscreen=False
+            fullscreen=False,
+            spinnerClassName=None
         ),
     ]
 )
@@ -359,6 +421,23 @@ def toggle_navbar_collapse(n_clicks: int, is_open: bool) -> bool:
         return not is_open
     return is_open
 
+@app.callback(
+    Output("projeto-store", "data"),
+    Input("projeto-dropdown", "value")
+)
+def update_projeto_store(projeto: str) -> str:
+    """
+    Atualiza o projeto selecionado no store.
+
+    Args:
+        projeto (str): Projeto selecionado no dropdown.
+
+    Returns:
+        str: Projeto selecionado ou None se não selecionado.
+    """
+    logger.debug(f"Projeto selecionado: {projeto}")
+    return projeto
+
 app.clientside_callback(
     """
     function(n_intervals) {
@@ -378,5 +457,5 @@ if __name__ == "__main__":
     debug_mode: bool = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
     port: int = int(os.environ.get("PORT", 8050))
     logger.info(f"Iniciando servidor {'no modo debug' if debug_mode else ''} na porta {port}...")
-    app.run_server(debug=debug_mode, host="0.0.0.0", port=port)
+    app.run(debug=debug_mode, host="0.0.0.0", port=port)
     

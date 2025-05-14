@@ -9,7 +9,7 @@ e importações originais. Inclui logs para diagnosticar dados vazios.
 
 Dependências:
   - Banco de dados via `db.query_to_df`
-  - Configurações `META_MINERIO` e `META_ESTERIL` de `config`
+  - Configurações `META_MINERIO`, `META_ESTERIL`, `PROJECTS_CONFIG`, `PROJECT_LABELS` de `config`
 """
 
 # ============================================================
@@ -29,7 +29,7 @@ import pandas as pd
 import numpy as np
 
 from db import query_to_df
-from config import META_MINERIO, META_ESTERIL
+from config import META_MINERIO, META_ESTERIL, PROJECTS_CONFIG, PROJECT_LABELS
 from app import cache
 
 # ============================================================
@@ -44,25 +44,30 @@ NUM_FORMAT = Format(precision=2, scheme=Scheme.fixed, group=True)
 # ============================================================
 
 @cache.memoize(timeout=300)
-def fetch_production_data(start_date: str, end_date: str) -> pd.DataFrame:
+def fetch_production_data(start_date: str, end_date: str, projeto: str) -> pd.DataFrame:
     """
     Consulta os dados de produção no banco para o período especificado, com cache.
 
     Args:
         start_date (str): Data inicial (DD/MM/YYYY).
         end_date (str): Data final (DD/MM/YYYY).
+        projeto (str): ID do projeto (ex.: 'projeto1').
 
     Returns:
         pd.DataFrame: Dados de produção ou DataFrame vazio em caso de erro.
     """
-    print(f"[DEBUG] Consultando dados de {start_date} a {end_date}")
+    print(f"[DEBUG] Consultando dados de {start_date} a {end_date} para projeto {projeto}")
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        print("[DEBUG] Projeto inválido ou não selecionado")
+        return pd.DataFrame()
+    
     query = f"""
-        EXEC dw_sdp_mt_fas..usp_fato_producao
+        EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_producao
         '{start_date}',
         '{end_date}'
     """
     try:
-        df = query_to_df(query)
+        df = query_to_df(query, projeto=projeto)
         print(f"[DEBUG] Dados brutos retornados: {len(df)} linhas")
         if df.empty or "dt_registro_turno" not in df.columns:
             print("[DEBUG] DataFrame vazio ou sem coluna 'dt_registro_turno'")
@@ -185,20 +190,21 @@ def get_table_columns() -> List[Dict]:
         {"name": "Massa", "id": "massa", "type": "numeric", "format": NUM_FORMAT}
     ]
 
-def create_volume_graph(df: pd.DataFrame, operacoes_selecionadas: Optional[List[str]] = None) -> px.bar:
+def create_volume_graph(df: pd.DataFrame, operacoes_selecionadas: Optional[List[str]] = None, projeto: str = None) -> px.bar:
     """
     Cria um gráfico de barras para volume por dia, com cores baseadas em metas.
 
     Args:
         df (pd.DataFrame): DataFrame com dados.
         operacoes_selecionadas (Optional[List[str]]): Operações filtradas.
+        projeto (str): ID do projeto (ex.: 'projeto1').
 
     Returns:
         px.bar: Gráfico Plotly.
     """
     if df.empty or "dt_registro_turno" not in df.columns:
         print("[DEBUG] DataFrame vazio ou sem dt_registro_turno em create_volume_graph")
-        return px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
+        return px.bar(title="Selecione uma obra para visualizar os dados.", template="plotly_white")
 
     # Garantir que dt_registro_turno seja datetime
     df["dt_registro_turno"] = pd.to_datetime(df["dt_registro_turno"], errors="coerce")
@@ -220,7 +226,7 @@ def create_volume_graph(df: pd.DataFrame, operacoes_selecionadas: Optional[List[
         df_grouped,
         x="dia",
         y="volume",
-        title="Soma do Volume por Dia",
+        title=f"Soma do Volume por Dia ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})",
         text="volume",
         template="plotly_white"
     )
@@ -284,6 +290,14 @@ NAVBAR = dbc.Navbar(
 
 layout = dbc.Container([
     NAVBAR,
+    html.Div(
+        id="rel7-no-project-message",
+        children=html.P(
+            "Selecione uma obra para visualizar os dados.",
+            className="text-center my-4",
+            style={"color": "#343a40", "fontSize": "1.2rem"}
+        )
+    ),
     dbc.Row(
         dbc.Col(
             html.H3(
@@ -483,59 +497,76 @@ layout = dbc.Container([
 # ============================================================
 
 @callback(
-    Output("data-store-rel7", "data"),
-    Input("apply-button-rel7", "n_clicks"),
-    State("date-picker-range-rel7", "start_date"),
-    State("date-picker-range-rel7", "end_date"),
+    [Output("data-store-rel7", "data"),
+     Output("rel7-no-project-message", "style")],
+    [Input("apply-button-rel7", "n_clicks"),
+     Input("projeto-store", "data")],
+    [State("date-picker-range-rel7", "start_date"),
+     State("date-picker-range-rel7", "end_date")],
     prevent_initial_call=True
 )
-def store_production_data(n_clicks: int, start_date: str, end_date: str) -> Any:
+def store_production_data(n_clicks: int, projeto: str, start_date: str, end_date: str) -> Tuple[Any, Dict]:
     """
     Consulta e armazena os dados de produção para o período selecionado.
 
     Args:
         n_clicks (int): Número de cliques no botão de filtro.
+        projeto (str): ID do projeto (ex.: 'projeto1').
         start_date (str): Data inicial (ISO).
         end_date (str): Data final (ISO).
 
     Returns:
-        Any: JSON com dados ou dicionário de erro.
+        Tuple: JSON com dados ou dicionário de erro, e estilo da mensagem de "sem projeto".
     """
+    print(f"[DEBUG] store_production_data disparado: n_clicks={n_clicks}, projeto={projeto}, start_date={start_date}, end_date={end_date}")
+    
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        print("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        return {}, {"display": "block", "textAlign": "center", "color": "#343a40", "fontSize": "1.2rem", "margin": "20px 0"}
+
     if not start_date or not end_date:
         print("[DEBUG] Datas de filtro não fornecidas")
-        return {}
+        return {}, {"display": "none"}
 
     start_date_obj = datetime.fromisoformat(start_date)
     end_date_obj = datetime.fromisoformat(end_date)
     start_date_str = start_date_obj.strftime("%d/%m/%Y")
     end_date_str = end_date_obj.strftime("%d/%m/%Y")
 
-    df_prod = fetch_production_data(start_date_str, end_date_str)
+    df_prod = fetch_production_data(start_date_str, end_date_str, projeto)
     if df_prod.empty:
         print("[DEBUG] Nenhum dado retornado por fetch_production_data")
-        return {"error": "Nenhum dado encontrado para o período selecionado."}
+        return {"error": "Nenhum dado encontrado para o período selecionado."}, {"display": "none"}
 
     df_prod = filter_by_date_range(df_prod, "dt_registro_turno", start_date_obj, end_date_obj)
     if df_prod.empty:
         print("[DEBUG] DataFrame vazio após filter_by_date_range")
-        return {"error": "Nenhum dado válido após filtragem por data."}
+        return {"error": "Nenhum dado válido após filtragem por data."}, {"display": "none"}
 
-    return df_prod.to_json(date_format="iso", orient="records")
+    return df_prod.to_json(date_format="iso", orient="records"), {"display": "none"}
 
 @callback(
     Output("operacao-dropdown-rel7", "options"),
-    Input("data-store-rel7", "data")
+    [Input("data-store-rel7", "data"),
+     Input("projeto-store", "data")]
 )
-def update_dropdown_options(json_data: Union[str, Dict]) -> List[Dict[str, str]]:
+def update_dropdown_options(json_data: Union[str, Dict], projeto: str) -> List[Dict[str, str]]:
     """
     Atualiza as opções do dropdown com base nos dados armazenados.
 
     Args:
         json_data (Union[str, Dict]): Dados em JSON.
+        projeto (str): ID do projeto (ex.: 'projeto1').
 
     Returns:
         List[Dict[str, str]]: Opções para o dropdown.
     """
+    print(f"[DEBUG] update_dropdown_options disparado: projeto={projeto}")
+    
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        print("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        return []
+
     df = load_json_data(json_data)
     if df.empty or "nome_operacao" not in df.columns:
         print("[DEBUG] Nenhum dado ou nome_operacao ausente em update_dropdown_options")
@@ -557,6 +588,7 @@ def update_dropdown_options(json_data: Union[str, Dict]) -> List[Dict[str, str]]
     [
         Input("data-store-rel7", "data"),
         Input("operacao-dropdown-rel7", "value"),
+        Input("projeto-store", "data"),
         State("date-picker-range-rel7", "start_date"),
         State("date-picker-range-rel7", "end_date")
     ]
@@ -564,6 +596,7 @@ def update_dropdown_options(json_data: Union[str, Dict]) -> List[Dict[str, str]]
 def update_tables_and_graph(
     json_data: Union[str, Dict],
     operacoes_selecionadas: Optional[List[str]],
+    projeto: str,
     start_date: str,
     end_date: str
 ) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict], List[Dict], List[Dict], px.bar]:
@@ -573,17 +606,26 @@ def update_tables_and_graph(
     Args:
         json_data (Union[str, Dict]): Dados em JSON.
         operacoes_selecionadas (Optional[List[str]]): Operações selecionadas.
+        projeto (str): ID do projeto (ex.: 'projeto1').
         start_date (str): Data inicial (ISO).
         end_date (str): Data final (ISO).
 
     Returns:
         Tuple: Dados, colunas, estilos para tabelas e figura do gráfico.
     """
+    print(f"[DEBUG] update_tables_and_graph disparado: projeto={projeto}, operacoes_selecionadas={operacoes_selecionadas}")
+    
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        print("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        empty_cols = get_table_columns()
+        empty_fig = px.bar(title="Selecione uma obra para visualizar os dados.", template="plotly_white")
+        return [], empty_cols, [], [], empty_cols, [], empty_fig
+
     df = load_json_data(json_data)
     if df.empty or "dt_registro_turno" not in df.columns:
         print("[DEBUG] DataFrame vazio ou sem dt_registro_turno em update_tables_and_graph")
         empty_cols = get_table_columns()
-        empty_fig = px.bar(title="Selecione um período para ver o gráfico.", template="plotly_white")
+        empty_fig = px.bar(title="Selecione uma obra para visualizar os dados.", template="plotly_white")
         return [], empty_cols, [], [], empty_cols, [], empty_fig
 
     # Garantir que dt_registro_turno seja datetime
@@ -653,7 +695,7 @@ def update_tables_and_graph(
     ]
 
     # Gráfico
-    fig_volume = create_volume_graph(df, operacoes_selecionadas)
+    fig_volume = create_volume_graph(df, operacoes_selecionadas, projeto)
 
     columns = get_table_columns()
     return (

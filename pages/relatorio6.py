@@ -1,21 +1,7 @@
-"""
-relatorio6.py – Equipamentos por Estado
-
-Exibe o estado atual dos equipamentos em um layout de TV, com cartões agrupados por estado e tipo,
-incluindo imagens por modelo e escala de cores para duração. Otimizado para performance com cache robusto
-e operações vetorizadas. Atualiza automaticamente a cada 5 minutos.
-
-Dependências:
-  - Banco de dados via `db.query_to_df`
-  - Cache via `app.cache`
-"""
-
-# ============================================================
-# IMPORTAÇÕES
-# ============================================================
 from datetime import datetime, timedelta
 import logging
 from typing import Tuple, List, Dict, Optional
+import io
 
 import pandas as pd
 from dash import dcc, html, Input, Output, callback
@@ -23,6 +9,7 @@ import dash_bootstrap_components as dbc
 
 from db import query_to_df
 from app import cache
+from config import PROJECTS_CONFIG, PROJECT_LABELS
 
 # ============================================================
 # CONFIGURAÇÕES
@@ -37,32 +24,49 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Período para consulta: últimos 7 dias
+# Período inicial para consulta: últimos 2 dias (ajustado dinamicamente)
 DAY_END: datetime = datetime.now()
 DAY_START: datetime = DAY_END - timedelta(days=2)
 
 # Mapeamento de imagens por modelo
 MODEL_IMAGES: Dict[str, str] = {
     "VOLVO FMX 500 8X4": "/assets/VOLVO FMX 500 8X4.jpg",
+    "VOLVO FM 500 8X4": "/assets/VOLVO FMX 500 8X4.jpg",
+    "Volvo FMX500 - CB": "/assets/VOLVO FMX 500 8X4.jpg",
     "MERCEDES BENZ AROCS 4851/45 8X4": "/assets/MERCEDES_BENZ_AROCS 4851_45_8X4.jpg",
+    "MERCEDES BENZ ACTROS 4844K/45 8X4": "/assets/MERCEDES_BENZ_AROCS 4851_45_8X4.jpg",
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": "/assets/MERCEDES BENZ AXOR 3344 6X4 (PIPA).jpg",
     "ESCAVADEIRA HIDRÁULICA CAT 374DL": "/assets/ESCAVADEIRA_HIDRAULICA_CAT_374DL.jpg",
     "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": "/assets/ESCAVADEIRA_HIDRAULICA_VOLVO_EC750DL.jpg",
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC700": "/assets/ESCAVADEIRA_HIDRAULICA_VOLVO_EC750DL.jpg",
     "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": "/assets/PERFURATRIZ HIDRAULICA SANDVIK DP1500I.jpg",
     "PERFURATRIZ HIDRAULICA SANDVIK DX800": "/assets/PERFURATRIZ HIDRAULICA SANDVIK DP1500I.jpg",
     "TRATOR DE ESTEIRAS CAT D7": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS CAT D6T": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS CAT D8": "/assets/TRATOR DE ESTEIRAS CAT D7.jpg",
     "TRATOR DE ESTEIRAS KOMATSU D155": "/assets/TRATOR DE ESTEIRAS KOMATSU D155.jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 320": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320 (ROMPEDOR).jpg",
-    "ESCAVADEIRA HIDRÁULICA CAT 352": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
-    "ESCAVADEIRA HIDRAULICA CAT 336NGX": "/assets/ESCAVADEIRA_HIDRAULICA CAT 320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 320": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "Cat 320D - EH": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 320NGX": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 320 (ROMPEDOR)": "/assets/ESCAVADEIRAHIDRAULICACAT320(ROMPEDOR).jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 352": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 345GC": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "ESCAVADEIRA HIDRAULICA CAT 336NGX": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "ESCAVADEIRA HIDRÁULICA CAT 336NGX": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
+    "Cat 336D - EH": "/assets/ESCAVADEIRAHIDRAULICACAT320.jpg",
     "ESCAVADEIRA HIDRAULICA SANY SY750H": "/assets/ESCAVADEIRA HIDRAULICA SANY SY750H.jpg",
-    "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": "/assets/ESCAVADEIRA_HIDRAULICA VOLVO_EC480DL.jpg",
+    "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": "/assets/ESCAVADEIRAHIDRAULICAVOLVOEC480DL.jpg",
     "MOTONIVELADORA CAT 140K": "/assets/MOTONIVELADORA CAT 140K.jpg",
     "PÁ CARREGADEIRA CAT 966L": "/assets/PA CARREGADEIRA CAT 966L.jpg",
+    "Cat 938 K - PC": "/assets/PA CARREGADEIRA CAT 966L.jpg",
+    "Cat 950 L - PC": "/assets/PA CARREGADEIRA CAT 966L.jpg",
     "RETRO ESCAVADEIRA CAT 416F2": "/assets/RETRO ESCAVADEIRA CAT 416F2.jpg",
+    "Cat CS54B - RC": "/assets/CatCS54BRC.jpg",
+    "ROLO COMPACTADOR CAT CP54B": "/assets/CatCS54BRC.jpg",
+    "Liebherr R954C - EH": "/assets/LiebherrR954CEH.jpg",
+    "CAMINHÃO ARTICULADO VOLVO A30G - 6X6": "/assets/CAMINHAOARTICULADOVOLVOA30G6X6.jpg",
+    "CAMINHÃO ARTICULADO VOLVO A30F - 6X6": "/assets/CAMINHAOARTICULADOVOLVOA30G6X6.jpg",
+    "TRATOR AGRÍCOLA NEW HOLLAND T7 205": "/assets/TRATORAGRICOLANEWHOLLANDT7205.jpg",
 }
 
 # Tempo máximo para escala de cores (4 horas em segundos)
@@ -80,24 +84,31 @@ def get_color_for_duration(duration: timedelta) -> Tuple[str, int]:
     return f"rgb(255, {green}, 0)", green
 
 @cache.memoize(timeout=300)
-def get_all_records_cached(start_date: str, end_date: str) -> pd.DataFrame:
+def get_all_records_cached(start_date: str, end_date: str, projeto: str) -> pd.DataFrame:
     """
-    Consulta a tabela fato_hora para o período especificado com cache.
+    Consulta a tabela fato_hora para o período e projeto especificados com cache.
 
     Args:
         start_date (str): Data inicial no formato 'dd/mm/yyyy HH:MM:SS'.
         end_date (str): Data final no formato 'dd/mm/yyyy HH:MM:SS'.
+        projeto (str): ID do projeto (ex.: 'projeto1').
 
     Returns:
         pd.DataFrame: Dados de equipamentos ou DataFrame vazio em caso de erro.
     """
-    logger.debug(f"[DEBUG] Consultando dados de {start_date} a {end_date}")
+    logger.debug(f"[DEBUG] Consultando dados de {start_date} a {end_date} para projeto {projeto}")
+    if projeto not in PROJECTS_CONFIG:
+        logger.error(f"[DEBUG] Projeto {projeto} não encontrado em PROJECTS_CONFIG")
+        return pd.DataFrame()
+    
+    logger.debug(f"[DEBUG] Configuração para {projeto}: server={PROJECTS_CONFIG[projeto]['server']}, database={PROJECTS_CONFIG[projeto]['database']}")
     query = (
-        f"EXEC dw_sdp_mt_fas..usp_fato_hora "
+        f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_hora "
         f"'{start_date}', '{end_date}'"
     )
+    logger.debug(f"[DEBUG] Query executada: {query}")
     try:
-        df = query_to_df(query)
+        df = query_to_df(query, projeto=projeto)
         if df is None or df.empty:
             logger.debug("[DEBUG] Consulta retornou DataFrame vazio")
             return pd.DataFrame()
@@ -106,27 +117,34 @@ def get_all_records_cached(start_date: str, end_date: str) -> pd.DataFrame:
         logger.debug(f"[DEBUG] Dados retornados: {len(df)} linhas")
         return df
     except Exception as e:
-        logger.error(f"[DEBUG] Erro na consulta: {str(e)}")
+        logger.error(f"[DEBUG] Erro na consulta para projeto {projeto}: {str(e)}")
         return pd.DataFrame()
 
-def get_all_records() -> pd.DataFrame:
+def get_all_records(projeto: str) -> pd.DataFrame:
     """Wrapper para obter registros com cache, usando datas atuais."""
     start_date = DAY_START.strftime("%d/%m/%Y %H:%M:%S")
     end_date = DAY_END.strftime("%d/%m/%Y %H:%M:%S")
-    return get_all_records_cached(start_date, end_date)
+    return get_all_records_cached(start_date, end_date, projeto)
 
-def get_current_state_records() -> pd.DataFrame:
-    """Retorna o registro mais recente por equipamento, com dt_registro_inicio."""
-    df = get_all_records()
+def get_current_state_records(projeto: str) -> pd.DataFrame:
+    """Retorna o registro mais recente por equipamento, com dt_registro_inicio, buscando nos últimos 2 dias ou 3 dias se vazio."""
+    # Primeiro tenta os últimos 2 dias
+    df = get_all_records(projeto)
     if df.empty:
-        logger.debug("[DEBUG] Nenhum dado retornado por get_all_records")
-        return pd.DataFrame()
+        logger.debug(f"[DEBUG] Nenhum dado nos últimos 2 dias para projeto {projeto}, tentando últimos 3 dias")
+        global DAY_START
+        DAY_START = DAY_END - timedelta(days=3)
+        df = get_all_records(projeto)
+        if df.empty:
+            logger.debug(f"[DEBUG] Nenhum dado nos últimos 3 dias para projeto {projeto}")
+            return pd.DataFrame()
+
     df = df.dropna(subset=["nome_equipamento", "id_lancamento", "dt_registro"])
     dt_min = df.groupby(["nome_equipamento", "id_lancamento"], as_index=False)["dt_registro"].min()
     df_sorted = df.sort_values("dt_registro")
     latest = df_sorted.groupby("nome_equipamento", as_index=False).last()
     current_state = pd.merge(latest, dt_min, on=["nome_equipamento", "id_lancamento"], suffixes=("", "_inicio"))
-    logger.debug(f"[DEBUG] Registros mais recentes: {len(current_state)} linhas")
+    logger.debug(f"[DEBUG] Registros mais recentes para projeto {projeto}: {len(current_state)} linhas")
     return current_state
 
 def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None) -> html.Div:
@@ -253,7 +271,8 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
                     "borderRadius": "8px",
                     "overflow": "hidden",
                     "backgroundColor": "#FFFFFF"
-                }
+                },
+                className="mb-2"  # Garantido como string
             )
             equip_cards.append(card)
 
@@ -272,12 +291,12 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
                     style={"backgroundColor": "#FFFFFF", "padding": "10px"}
                 )
             ],
-            className="mb-2"
+            className="mb-2"  # Garantido como string
         )
         rows.append(row_layout)
 
     logger.debug(f"[DEBUG] Layout criado com {len(rows)} grupos")
-    return html.Div([header] + rows)
+    return html.Div([header] + rows, className="mt-4")  # Garantido como string
 
 # ============================================================
 # LAYOUT PRINCIPAL
@@ -327,8 +346,7 @@ layout = dbc.Container([
         dbc.Col(
             html.H3(
                 [html.I(className="fas fa-cogs mr-2"), "Equipamentos por Estado"],
-                className="text-center mt-4 mb-4",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "1.6rem", "fontWeight": "500"}
+                className="text-center mt-4 mb-4"
             ),
             width=12
         ),
@@ -352,7 +370,7 @@ layout = dbc.Container([
                         className="w-100",
                         style={
                             "fontSize": "0.9rem",
-                            "borderRadius": "8px",
+                            "block": "8px",
                             "background": "linear-gradient(45deg, #28a745, #34c759)",
                             "color": "#fff",
                             "transition": "all 0.3s",
@@ -408,7 +426,7 @@ layout = dbc.Container([
         )
     ], className="shadow-md mb-4 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none", "zIndex": "10"}),
     dcc.Store(id="latest-data-store"),
-    dcc.Interval(id="interval-component", interval=300000, n_intervals=0),
+    dcc.Interval(id="interval-component", interval=300000, n_intervals=0),  # 5 minutos
     dcc.Loading(
         id="loading-tv-layout",
         type="default",
@@ -438,23 +456,33 @@ layout = dbc.Container([
     Output("last-update", "children"),
     Input("update-button", "n_clicks"),
     Input("interval-component", "n_intervals"),
+    Input("projeto-store", "data"),
     prevent_initial_call=False
 )
-def update_data(n_clicks: Optional[int], n_intervals: int) -> Tuple[Optional[str], str]:
+def update_data(n_clicks: Optional[int], n_intervals: int, projeto: Optional[str]) -> Tuple[Optional[str], str]:
     """Atualiza os dados com os registros mais recentes por equipamento a cada 5 minutos ou clique."""
-    logger.debug(f"[DEBUG] update_data disparado: n_clicks={n_clicks}, n_intervals={n_intervals}")
+    logger.debug(f"[DEBUG] update_data disparado: n_clicks={n_clicks}, n_intervals={n_intervals}, projeto={projeto}")
     
-    # Forçar atualização do cache no clique ou a cada intervalo
-    cache_key = f"{DAY_START.strftime('%d/%m/%Y %H:%M:%S')}_{DAY_END.strftime('%d/%m/%Y %H:%M:%S')}_{n_intervals}"
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        logger.debug("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        return None, "Selecione uma obra para visualizar os dados."
+    
+    # Recalcular datas dinamicamente para invalidar o cache a cada intervalo
+    global DAY_END, DAY_START
+    DAY_END = datetime.now()
+    DAY_START = DAY_END - timedelta(days=2)
+    
+    # Forçar atualização do cache com base em n_intervals
+    cache_key = f"{DAY_START.strftime('%d/%m/%Y %H:%M:%S')}_{DAY_END.strftime('%d/%m/%Y %H:%M:%S')}_{n_intervals}_{projeto}"
     try:
-        latest = get_current_state_records()
+        latest = get_current_state_records(projeto)
     except Exception as e:
-        logger.error(f"[DEBUG] Erro ao obter registros mais recentes: {str(e)}")
-        return None, f"Erro ao carregar dados: {str(e)}"
+        logger.error(f"[DEBUG] Erro ao obter registros mais recentes para projeto {projeto}: {str(e)}")
+        return None, f"Erro ao carregar dados para {PROJECT_LABELS.get(projeto, projeto)}: {str(e)}"
 
     if latest.empty:
-        logger.debug("[DEBUG] Nenhum dado retornado por get_current_state_records")
-        return None, "Sem dados. Verifique a disponibilidade de dados no banco."
+        logger.debug(f"[DEBUG] Nenhum dado retornado por get_current_state_records para projeto {projeto}")
+        return None, f"Sem dados para {PROJECT_LABELS.get(projeto, projeto)}. Verifique a disponibilidade de dados no banco."
 
     latest = latest[latest["nome_equipamento"].str.upper() != "TRIMAK"]
     logger.debug(f"[DEBUG] Após remover TRIMAK em update_data: {len(latest)} linhas")
@@ -463,9 +491,9 @@ def update_data(n_clicks: Optional[int], n_intervals: int) -> Tuple[Optional[str
         json_data = latest.to_json(orient="records", date_format="iso")
     except Exception as e:
         logger.error(f"[DEBUG] Erro ao serializar dados para JSON: {str(e)}")
-        return None, f"Erro ao processar dados: {str(e)}"
+        return None, f"Erro ao processar dados para {PROJECT_LABELS.get(projeto, projeto)}: {str(e)}"
 
-    last_update_text = f"Última atualização: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+    last_update_text = f"Última atualização: {DAY_END.strftime('%d/%m/%Y %H:%M:%S')} ({PROJECT_LABELS.get(projeto, projeto)})"
     logger.debug(f"[DEBUG] Dados atualizados: {len(latest)} linhas, cache_key={cache_key}")
     return json_data, last_update_text
 
@@ -482,7 +510,8 @@ def update_filter_options(json_data: Optional[str]) -> Tuple[List[Dict[str, str]
         return [], []
 
     try:
-        df = pd.read_json(json_data, orient="records")
+        # Usar StringIO para ler JSON literal
+        df = pd.read_json(io.StringIO(json_data), orient="records")
     except Exception as e:
         logger.error(f"[DEBUG] Erro ao ler JSON em update_filter_options: {str(e)}")
         return [], []
@@ -517,12 +546,13 @@ def render_tv_layout(json_data: Optional[str], filter_values: Optional[List[str]
     if not json_data:
         logger.debug("[DEBUG] Nenhum dado em render_tv_layout")
         return html.Div(
-            "Erro ao carregar dados. Verifique a conexão com o banco ou clique em 'Atualizar'.",
+            "Selecione uma obra para visualizar os dados.",
             className="text-center my-4"
         )
 
     try:
-        df = pd.read_json(json_data, orient="records")
+        # Usar StringIO para ler JSON literal
+        df = pd.read_json(io.StringIO(json_data), orient="records")
     except Exception as e:
         logger.error(f"[DEBUG] Erro ao ler JSON em render_tv_layout: {str(e)}")
         return html.Div(

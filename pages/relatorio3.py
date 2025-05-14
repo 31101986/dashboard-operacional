@@ -152,9 +152,9 @@ df_servicos_eventuais: pd.DataFrame = pd.DataFrame([
     },
     {
         "Equipamento": "MERCEDES BENZ AXOR 3344 6X4 (PIPA)",
-        "Horas Mínimas Garantidas": 2500,
+        "Horas Mínimas Garantidas": 500,
         "Preço Unitário (R$/h)": 260.635740696746,
-        "Valor Total (R$)": 2500 * 260.635740696746
+        "Valor Total (R$)": 500 * 260.635740696746
     },
     {
         "Equipamento": "PÁ CARREGADEIRA CAT 966L",
@@ -164,12 +164,12 @@ df_servicos_eventuais: pd.DataFrame = pd.DataFrame([
     },
     {
         "Equipamento": "TOTAL",
-        "Horas Mínimas Garantidas": 9000,
+        "Horas Mínimas Garantidas": 7000,
         "Preço Unitário (R$/h)": "",
         "Valor Total (R$)": (
             500 * 621.089424639054
             + 2500 * 316.090153610947
-            + 2500 * 260.635740696746
+            + 500 * 260.635740696746
             + 3500 * 460.271627187871
         )
     }

@@ -5,10 +5,12 @@ relatorio5.py – Timeline de Apontamentos por Equipamento
 
 Exibe uma timeline estilo Gantt dos estados de equipamentos, com filtros por período (Hoje/Ontem)
 e equipamentos. Otimizado para performance com cache, operações vetorizadas e logs de depuração.
+Inicia em branco até que uma obra seja selecionada via projeto-store. Filtra equipamentos com
+nome_tipo_equipamento = 'Carga' e exclui TRIMAK.
 
 Dependências:
   - Banco de dados via `db.query_to_df`
-  - Configurações `META_MINERIO`, `META_ESTERIL`, `TIMEZONE` de `config`
+  - Configurações `META_MINERIO`, `META_ESTERIL`, `TIMEZONE`, `PROJECTS_CONFIG`, `PROJECT_LABELS` de `config`
 """
 
 # ============================================================
@@ -22,16 +24,13 @@ from typing import List, Dict, Optional, Any
 import dash
 from dash import dcc, html, Output, Input
 import dash_bootstrap_components as dbc
-import dash_table
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-from dash.dash_table.Format import Format, Scheme
-from dash.dash_table import FormatTemplate
-from pandas.api.types import CategoricalDtype
 
 from db import query_to_df
-from config import META_MINERIO, META_ESTERIL, TIMEZONE
+from config import META_MINERIO, META_ESTERIL, TIMEZONE, PROJECTS_CONFIG, PROJECT_LABELS
 from app import cache
 
 # ============================================================
@@ -39,16 +38,13 @@ from app import cache
 # ============================================================
 
 # Configuração do log
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    filename="dashboard.log",
+    filemode="a",
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
-
-# Modelos permitidos
-ALLOWED_MODELS = [
-    "ESCAVADEIRA HIDRAULICA SANY SY750H",
-    "ESCAVADEIRA HIDRÁULICA CAT 352",
-    "ESCAVADEIRA HIDRÁULICA CAT 374DL",
-    "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL"
-]
 
 # Mapeamento de cores por nome_tipo_estado
 COLOR_MAP = {
@@ -87,25 +83,35 @@ def profile_time(func):
 
 @cache.memoize(timeout=300)
 @profile_time
-def fetch_fato_hora(start_dt: datetime, end_dt: datetime) -> pd.DataFrame:
+def fetch_fato_hora(start_dt: datetime, end_dt: datetime, projeto: str) -> pd.DataFrame:
     """
-    Consulta os dados da tabela fato_hora para o período especificado, com cache.
+    Consulta os dados da tabela fato_hora para o período e projeto especificados, com cache.
 
     Args:
         start_dt (datetime): Data inicial.
         end_dt (datetime): Data final.
+        projeto (str): ID do projeto (ex.: 'projeto1').
 
     Returns:
         pd.DataFrame: Dados de fato_hora ou DataFrame vazio em caso de erro.
     """
-    logger.debug(f"[DEBUG] Consultando fato_hora de {start_dt:%d/%m/%Y %H:%M:%S} a {end_dt:%d/%m/%Y %H:%M:%S}")
+    logger.debug(f"[DEBUG] Consultando fato_hora de {start_dt:%d/%m/%Y %H:%M:%S} a {end_dt:%d/%m/%Y %H:%M:%S} para projeto {projeto}")
+    if projeto not in PROJECTS_CONFIG:
+        logger.error(f"[DEBUG] Projeto {projeto} não encontrado em PROJECTS_CONFIG")
+        return pd.DataFrame()
+    
+    logger.debug(f"[DEBUG] Configuração para {projeto}: server={PROJECTS_CONFIG[projeto]['server']}, database={PROJECTS_CONFIG[projeto]['database']}")
     query = (
-        f"EXEC dw_sdp_mt_fas..usp_fato_hora "
+        f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_hora "
         f"'{start_dt:%d/%m/%Y %H:%M:%S}', '{end_dt:%d/%m/%Y %H:%M:%S}'"
     )
+    logger.debug(f"[DEBUG] Query executada: {query}")
     try:
-        df = query_to_df(query)
+        # Ensure cache key includes projeto to prevent cross-project data leakage
+        df = query_to_df(query, projeto=projeto)
         logger.debug(f"[DEBUG] Dados brutos retornados: {len(df)} linhas")
+        logger.debug(f"[DEBUG] Colunas retornadas: {df.columns.tolist()}")
+        logger.debug(f"[DEBUG] Primeiras 5 linhas:\n{df.head().to_string()}")
         if df.empty or "dt_registro" not in df.columns:
             logger.debug("[DEBUG] DataFrame vazio ou sem coluna 'dt_registro'")
             return pd.DataFrame()
@@ -115,11 +121,29 @@ def fetch_fato_hora(start_dt: datetime, end_dt: datetime) -> pd.DataFrame:
         invalid_dates = df["dt_registro"].isna().sum() + df["dt_registro_turno"].isna().sum()
         logger.debug(f"[DEBUG] Linhas com datas inválidas (NaT): {invalid_dates}")
         
-        df = df.dropna(subset=["nome_equipamento", "nome_modelo", "nome_estado", "nome_tipo_estado"])
+        # Normalizar strings
+        df = df.assign(
+            nome_modelo=df["nome_modelo"].str.strip().str.upper(),
+            nome_equipamento=df["nome_equipamento"].str.strip().str.upper(),
+            nome_tipo_estado=df["nome_tipo_estado"].str.strip().str.upper(),
+            nome_estado=df["nome_estado"].str.strip().str.upper(),
+            nome_tipo_equipamento=df["nome_tipo_equipamento"].str.strip().str.upper()
+        )
+        
+        # Filtrar por nome_tipo_equipamento = "CARGA"
+        logger.debug(f"[DEBUG] Valores únicos de nome_tipo_equipamento: {df['nome_tipo_equipamento'].unique().tolist()}")
+        df = df[df["nome_tipo_equipamento"] == "CARGA"]
+        logger.debug(f"[DEBUG] Após filtro nome_tipo_equipamento='CARGA': {len(df)} linhas")
+        
+        # Excluir TRIMAK
+        df = df[df["nome_equipamento"] != "TRIMAK"]
+        logger.debug(f"[DEBUG] Após excluir TRIMAK: {len(df)} linhas")
+        
+        df = df.dropna(subset=["nome_equipamento", "nome_modelo", "nome_estado", "nome_tipo_estado", "nome_tipo_equipamento"])
         logger.debug(f"[DEBUG] Após dropna: {len(df)} linhas")
         return df
     except Exception as e:
-        logger.error(f"[DEBUG] Erro ao consultar fato_hora: {str(e)}")
+        logger.error(f"[DEBUG] Erro ao consultar fato_hora para projeto {projeto}: {str(e)}")
         return pd.DataFrame()
 
 @profile_time
@@ -145,14 +169,14 @@ def compute_segments(df: pd.DataFrame, end_dt: datetime) -> pd.DataFrame:
         (df.groupby("nome_equipamento")["nome_estado"].shift() != df["nome_estado"]) |
         (df.groupby("nome_equipamento")["nome_tipo_estado"].shift() != df["nome_tipo_estado"])
     ).fillna(True)
-    df["segment_id"] = df.groupby("nome_equipamento")["segment_change"].cumsum()
+    df["segment_id"] = df.groupby("nome_equipamento")["segment_change"].cumsum().astype(int)
     
-    # Agregar segmentos
-    segments = df.groupby(["nome_equipamento", "segment_id"], as_index=False).agg(
+    # Agregar segmentos com reset_index para evitar conflitos de índice
+    segments = df.groupby(["nome_equipamento", "segment_id"]).agg(
         nome_estado=("nome_estado", "first"),
         nome_tipo_estado=("nome_tipo_estado", "first"),
         start=("dt_registro", "first")
-    )
+    ).reset_index()
     
     # Definir fim do segmento
     segments["end"] = segments.groupby("nome_equipamento")["start"].shift(-1).fillna(pd.Timestamp(end_dt))
@@ -164,78 +188,148 @@ def compute_segments(df: pd.DataFrame, end_dt: datetime) -> pd.DataFrame:
     return segments[["nome_equipamento", "nome_estado", "nome_tipo_estado", "start", "end", "duration"]]
 
 @profile_time
-def create_timeline_graph(selected_day: str, equipment_filter: Optional[List[str]] = None) -> px.timeline:
+def create_timeline_graph(selected_day: str, projeto: Optional[str], equipment_filter: Optional[List[str]] = None) -> go.Figure:
     """
     Cria um gráfico de timeline (Gantt) com tooltips e layout responsivo.
 
     Args:
         selected_day (str): Período selecionado ("hoje" ou "ontem").
+        projeto (Optional[str]): ID do projeto (ex.: 'projeto1').
         equipment_filter (Optional[List[str]]): Lista de equipamentos para filtrar.
 
     Returns:
-        px.timeline: Gráfico de timeline.
+        go.Figure: Gráfico de timeline.
     """
     # Definir período
     if selected_day == "hoje":
         day_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = datetime.now()
-        title = "Timeline de Apontamentos - Hoje"
+        title = f"Timeline de Apontamentos - Hoje ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})"
     elif selected_day == "ontem":
         day_end = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         day_start = day_end - timedelta(days=1)
-        title = "Timeline de Apontamentos - Ontem"
+        title = f"Timeline de Apontamentos - Ontem ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})"
     else:
         day_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
-        title = "Timeline de Apontamentos"
+        title = f"Timeline de Apontamentos ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})"
     
-    # Obter dados
-    df = fetch_fato_hora(day_start, day_end)
-    if df.empty:
-        logger.debug("[DEBUG] Nenhum dado retornado por fetch_fato_hora")
-        fig = px.timeline(title=title)
-        fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
+    # Verificar projeto
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        logger.debug("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Selecione uma obra para visualizar os dados.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#343a40")
+        )
+        fig.update_layout(
+            xaxis_title="Hora",
+            yaxis_title="Equipamento",
+            showlegend=False,
+            title={'text': title, 'x': 0.5, 'xanchor': 'center'},
+            template="plotly_white",
+            margin=dict(l=150, r=50, t=70, b=50)
+        )
         return fig
     
-    # Normalizar e filtrar dados
-    df = df.assign(
-        nome_modelo=df["nome_modelo"].str.strip().str.upper(),
-        nome_equipamento=df["nome_equipamento"].str.strip().str.upper(),
-        nome_tipo_estado=df["nome_tipo_estado"].str.strip().str.upper(),
-        nome_estado=df["nome_estado"].str.strip().str.upper()
-    )
+    # Obter dados
+    df = fetch_fato_hora(day_start, day_end, projeto)
+    if df.empty:
+        logger.debug(f"[DEBUG] Nenhum dado retornado por fetch_fato_hora para projeto {projeto}")
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nenhum dado disponível para o período selecionado.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#343a40")
+        )
+        fig.update_layout(
+            xaxis_title="Hora",
+            yaxis_title="Equipamento",
+            showlegend=False,
+            title={'text': title, 'x': 0.5, 'xanchor': 'center'},
+            template="plotly_white",
+            margin=dict(l=150, r=50, t=70, b=50)
+        )
+        return fig
     
-    df = df[df["nome_modelo"].isin([m.upper() for m in ALLOWED_MODELS])]
-    df = df[df["nome_equipamento"] != "TRIMAK"]
+    # Aplicar filtro de equipamentos (se houver)
     if equipment_filter:
         equipment_filter_upper = [e.strip().upper() for e in equipment_filter]
         df = df[df["nome_equipamento"].isin(equipment_filter_upper)]
-    
-    logger.debug(f"[DEBUG] Após filtros (modelos, TRIMAK, equipamentos): {len(df)} linhas")
+        logger.debug(f"[DEBUG] Após filtro de equipamentos selecionados: {len(df)} linhas")
     
     if df.empty:
         logger.debug("[DEBUG] DataFrame vazio após filtros")
-        fig = px.timeline(title=title)
-        fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nenhum equipamento corresponde ao filtro selecionado.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#343a40")
+        )
+        fig.update_layout(
+            xaxis_title="Hora",
+            yaxis_title="Equipamento",
+            showlegend=False,
+            title={'text': title, 'x': 0.5, 'xanchor': 'center'},
+            template="plotly_white",
+            margin=dict(l=150, r=50, t=70, b=50)
+        )
         return fig
     
     # Filtrar por período
     ts_start = pd.Timestamp(day_start)
     ts_end = pd.Timestamp(day_end)
+    logger.debug(f"[DEBUG] ts_start: {ts_start}, tz={ts_start.tz}; ts_end: {ts_end}, tz={ts_end.tz}")
+    logger.debug(f"[DEBUG] dt_registro_turno dtype: {df['dt_registro_turno'].dtype}")
     df = df[(df["dt_registro_turno"] >= ts_start) & (df["dt_registro_turno"] < ts_end)]
     
     if df.empty:
         logger.debug("[DEBUG] Nenhum dado no período selecionado")
-        fig = px.timeline(title=title)
-        fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nenhum dado no período selecionado.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#343a40")
+        )
+        fig.update_layout(
+            xaxis_title="Hora",
+            yaxis_title="Equipamento",
+            showlegend=False,
+            title={'text': title, 'x': 0.5, 'xanchor': 'center'},
+            template="plotly_white",
+            margin=dict(l=150, r=50, t=70, b=50)
+        )
         return fig
     
     # Calcular segmentos
     seg_df = compute_segments(df, day_end)
     if seg_df.empty:
         logger.debug("[DEBUG] Nenhum segmento calculado")
-        fig = px.timeline(title=title)
-        fig.update_layout(xaxis_title="Hora", yaxis_title="Equipamento")
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Nenhum segmento disponível para o período selecionado.",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5,
+            showarrow=False,
+            font=dict(size=16, color="#343a40")
+        )
+        fig.update_layout(
+            xaxis_title="Hora",
+            yaxis_title="Equipamento",
+            showlegend=False,
+            title={'text': title, 'x': 0.5, 'xanchor': 'center'},
+            template="plotly_white",
+            margin=dict(l=150, r=50, t=70, b=50)
+        )
         return fig
     
     # Preparar tooltips
@@ -356,6 +450,13 @@ layout = dbc.Container([
         ),
         className="mb-3"
     ),
+    html.Div(
+        id="rel5-no-project-message",
+        children=html.P(
+            "Selecione uma obra para visualizar os dados.",
+            className="text-center my-4"
+        )
+    ),
     dbc.Card([
         dbc.CardHeader(
             html.H5("Selecionar Período", className="mb-0 text-white", style={
@@ -439,24 +540,29 @@ layout = dbc.Container([
             style={"padding": "0.8rem"}
         )
     ], className="shadow-md mb-4 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none", "zIndex": "10"}),
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Timeline de Apontamentos", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Graph(
-                id="rel5-graph",
-                config={"displayModeBar": False, "responsive": True},
-                style={"minHeight": "600px"}
+    dcc.Interval(id="rel5-interval-component", interval=300000, n_intervals=0),
+    dcc.Loading(
+        id="loading-rel5-graph",
+        type="default",
+        children=dbc.Card([
+            dbc.CardHeader(
+                html.H5("Timeline de Apontamentos", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-4 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none", "zIndex": "5"}),
+            dbc.CardBody(
+                dcc.Graph(
+                    id="rel5-graph",
+                    config={"displayModeBar": False, "responsive": True},
+                    style={"minHeight": "600px"}
+                ),
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-4 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none", "zIndex": "5"})
+    ),
 ], fluid=True)
 
 # ============================================================
@@ -464,19 +570,31 @@ layout = dbc.Container([
 # ============================================================
 
 @dash.callback(
-    Output("rel5-equipment-dropdown", "options"),
-    Input("rel5-tabs", "value")
+    [Output("rel5-equipment-dropdown", "options"),
+     Output("rel5-no-project-message", "style")],
+    [Input("rel5-tabs", "value"),
+     Input("rel5-interval-component", "n_intervals"),
+     Input("projeto-store", "data")]
 )
-def update_equipment_options(selected_day: str) -> List[Dict[str, str]]:
+def update_equipment_options(selected_day: str, n_intervals: int, projeto: Optional[str]) -> tuple[List[Dict[str, str]], Dict[str, str]]:
     """
-    Atualiza as opções do dropdown de equipamentos com base no período selecionado.
+    Atualiza as opções do dropdown de equipamentos com base no período e projeto selecionados,
+    e controla a visibilidade da mensagem de 'sem projeto'.
 
     Args:
         selected_day (str): Período selecionado ("hoje" ou "ontem").
+        n_intervals (int): Contador de intervalos para atualização automática.
+        projeto (Optional[str]): ID do projeto (ex.: 'projeto1').
 
     Returns:
-        List[Dict[str, str]]: Opções para o dropdown.
+        tuple[List[Dict[str, str]], Dict[str, str]]: Opções para o dropdown e estilo da mensagem.
     """
+    logger.debug(f"[DEBUG] update_equipment_options disparado: selected_day={selected_day}, n_intervals={n_intervals}, projeto={projeto}")
+    
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        logger.debug("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
+        return [], {"display": "block"}
+    
     if selected_day == "hoje":
         day_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = datetime.now()
@@ -487,32 +605,34 @@ def update_equipment_options(selected_day: str) -> List[Dict[str, str]]:
         day_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
     
-    df = fetch_fato_hora(day_start, day_end)
+    df = fetch_fato_hora(day_start, day_end, projeto)
     if df.empty:
-        logger.debug("[DEBUG] Nenhum dado retornado para dropdown")
-        return []
-    
-    df = df[df["nome_modelo"].str.strip().str.upper().isin([m.upper() for m in ALLOWED_MODELS])]
-    df = df[df["nome_equipamento"].str.strip().str.upper() != "TRIMAK"]
+        logger.debug(f"[DEBUG] Nenhum dado retornado para dropdown para projeto {projeto}")
+        return [], {"display": "block", "textAlign": "center", "color": "#343a40", "fontSize": "1.2rem", "margin": "20px 0"}
     
     equips = sorted(df["nome_equipamento"].dropna().astype(str).unique())
     logger.debug(f"[DEBUG] Equipamentos encontrados para dropdown: {len(equips)}")
-    return [{"label": equip, "value": equip} for equip in equips]
+    return [{"label": equip, "value": equip} for equip in equips], {"display": "none"}
 
 @dash.callback(
     Output("rel5-graph", "figure"),
-    Input("rel5-tabs", "value"),
-    Input("rel5-equipment-dropdown", "value")
+    [Input("rel5-tabs", "value"),
+     Input("rel5-equipment-dropdown", "value"),
+     Input("rel5-interval-component", "n_intervals"),
+     Input("projeto-store", "data")]
 )
-def update_graph(selected_day: str, equipment_filter: Optional[List[str]]) -> px.timeline:
+def update_graph(selected_day: str, equipment_filter: Optional[List[str]], n_intervals: int, projeto: Optional[str]) -> go.Figure:
     """
-    Atualiza o gráfico de timeline com base no período e filtro de equipamentos.
+    Atualiza o gráfico de timeline com base no período, filtro de equipamentos e projeto.
 
     Args:
         selected_day (str): Período selecionado ("hoje" ou "ontem").
         equipment_filter (Optional[List[str]]): Lista de equipamentos selecionados.
+        n_intervals (int): Contador de intervalos para atualização automática.
+        projeto (Optional[str]): ID do projeto (ex.: 'projeto1').
 
     Returns:
-        px.timeline: Gráfico de timeline atualizado.
+        go.Figure: Gráfico de timeline atualizado.
     """
-    return create_timeline_graph(selected_day, equipment_filter)
+    logger.debug(f"[DEBUG] update_graph disparado: selected_day={selected_day}, equipment_filter={equipment_filter}, n_intervals={n_intervals}, projeto={projeto}")
+    return create_timeline_graph(selected_day, projeto, equipment_filter)

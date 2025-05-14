@@ -1,12 +1,51 @@
-.card-hover {
-    transition: transform 0.3s, box-shadow 0.3s;
-    cursor: pointer;
-}
 .card-hover:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important;
+    transition: all 0.3s ease;
 }
-.footer-text {
-    font-size: 0.9rem;
-    color: #6c757d;
+
+.btn-modern:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-modern:active {
+    animation: pulse 0.2s;
+}
+
+.nav-link-modern:hover {
+    background-color: rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.carousel-slide {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-slide:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.carousel-active {
+    border: 3px solid #3b82f6;
+    box-shadow: 0 6px 15px rgba(59,130,246,0.4);
+    transform: scale(1.02);
+}
+
+.carousel-container::-webkit-scrollbar {
+    display: none;
+}
+
+.carousel-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
 }

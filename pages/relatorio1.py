@@ -12,51 +12,48 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-# Importa o fuso horário definido em config.py
-from config import TIMEZONE
+from config import TIMEZONE, PROJECTS_CONFIG, PROJECT_LABELS
+from db import query_to_df
 
-# Configuração do log (utilize seu gerenciador de logs conforme necessário)
+# Configuração do log
 logging.basicConfig(
     level=logging.INFO,
     filename="dashboard.log",
     filemode="a",
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
-from db import query_to_df
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # CONSTANTES
 # =============================================================================
-MAPBOX_TOKEN = ""  # Informe seu token Mapbox, se disponível
-DEFAULT_MAP_STYLE = "open-street-map"  # Forçamos um estilo fixo
+MAPBOX_TOKEN = ""
+DEFAULT_MAP_STYLE = "open-street-map"
+# Estilos gratuitos confiáveis no Plotly
+MAP_STYLE_OPTIONS = [
+    {"label": "Open Street Map", "value": "open-street-map"},
+    {"label": "Carto Positron", "value": "carto-positron"},
+    {"label": "Carto Darkmatter", "value": "carto-darkmatter"},
+    {"label": "White Background", "value": "white-bg"}
+]
 
 # =============================================================================
 # DECORADOR DE PROFILING
 # =============================================================================
 def profile_time(func):
-    """
-    Decorador simples para medir o tempo de execução da função.
-    Registra o tempo decorrido via logging.
-    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         t0 = time.perf_counter()
         result = func(*args, **kwargs)
         t1 = time.perf_counter()
-        logging.info(f"[Profile] {func.__name__} executed in {t1-t0:.4f} seconds")
+        logger.info(f"[Profile] {func.__name__} executed in {t1-t0:.4f} seconds")
         return result
     return wrapper
 
 # =============================================================================
 # FUNÇÕES AUXILIARES
 # =============================================================================
-
 def get_current_shift_period():
-    """
-    Retorna o início e o fim do turno atual (07:00 → 07:00 do dia seguinte),
-    considerando o fuso horário definido em TIMEZONE.
-    """
     now = datetime.now(TIMEZONE)
     shift_start = now.replace(hour=7, minute=0, second=0, microsecond=0)
     if now.hour < 7:
@@ -65,9 +62,7 @@ def get_current_shift_period():
     return shift_start, shift_end
 
 def no_data_fig(title):
-    """Retorna um gráfico vazio com mensagem 'Sem dados...' e layout modernizado."""
-    df_empty = pd.DataFrame({"x": [], "y": []})
-    fig = px.bar(df_empty, x="x", y="y", title=title)
+    fig = px.bar(pd.DataFrame({"x": [], "y": []}), x="x", y="y", title=title)
     fig.update_layout(
         template="plotly_white",
         title_x=0.5,
@@ -86,28 +81,19 @@ def no_data_fig(title):
     return fig
 
 def no_data_table():
-    """Retorna uma linha de tabela informando que não há dados."""
     return [{"Mensagem": "Sem dados para o período selecionado"}]
 
-def execute_query(query):
-    """
-    Executa a query utilizando query_to_df e trata exceções.
-    Retorna um DataFrame (pode estar vazio em caso de erro).
-    """
+def execute_query(query, projeto):
     try:
-        return query_to_df(query)
+        return query_to_df(query, projeto=projeto)
     except Exception as e:
-        logging.error(f"Erro na execução da query: {e}")
+        logger.error(f"Erro na execução da query para projeto {projeto}: {e}")
         return pd.DataFrame()
 
-def common_map_layout(center_lat, center_lon):
-    """
-    Layout padrão para mapas com configurações centralizadas,
-    utilizando estilo fixo 'open-street-map'.
-    """
+def common_map_layout(center_lat, center_lon, map_style=DEFAULT_MAP_STYLE):
     return {
         "template": "plotly_white",
-        "mapbox_style": DEFAULT_MAP_STYLE,
+        "mapbox_style": map_style,
         "mapbox_accesstoken": MAPBOX_TOKEN if MAPBOX_TOKEN else None,
         "mapbox": {
             "center": {"lat": center_lat, "lon": center_lon},
@@ -130,11 +116,7 @@ def common_map_layout(center_lat, center_lon):
     }
 
 def localize_column_tz(df, col_name):
-    """
-    Converte a coluna 'col_name' de df para datetime e aplica ou converte
-    a timezone para TIMEZONE.
-    """
-    if col_name not in df.columns:
+    if col_name not in df.columns or df.empty:
         return df
     df[col_name] = pd.to_datetime(df[col_name], errors="coerce")
     sample_tz = df[col_name].dt.tz
@@ -145,153 +127,75 @@ def localize_column_tz(df, col_name):
     return df
 
 @profile_time
-def get_filtered_data_producao(period_start, period_end, operacao_filter=None, df=None):
-    """
-    Filtra os dados de Produção localmente ou executa a query se df for None.
-    Aplica filtros de data e, se informado, de operação.
-    """
-    if df is None:
-        query = (
-            f"EXEC dw_sdp_mt_fas..usp_fato_producao "
-            f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
-        )
-        df = execute_query(query)
-    if df.empty:
-        return df
-    if "dt_registro_fim" in df.columns:
-        df = localize_column_tz(df, "dt_registro_fim")
-        df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
+def get_filtered_data_producao(period_start, period_end, operacao_filter=None, df=None, last_hours=None):
+    if df is None or df.empty:
+        return pd.DataFrame()
+    df = localize_column_tz(df, "dt_registro_fim")
+    mask = (df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)
+    if last_hours is not None:
+        now = datetime.now(TIMEZONE)
+        time_threshold = now - timedelta(hours=last_hours)
+        mask &= (df["dt_registro_fim"] >= time_threshold)
     if operacao_filter and "nome_operacao" in df.columns:
-        df = df[df["nome_operacao"].isin(operacao_filter)]
-    return df
+        mask &= df["nome_operacao"].isin(operacao_filter)
+    return df[mask]
 
 @profile_time
-def get_filtered_data_hora(period_start, period_end, only_today=True, df=None):
-    """
-    Filtra os dados de 'Hora' localmente ou executa a query se df for None.
-    Filtra por estado específico e converte colunas de data (dt_registro_turno).
-    """
-    if df is None:
-        query = (
-            f"EXEC dw_sdp_mt_fas..usp_fato_hora "
-            f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
-        )
-        df = execute_query(query)
-    if df.empty:
-        return df
-    if "dt_registro_turno" in df.columns:
-        df = localize_column_tz(df, "dt_registro_turno")
-        df = df[(df["dt_registro_turno"] >= period_start) & (df["dt_registro_turno"] < period_end)]
-    if "nome_estado" in df.columns:
-        df = df[df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])]
-    return df
+def get_filtered_data_hora(period_start, period_end, only_today=True, df=None, last_hours=None):
+    if df is None or df.empty:
+        return pd.DataFrame()
+    df = localize_column_tz(df, "dt_registro_turno")
+    mask = (df["dt_registro_turno"] >= period_start) & (df["dt_registro_turno"] < period_end)
+    if last_hours is not None:
+        now = datetime.now(TIMEZONE)
+        time_threshold = now - timedelta(hours=last_hours)
+        mask &= (df["dt_registro_turno"] >= time_threshold)
+    mask &= df["nome_estado"].isin(["Carregando", "Manobra no Carregamento"])
+    return df[mask]
 
 @profile_time
 def compute_truck_stats(df_prod_period, df_hora):
-    """
-    Calcula estatísticas de ciclo e estima os caminhões necessários.
-    Se 'tempo_ciclo_minuto' for superior a 60, é considerado o valor 45.
-    Utiliza operações vetorizadas para maior performance.
-    """
     if df_prod_period.empty:
-        cols = ["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"]
-        return pd.DataFrame(columns=cols)
+        return pd.DataFrame(columns=["nome_equipamento_utilizado", "avg_cycle", "avg_carregando", "avg_manobra", "trucks_needed"])
 
-    # Converte e ajusta tempo_ciclo_minuto de forma vetorizada
-    if "tempo_ciclo_minuto" in df_prod_period.columns:
-        df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce")
-        df_prod_period["tempo_ciclo_minuto"] = np.where(
-            df_prod_period["tempo_ciclo_minuto"] > 60,
-            45,
-            df_prod_period["tempo_ciclo_minuto"]
-        )
-
-    prod_grp = df_prod_period.groupby("nome_equipamento_utilizado", as_index=False).agg(
-        avg_cycle=("tempo_ciclo_minuto", "mean")
-    )
-    prod_grp["avg_cycle"] = prod_grp["avg_cycle"].round(2)
+    df_prod_period["tempo_ciclo_minuto"] = pd.to_numeric(df_prod_period["tempo_ciclo_minuto"], errors="coerce").clip(upper=60).replace(np.nan, 45)
+    
+    prod_grp = df_prod_period.groupby("nome_equipamento_utilizado")["tempo_ciclo_minuto"].mean().round(2).reset_index(name="avg_cycle")
     base = df_prod_period[["cod_viagem", "nome_equipamento_utilizado"]].drop_duplicates()
 
     if df_hora.empty:
-        prod_grp["avg_carregando"] = 3.5
-        prod_grp["avg_manobra"] = 1
+        prod_grp = prod_grp.assign(avg_carregando=3.5, avg_manobra=1)
     else:
         cod_list = df_prod_period["cod_viagem"].unique()
         df_join = df_hora[df_hora["cod_viagem"].isin(cod_list)]
         if df_join.empty:
-            eq_list = base["nome_equipamento_utilizado"].unique()
-            op_grp = pd.DataFrame({
-                "nome_equipamento_utilizado": eq_list,
-                "avg_carregando": [3.5] * len(eq_list),
-                "avg_manobra": [1] * len(eq_list)
-            })
+            prod_grp = prod_grp.assign(avg_carregando=3.5, avg_manobra=1)
         else:
-            # Média para "Carregando" com condição vetorizada
-            df_carregando = (
-                df_join[df_join["nome_estado"] == "Carregando"]
-                .groupby("cod_viagem", as_index=False)["tempo_minuto"]
-                .mean()
-                .rename(columns={"tempo_minuto": "avg_carregando"})
-            )
-            if not df_carregando.empty:
-                df_carregando["avg_carregando"] = np.where(
-                    (df_carregando["avg_carregando"] >= 1) & (df_carregando["avg_carregando"] <= 10),
-                    df_carregando["avg_carregando"],
-                    3.5
-                )
-            # Média para "Manobra no Carregamento" com condição vetorizada
-            df_manobra = (
-                df_join[df_join["nome_estado"] == "Manobra no Carregamento"]
-                .groupby("cod_viagem", as_index=False)["tempo_minuto"]
-                .mean()
-                .rename(columns={"tempo_minuto": "avg_manobra"})
-            )
-            if not df_manobra.empty:
-                df_manobra["avg_manobra"] = np.where(
-                    (df_manobra["avg_manobra"] >= 5/60) & (df_manobra["avg_manobra"] <= 5),
-                    df_manobra["avg_manobra"],
-                    1
-                )
-            # Merge dos dados utilizando a base dos códigos de viagem
-            op = base.copy()
-            op = op.merge(df_carregando, on="cod_viagem", how="left")
-            op = op.merge(df_manobra, on="cod_viagem", how="left")
-            op["avg_carregando"] = op["avg_carregando"].fillna(3.5)
-            op["avg_manobra"] = op["avg_manobra"].fillna(1)
-            op_grp = op.groupby("nome_equipamento_utilizado", as_index=False).agg(
-                avg_carregando=("avg_carregando", "mean"),
-                avg_manobra=("avg_manobra", "mean")
-            )
-            op_grp["avg_carregando"] = op_grp["avg_carregando"].round(2)
-            op_grp["avg_manobra"] = op_grp["avg_manobra"].round(2)
-        prod_grp = prod_grp.merge(op_grp, on="nome_equipamento_utilizado", how="left")
+            df_carregando = df_join[df_join["nome_estado"] == "Carregando"].groupby("cod_viagem")["tempo_minuto"].mean().rename("avg_carregando")
+            df_carregando = df_carregando.where((df_carregando.between(1, 10)), 3.5)
+            
+            df_manobra = df_join[df_join["nome_estado"] == "Manobra no Carregamento"].groupby("cod_viagem")["tempo_minuto"].mean().rename("avg_manobra")
+            df_manobra = df_manobra.where((df_manobra.between(5/60, 5)), 1)
+            
+            op = base.merge(df_carregando, on="cod_viagem", how="left").merge(df_manobra, on="cod_viagem", how="left")
+            op = op.fillna({"avg_carregando": 3.5, "avg_manobra": 1})
+            op_grp = op.groupby("nome_equipamento_utilizado")[["avg_carregando", "avg_manobra"]].mean().round(2).reset_index()
+            prod_grp = prod_grp.merge(op_grp, on="nome_equipamento_utilizado", how="left").fillna({"avg_carregando": 3.5, "avg_manobra": 1})
 
-    if "avg_carregando" not in prod_grp.columns:
-        prod_grp["avg_carregando"] = 3.5
-    if "avg_manobra" not in prod_grp.columns:
-        prod_grp["avg_manobra"] = 1
-
-    denominator = prod_grp["avg_carregando"] + prod_grp["avg_manobra"]
-    prod_grp["trucks_needed"] = np.where(denominator > 0,
-                                         np.ceil(prod_grp["avg_cycle"] / denominator),
-                                         0)
+    prod_grp["trucks_needed"] = np.ceil(prod_grp["avg_cycle"] / (prod_grp["avg_carregando"] + prod_grp["avg_manobra"])).replace([np.inf, -np.inf], 0)
     return prod_grp
 
 # =============================================================================
 # LAYOUT DO RELATÓRIO
 # =============================================================================
-
-# Navbar personalizada com botão de retorno e horário local
 navbar = dbc.Navbar(
     dbc.Container([
-        # Título com ícone estilizado
         dbc.NavbarBrand([
-            html.I(className="fas fa-chart-line mr-2"),  # Ícone consistente com mineração
+            html.I(className="fas fa-chart-line mr-2"),
             "Ciclo Operacional"
         ], href="/relatorio1", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
-        # Botão de retorno à página inicial
         dcc.Link([
-            html.I(className="fas fa-home mr-1"),  # Ícone de retorno
+            html.I(className="fas fa-home mr-1"),
             "Voltar"
         ], href="/", className="btn btn-sm", style={
             "borderRadius": "10px",
@@ -300,7 +204,6 @@ navbar = dbc.Navbar(
             "padding": "6px 12px",
             "transition": "all 0.3s"
         }),
-        # Horário local em badge
         html.Div([
             html.Span(id="local-time", style={
                 "fontWeight": "bold",
@@ -316,23 +219,27 @@ navbar = dbc.Navbar(
     dark=True,
     sticky="top",
     style={
-        "background": "linear-gradient(90deg, #343a40, #495057)",  # Gradiente suave
+        "background": "linear-gradient(90deg, #343a40, #495057)",
         "borderBottom": "1px solid rgba(255,255,255,0.1)",
         "padding": "0.5rem 0",
         "fontSize": "0.9rem"
     }
 )
 
-# Layout principal com cabeçalho, filtros e cards para gráficos e tabela
 layout = dbc.Container([
     navbar,
+    html.Div(
+        id="rel1-no-project-message",
+        children=html.P(
+            "Selecione uma obra para visualizar os dados.",
+            className="text-center my-4"
+        )
+    ),
     html.H3("Ciclo Operacional", className="text-center mt-4 mb-4", style={
         "fontFamily": "Arial, sans-serif",
         "fontSize": "1.6rem",
         "fontWeight": "500"
     }),
-
-    # Linha de filtros e botão de atualização
     dbc.Row([
         dbc.Col(
             dcc.Dropdown(
@@ -353,7 +260,7 @@ layout = dbc.Container([
         ),
         dbc.Col(
             dbc.Button([
-                html.I(className="fas fa-sync-alt mr-1"),  # Ícone de atualização
+                html.I(className="fas fa-sync-alt mr-1"),
                 "Atualizar"
             ], id="btn-atualizar", color="primary", className="w-100", style={
                 "fontSize": "0.9rem",
@@ -365,8 +272,6 @@ layout = dbc.Container([
             width=12, sm=3
         ),
     ], className="mb-3 align-items-center"),
-
-    # Informativo de Caminhões
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -391,8 +296,6 @@ layout = dbc.Container([
             width=12
         )
     ], className="mb-3"),
-
-    # Gráfico: Caminhões Necessários por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -421,8 +324,6 @@ layout = dbc.Container([
             })
         )
     ]),
-
-    # Linha apenas com o gráfico de Volume por Escavadeira
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -452,8 +353,42 @@ layout = dbc.Container([
             width=12
         )
     ]),
-
-    # Linha com dois mapas lado a lado: Mapa de Carregamento e Mapa de Basculamento
+    # Dropdowns para seleção de estilo dos mapas
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                id="map-carregamento-style",
+                options=MAP_STYLE_OPTIONS,
+                value=DEFAULT_MAP_STYLE,
+                placeholder="Selecione o estilo do mapa",
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#f8f9fa",
+                    "padding": "4px",
+                    "marginBottom": "10px"
+                }
+            ),
+            width=12, md=6
+        ),
+        dbc.Col(
+            dcc.Dropdown(
+                id="map-basculamento-style",
+                options=MAP_STYLE_OPTIONS,
+                value=DEFAULT_MAP_STYLE,
+                placeholder="Selecione o estilo do mapa",
+                style={
+                    "fontSize": "0.9rem",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#f8f9fa",
+                    "padding": "4px",
+                    "marginBottom": "10px"
+                }
+            ),
+            width=12, md=6
+        )
+    ]),
+    # Mapas lado a lado
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -510,8 +445,6 @@ layout = dbc.Container([
             width=12, md=6
         )
     ]),
-
-    # Linha com a tabela de detalhamento operacional
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -603,70 +536,61 @@ layout = dbc.Container([
             })
         )
     ]),
-
-    # Atualização automática dos dados a cada 25 minutos
-    dcc.Interval(id="interval-update", interval=25*60*1000, n_intervals=0),
-
-    # Armazenamento dos dados para produção e hora
+    dcc.Interval(id="interval-update", interval=5*60*1000, n_intervals=0),  # Ajustado para 5 minutos
     dcc.Store(id="store-producao"),
     dcc.Store(id="store-hora"),
-
 ], fluid=True)
 
 # =============================================================================
 # CALLBACKS
 # =============================================================================
-
-# 1) Callback para buscar e armazenar dados de Produção e Hora
 @dash.callback(
-    Output("store-producao", "data"),
-    Output("store-hora", "data"),
-    Input("interval-update", "n_intervals"),
-    Input("btn-atualizar", "n_clicks"),
+    [Output("store-producao", "data"),
+     Output("store-hora", "data")],
+    [Input("interval-update", "n_intervals"),
+     Input("btn-atualizar", "n_clicks"),
+     Input("projeto-store", "data")],
     prevent_initial_call=False
 )
-def fetch_data(n_intervals, n_clicks):
+def fetch_data(n_intervals, n_clicks, projeto):
+    logger.debug(f"[DEBUG] fetch_data disparado: n_intervals={n_intervals}, n_clicks={n_clicks}, projeto={projeto}")
+    
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return [], []
+    
     period_start, period_end = get_current_shift_period()
-
-    query_prod = (
-        f"EXEC dw_sdp_mt_fas..usp_fato_producao "
-        f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
-    )
-    df_producao = execute_query(query_prod)
-    if not df_producao.empty and "dt_registro_fim" in df_producao.columns:
-        df_producao = localize_column_tz(df_producao, "dt_registro_fim")
-
-    query_hora = (
-        f"EXEC dw_sdp_mt_fas..usp_fato_hora "
-        f"'{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
-    )
-    df_hora = execute_query(query_hora)
-    if not df_hora.empty and "dt_registro_turno" in df_hora.columns:
-        df_hora = localize_column_tz(df_hora, "dt_registro_turno")
-
+    query_prod = f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_producao '{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
+    df_producao = execute_query(query_prod, projeto)
+    
+    query_hora = f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_hora '{period_start:%d/%m/%Y %H:%M:%S}', '{period_end:%d/%m/%Y %H:%M:%S}'"
+    df_hora = execute_query(query_hora, projeto)
+    
+    # Forçar nova consulta a cada chamada, evitando cache
+    logger.info(f"Consulta realizada às {datetime.now(TIMEZONE)} para projeto {projeto}")
     return df_producao.to_dict("records"), df_hora.to_dict("records")
 
-# 2) Callback para atualizar o dropdown de operações com os dados filtrados
 @dash.callback(
-    Output("operacao-filter", "options"),
-    Input("store-producao", "data")
+    [Output("operacao-filter", "options"),
+     Output("rel1-no-project-message", "style")],
+    [Input("store-producao", "data"),
+     Input("projeto-store", "data")]
 )
-def update_dropdown(df_producao_records):
+def update_dropdown(df_producao_records, projeto):
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return [], {"display": "block", "textAlign": "center", "color": "#343a40", "fontSize": "1.2rem", "margin": "20px 0"}
+    
     if not df_producao_records:
-        return []
+        return [], {"display": "none"}
+    
     df = pd.DataFrame(df_producao_records)
     period_start, period_end = get_current_shift_period()
-    if "dt_registro_fim" in df.columns:
-        df = localize_column_tz(df, "dt_registro_fim")
-        df = df[(df["dt_registro_fim"] >= period_start) & (df["dt_registro_fim"] < period_end)]
-    if df.empty:
-        return []
-    if "nome_operacao" in df.columns:
-        ops = sorted(df["nome_operacao"].dropna().unique())
-        return [{"label": op, "value": op} for op in ops]
-    return []
+    df = get_filtered_data_producao(period_start, period_end, df=df)
+    if df.empty or "nome_operacao" not in df.columns:
+        return [], {"display": "none"}
+    
+    ops = sorted(df["nome_operacao"].dropna().unique())
+    return [{"label": op, "value": op} for op in ops], {"display": "none"}
 
-# 3) Callback para resetar o intervalo de atualização manualmente
 @dash.callback(
     Output("interval-update", "n_intervals"),
     Input("btn-atualizar", "n_clicks"),
@@ -675,27 +599,27 @@ def update_dropdown(df_producao_records):
 def manual_update(n_clicks):
     return 0
 
-# 4) Callback para atualizar o gráfico: Caminhões Necessários por Escavadeira
 @dash.callback(
     Output("truck-cards", "figure"),
-    Input("store-producao", "data"),
-    Input("store-hora", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("store-hora", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data")]
 )
-def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
-    period_start, period_end = get_current_shift_period()
-
-    df_prod_period = pd.DataFrame(df_producao_records or [])
-    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
-    if df_prod_period.empty:
+def update_truck_chart(df_producao_records, df_hora_records, operacao_filter, projeto):
+    if not projeto or projeto not in PROJECTS_CONFIG:
         return no_data_fig("Caminhões Necessários por Escavadeira")
 
-    df_hora = pd.DataFrame(df_hora_records or [])
-    df_hora = get_filtered_data_hora(period_start, period_end, df=df_hora)
+    period_start, period_end = get_current_shift_period()
+    # Filtrar dados das últimas 3 horas
+    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records), last_hours=3)
+    if df_prod_period.empty:
+        return no_data_fig("Caminhões Necessários por Escavadeira (Últimas 3 Horas)")
 
+    df_hora = get_filtered_data_hora(period_start, period_end, df=pd.DataFrame(df_hora_records), last_hours=3)
     merged_data = compute_truck_stats(df_prod_period, df_hora)
     if merged_data.empty:
-        return no_data_fig("Caminhões Necessários por Escavadeira")
+        return no_data_fig("Caminhões Necessários por Escavadeira (Últimas 3 Horas)")
 
     merged_data = merged_data.rename(columns={"nome_equipamento_utilizado": "escavadeira"})
     fig = px.scatter(
@@ -705,7 +629,7 @@ def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
         size="trucks_needed",
         color="trucks_needed",
         text="trucks_needed",
-        title="Caminhões Necessários por Escavadeira",
+        title=f"Caminhões Necessários por Escavadeira (Últimas 3 Horas) - ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})",
         labels={"escavadeira": "Escavadeira", "avg_cycle": "Tempo Médio de Ciclo (min)", "trucks_needed": "Caminhões"},
         size_max=100,
         color_continuous_scale="Viridis",
@@ -715,21 +639,27 @@ def update_truck_chart(df_producao_records, df_hora_records, operacao_filter):
     fig.update_layout(xaxis_tickangle=-45, margin=dict(l=50, r=50, t=50, b=120))
     return fig
 
-# 5) Callback para atualizar o Mapa de Carregamento Detalhado
 @dash.callback(
     Output("map-carregamento", "figure"),
-    Input("store-producao", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data"),
+     Input("map-carregamento-style", "value")]
 )
-def update_map_carregamento_detalhado(df_producao_records, operacao_filter):
+def update_map_carregamento_detalhado(df_producao_records, operacao_filter, projeto, map_style):
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return no_data_fig("Mapa de Carregamento")
+
     period_start, period_end = get_current_shift_period()
-    df = pd.DataFrame(df_producao_records or [])
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+    # Mapas devem carregar todos os dados do turno, sem filtro de últimas 3 horas
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records))
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
+    
     df = df.dropna(subset=["latitude_carregamento", "longitude_carregamento"])
     if df.empty:
         return no_data_fig("Mapa de Carregamento")
+    
     fig = px.scatter_mapbox(
         df,
         lat="latitude_carregamento",
@@ -737,7 +667,7 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter):
         color="nome_equipamento_utilizado",
         hover_name="nome_equipamento_utilizado",
         hover_data={"latitude_carregamento": True, "longitude_carregamento": True},
-        title="Mapa de Carregamento (Detalhado)",
+        title=f"Mapa de Carregamento (Detalhado) ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})",
         zoom=15,
         height=400
     )
@@ -747,24 +677,30 @@ def update_map_carregamento_detalhado(df_producao_records, operacao_filter):
     )
     center_lat = df["latitude_carregamento"].mean()
     center_lon = df["longitude_carregamento"].mean()
-    fig.update_layout(common_map_layout(center_lat, center_lon))
+    fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
-# 6) Callback para atualizar o Mapa de Basculamento
 @dash.callback(
     Output("map-basculamento", "figure"),
-    Input("store-producao", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data"),
+     Input("map-basculamento-style", "value")]
 )
-def update_map_basculamento_detalhado(df_producao_records, operacao_filter):
+def update_map_basculamento_detalhado(df_producao_records, operacao_filter, projeto, map_style):
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return no_data_fig("Mapa de Basculamento")
+
     period_start, period_end = get_current_shift_period()
-    df = pd.DataFrame(df_producao_records or [])
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+    # Mapas devem carregar todos os dados do turno, sem filtro de últimas 3 horas
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records))
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
+    
     df = df.dropna(subset=["latitude_basculamento", "longitude_basculamento"])
     if df.empty:
         return no_data_fig("Mapa de Basculamento")
+    
     fig = px.scatter_mapbox(
         df,
         lat="latitude_basculamento",
@@ -772,39 +708,43 @@ def update_map_basculamento_detalhado(df_producao_records, operacao_filter):
         color="nome_destino",
         hover_name="nome_destino",
         hover_data={"volume": True, "latitude_basculamento": False, "longitude_basculamento": False},
-        title="Mapa de Basculamento",
+        title=f"Mapa de Basculamento ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})",
         zoom=15,
         height=400
     )
     fig.update_traces(marker=dict(size=8, opacity=0.8))
     center_lat = df["latitude_basculamento"].mean()
     center_lon = df["longitude_basculamento"].mean()
-    fig.update_layout(common_map_layout(center_lat, center_lon))
+    fig.update_layout(common_map_layout(center_lat, center_lon, map_style))
     return fig
 
-# 7) Callback para atualizar o Gráfico de Barras (Volume)
 @dash.callback(
     Output("volume-bar", "figure"),
-    Input("store-producao", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data")]
 )
-def update_volume_bar(df_producao_records, operacao_filter):
-    period_start, period_end = get_current_shift_period()
-    df = pd.DataFrame(df_producao_records or [])
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
-    if df.empty or "volume" not in df.columns:
+def update_volume_bar(df_producao_records, operacao_filter, projeto):
+    if not projeto or projeto not in PROJECTS_CONFIG:
         return no_data_fig("Volume: Sem dados")
+
+    period_start, period_end = get_current_shift_period()
+    # Filtrar dados das últimas 3 horas
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records), last_hours=3)
+    if df.empty or "volume" not in df.columns:
+        return no_data_fig("Volume: Sem dados (Últimas 3 Horas)")
+    
     df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
     df = df.dropna(subset=["volume"])
     if df.empty:
-        return no_data_fig("Volume: Sem dados após filtros")
-    df_group = df.groupby("nome_equipamento_utilizado", as_index=False)["volume"].sum()
-    df_group = df_group.sort_values("volume", ascending=False)
+        return no_data_fig("Volume: Sem dados após filtros (Últimas 3 Horas)")
+    
+    df_group = df.groupby("nome_equipamento_utilizado")["volume"].sum().reset_index().sort_values("volume", ascending=False)
     fig = px.bar(
         df_group,
         x="nome_equipamento_utilizado",
         y="volume",
-        title="Volume Total por Escavadeira",
+        title=f"Volume Total por Escavadeira (Últimas 3 Horas) - ({PROJECT_LABELS.get(projeto, 'Nenhuma obra selecionada')})",
         labels={"nome_equipamento_utilizado": "Escavadeira", "volume": "Volume Total"}
     )
     fig.update_layout(
@@ -816,16 +756,19 @@ def update_volume_bar(df_producao_records, operacao_filter):
     )
     return fig
 
-# 8) Callback para atualizar a tabela de detalhamento operacional
 @dash.callback(
     Output("table-data", "data"),
-    Input("store-producao", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data")]
 )
-def update_table(df_producao_records, operacao_filter):
+def update_table(df_producao_records, operacao_filter, projeto):
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return no_data_table()
+
     period_start, period_end = get_current_shift_period()
-    df = pd.DataFrame(df_producao_records or [])
-    df = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df)
+    # Filtrar dados das últimas 3 horas
+    df = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records), last_hours=3)
     if df.empty:
         return no_data_table()
 
@@ -833,66 +776,52 @@ def update_table(df_producao_records, operacao_filter):
         'nome_origem', 'nome_destino', 'tempo_ciclo_minuto', 'volume',
         'dmt_mov_cheio', 'dmt_mov_vazio', 'velocidade_media_cheio', 'velocidade_media_vazio'
     ]
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = None
-
-    # Agrupamento vetorizado
-    grouped = df.groupby("nome_origem").agg(
-        nome_destino=("nome_destino", "first"),
-        tempo_ciclo_minuto=("tempo_ciclo_minuto", "mean"),
-        volume=("volume", "sum"),
-        velocidade_media_cheio=("velocidade_media_cheio", "mean"),
-        velocidade_media_vazio=("velocidade_media_vazio", "mean")
-    ).reset_index()
+    df = df.assign(**{col: np.nan for col in required_cols if col not in df.columns})
 
     total_volume = df.groupby("nome_origem")["volume"].sum()
+    grouped = df.groupby("nome_origem").agg({
+        "nome_destino": "first",
+        "tempo_ciclo_minuto": "mean",
+        "volume": "sum",
+        "velocidade_media_cheio": "mean",
+        "velocidade_media_vazio": "mean"
+    }).reset_index()
+
     dmt_mov_cheio = (df["dmt_mov_cheio"] * df["volume"]).groupby(df["nome_origem"]).sum() / total_volume
     dmt_mov_vazio = (df["dmt_mov_vazio"] * df["volume"]).groupby(df["nome_origem"]).sum() / total_volume
-
-    # Caso a soma dos pesos seja zero, utiliza a média simples
     dmt_mov_cheio = dmt_mov_cheio.fillna(df.groupby("nome_origem")["dmt_mov_cheio"].mean())
     dmt_mov_vazio = dmt_mov_vazio.fillna(df.groupby("nome_origem")["dmt_mov_vazio"].mean())
 
     grouped["dmt_mov_cheio"] = dmt_mov_cheio.values
     grouped["dmt_mov_vazio"] = dmt_mov_vazio.values
 
-    for col in ["tempo_ciclo_minuto", "dmt_mov_cheio", "dmt_mov_vazio",
-                "velocidade_media_cheio", "velocidade_media_vazio"]:
+    for col in ["tempo_ciclo_minuto", "dmt_mov_cheio", "dmt_mov_vazio", "velocidade_media_cheio", "velocidade_media_vazio"]:
         grouped[col] = grouped[col].round(2)
     grouped["volume"] = grouped["volume"].round(2)
 
     return grouped.to_dict("records")
 
-# 9) Callback para atualizar o informativo de caminhões
 @dash.callback(
     Output("truck-info", "children"),
-    Input("store-producao", "data"),
-    Input("store-hora", "data"),
-    Input("operacao-filter", "value")
+    [Input("store-producao", "data"),
+     Input("store-hora", "data"),
+     Input("operacao-filter", "value"),
+     Input("projeto-store", "data")]
 )
-def update_truck_info(df_producao_records, df_hora_records, operacao_filter):
+def update_truck_info(df_producao_records, df_hora_records, operacao_filter, projeto):
+    if not projeto or projeto not in PROJECTS_CONFIG:
+        return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
+
     period_start, period_end = get_current_shift_period()
-    df_prod_period = pd.DataFrame(df_producao_records or [])
-    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, df=df_prod_period)
+    # Filtrar dados das últimas 3 horas
+    df_prod_period = get_filtered_data_producao(period_start, period_end, operacao_filter, pd.DataFrame(df_producao_records), last_hours=3)
     if df_prod_period.empty:
         return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
 
-    df_hora = pd.DataFrame(df_hora_records or [])
-    df_hora = get_filtered_data_hora(period_start, period_end, df=df_hora)
+    df_hora = get_filtered_data_hora(period_start, period_end, df=pd.DataFrame(df_hora_records), last_hours=3)
     merged_data = compute_truck_stats(df_prod_period, df_hora)
     if merged_data.empty:
-        return "Total Caminhões Indicados: 0 / Máximo em Operação: 48"
-    total_trucks = merged_data["trucks_needed"].sum()
-    return f"Total Caminhões Indicados: {total_trucks} / Máximo em Operação: 48"
-
-# =============================================================================
-# EXECUÇÃO STANDALONE (Para testes independentes, descomente se necessário)
-# =============================================================================
-"""
-if __name__ == "__main__":
-    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
-    app.title = "Relatório 1 - Ciclo Operacional"
-    app.layout = layout
-    app.run_server(debug=True)
-"""
+        return "Total Caminhões Indicados: 0"
+    
+    total_trucks = int(merged_data["trucks_needed"].sum())
+    return f"Total Caminhões Indicados: {total_trucks}"
