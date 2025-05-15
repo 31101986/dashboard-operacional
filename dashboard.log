@@ -7019,3 +7019,11 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 
 2025-05-14 17:36:02,700 - INFO - [Profile] create_timeline_graph executada em 0.0637 segundos
 2025-05-14 17:38:54,973 - INFO - Consulta realizada às 2025-05-14 17:38:54.973027-03:00 para projeto projeto2
+2025-05-14 18:03:54,034 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-15 07:55:49,978 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-15 07:57:28,787 - INFO - [Profile] fetch_fato_hora executada em 0.7154 segundos
+2025-05-15 07:57:28,795 - INFO - [Profile] fetch_fato_hora executada em 0.7207 segundos
+2025-05-15 07:57:28,819 - INFO - [Profile] compute_segments executada em 0.0223 segundos
+2025-05-15 07:57:29,415 - INFO - [Profile] create_timeline_graph executada em 1.3413 segundos
