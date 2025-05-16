@@ -7027,3 +7027,276 @@ KeyError: <flask_caching.Cache object at 0x000001F8614F1A90>
 2025-05-15 07:57:28,795 - INFO - [Profile] fetch_fato_hora executada em 0.7207 segundos
 2025-05-15 07:57:28,819 - INFO - [Profile] compute_segments executada em 0.0223 segundos
 2025-05-15 07:57:29,415 - INFO - [Profile] create_timeline_graph executada em 1.3413 segundos
+2025-05-15 07:59:22,322 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-15 09:42:14,647 - INFO - [Profile] calc_custo_por_faixa executada em 0.1037 segundos
+2025-05-15 09:42:28,164 - INFO - [Profile] calc_custo_por_faixa executada em 2.5631 segundos
+2025-05-15 09:42:28,555 - INFO - [Profile] calc_custo_adicional executada em 0.4832 segundos
+2025-05-15 09:42:33,186 - INFO - [Profile] calc_custo_por_faixa executada em 0.0328 segundos
+2025-05-15 09:42:33,344 - INFO - [Profile] calc_custo_por_faixa executada em 0.1573 segundos
+2025-05-15 09:42:33,504 - INFO - [Profile] calc_custo_adicional executada em 0.1595 segundos
+2025-05-15 09:42:33,505 - INFO - [Profile] calc_faturamento_transporte executada em 0.3523 segundos
+2025-05-15 09:42:35,734 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0211 segundos
+2025-05-15 09:42:59,300 - INFO - [Profile] calc_custo_por_faixa executada em 0.0216 segundos
+2025-05-15 09:42:59,455 - INFO - [Profile] calc_custo_por_faixa executada em 0.1528 segundos
+2025-05-15 09:42:59,619 - INFO - [Profile] calc_custo_adicional executada em 0.1608 segundos
+2025-05-15 09:42:59,639 - INFO - [Profile] calc_horas_locacao executada em 0.0200 segundos
+2025-05-15 09:42:59,669 - INFO - [Profile] calc_custo_por_faixa executada em 0.0171 segundos
+2025-05-15 09:42:59,807 - INFO - [Profile] calc_custo_por_faixa executada em 0.1374 segundos
+2025-05-15 09:42:59,948 - INFO - [Profile] calc_custo_adicional executada em 0.1403 segundos
+2025-05-15 09:42:59,949 - INFO - [Profile] calc_faturamento_transporte executada em 0.2971 segundos
+2025-05-15 09:42:59,962 - INFO - [Profile] calc_faturamento_hora_60 executada em 0.0133 segundos
+2025-05-15 10:02:06,445 - INFO - [Profile] fetch_fato_hora executada em 0.2473 segundos
+2025-05-15 10:02:06,698 - INFO - [Profile] fetch_fato_hora executada em 0.4970 segundos
+2025-05-15 10:02:06,720 - INFO - [Profile] compute_segments executada em 0.0188 segundos
+2025-05-15 10:02:06,895 - INFO - [Profile] create_timeline_graph executada em 0.6945 segundos
+2025-05-15 12:02:02,925 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-15 16:41:49,467 - INFO - Consulta realizada às 2025-05-15 16:41:49.467803-03:00 para projeto projeto1
+2025-05-15 16:41:51,193 - INFO - [Profile] get_filtered_data_producao executed in 0.0298 seconds
+2025-05-15 16:41:51,782 - INFO - [Profile] get_filtered_data_producao executed in 0.0943 seconds
+2025-05-15 16:41:52,061 - INFO - [Profile] get_filtered_data_producao executed in 0.0649 seconds
+2025-05-15 16:41:52,086 - INFO - [Profile] get_filtered_data_producao executed in 0.0578 seconds
+2025-05-15 16:41:52,266 - INFO - [Profile] get_filtered_data_hora executed in 0.1910 seconds
+2025-05-15 16:41:52,291 - INFO - [Profile] get_filtered_data_producao executed in 0.1993 seconds
+2025-05-15 16:41:52,319 - INFO - [Profile] compute_truck_stats executed in 0.0441 seconds
+2025-05-15 16:41:52,321 - INFO - [Profile] get_filtered_data_producao executed in 0.0884 seconds
+2025-05-15 16:41:52,701 - INFO - [Profile] get_filtered_data_producao executed in 0.0174 seconds
+2025-05-15 16:41:52,965 - INFO - [Profile] get_filtered_data_hora executed in 0.0558 seconds
+2025-05-15 16:41:52,974 - INFO - [Profile] compute_truck_stats executed in 0.0064 seconds
+2025-05-15 16:46:48,841 - INFO - Consulta realizada às 2025-05-15 16:46:48.841168-03:00 para projeto projeto1
+2025-05-15 16:46:50,297 - INFO - [Profile] get_filtered_data_producao executed in 0.0145 seconds
+2025-05-15 16:46:50,746 - INFO - [Profile] get_filtered_data_producao executed in 0.0760 seconds
+2025-05-15 16:46:50,764 - INFO - [Profile] get_filtered_data_producao executed in 0.1106 seconds
+2025-05-15 16:46:50,793 - INFO - [Profile] get_filtered_data_producao executed in 0.0343 seconds
+2025-05-15 16:46:51,150 - INFO - [Profile] get_filtered_data_producao executed in 0.1853 seconds
+2025-05-15 16:46:51,843 - INFO - [Profile] get_filtered_data_producao executed in 0.2135 seconds
+2025-05-15 16:46:51,941 - INFO - [Profile] get_filtered_data_producao executed in 0.0221 seconds
+2025-05-15 16:46:52,062 - INFO - [Profile] get_filtered_data_hora executed in 0.1230 seconds
+2025-05-15 16:46:52,082 - INFO - [Profile] compute_truck_stats executed in 0.0140 seconds
+2025-05-15 16:46:52,236 - INFO - [Profile] get_filtered_data_hora executed in 0.0730 seconds
+2025-05-15 16:46:52,245 - INFO - [Profile] compute_truck_stats executed in 0.0059 seconds
+2025-05-15 16:51:48,750 - INFO - Consulta realizada às 2025-05-15 16:51:48.750796-03:00 para projeto projeto1
+2025-05-15 16:51:49,940 - INFO - [Profile] get_filtered_data_producao executed in 0.0109 seconds
+2025-05-15 16:51:50,277 - INFO - [Profile] get_filtered_data_producao executed in 0.1243 seconds
+2025-05-15 16:51:50,376 - INFO - [Profile] get_filtered_data_producao executed in 0.0816 seconds
+2025-05-15 16:51:50,542 - INFO - [Profile] get_filtered_data_producao executed in 0.0510 seconds
+2025-05-15 16:51:50,758 - INFO - [Profile] get_filtered_data_producao executed in 0.0216 seconds
+2025-05-15 16:51:51,062 - INFO - [Profile] get_filtered_data_producao executed in 0.0214 seconds
+2025-05-15 16:51:51,255 - INFO - [Profile] get_filtered_data_hora executed in 0.0678 seconds
+2025-05-15 16:51:51,275 - INFO - [Profile] compute_truck_stats executed in 0.0137 seconds
+2025-05-15 16:51:51,566 - INFO - [Profile] get_filtered_data_producao executed in 0.0143 seconds
+2025-05-15 16:51:51,703 - INFO - [Profile] get_filtered_data_hora executed in 0.0657 seconds
+2025-05-15 16:51:51,712 - INFO - [Profile] compute_truck_stats executed in 0.0071 seconds
+2025-05-15 16:56:48,903 - INFO - Consulta realizada às 2025-05-15 16:56:48.903431-03:00 para projeto projeto1
+2025-05-15 16:56:50,898 - INFO - [Profile] get_filtered_data_producao executed in 0.0247 seconds
+2025-05-15 16:56:51,346 - INFO - [Profile] get_filtered_data_producao executed in 0.0759 seconds
+2025-05-15 16:56:51,468 - INFO - [Profile] get_filtered_data_producao executed in 0.1477 seconds
+2025-05-15 16:56:51,788 - INFO - [Profile] get_filtered_data_producao executed in 0.1487 seconds
+2025-05-15 16:56:52,184 - INFO - [Profile] get_filtered_data_producao executed in 0.2255 seconds
+2025-05-15 16:56:52,743 - INFO - [Profile] get_filtered_data_producao executed in 0.0281 seconds
+2025-05-15 16:56:53,205 - INFO - [Profile] get_filtered_data_hora executed in 0.0742 seconds
+2025-05-15 16:56:53,233 - INFO - [Profile] compute_truck_stats executed in 0.0249 seconds
+2025-05-15 16:56:53,307 - INFO - [Profile] get_filtered_data_producao executed in 0.1091 seconds
+2025-05-15 16:56:53,530 - INFO - [Profile] get_filtered_data_hora executed in 0.0854 seconds
+2025-05-15 16:56:53,542 - INFO - [Profile] compute_truck_stats executed in 0.0074 seconds
+2025-05-15 17:01:48,791 - INFO - Consulta realizada às 2025-05-15 17:01:48.791505-03:00 para projeto projeto1
+2025-05-15 17:01:49,917 - INFO - [Profile] get_filtered_data_producao executed in 0.0087 seconds
+2025-05-15 17:01:50,125 - INFO - [Profile] get_filtered_data_producao executed in 0.0547 seconds
+2025-05-15 17:01:50,471 - INFO - [Profile] get_filtered_data_producao executed in 0.0315 seconds
+2025-05-15 17:01:50,500 - INFO - [Profile] get_filtered_data_producao executed in 0.0484 seconds
+2025-05-15 17:01:50,732 - INFO - [Profile] get_filtered_data_producao executed in 0.1608 seconds
+2025-05-15 17:01:51,138 - INFO - [Profile] get_filtered_data_producao executed in 0.0156 seconds
+2025-05-15 17:01:51,492 - INFO - [Profile] get_filtered_data_hora executed in 0.0674 seconds
+2025-05-15 17:01:51,510 - INFO - [Profile] compute_truck_stats executed in 0.0115 seconds
+2025-05-15 17:01:51,598 - INFO - [Profile] get_filtered_data_producao executed in 0.0513 seconds
+2025-05-15 17:01:51,723 - INFO - [Profile] get_filtered_data_hora executed in 0.0334 seconds
+2025-05-15 17:01:51,730 - INFO - [Profile] compute_truck_stats executed in 0.0054 seconds
+2025-05-15 17:06:48,763 - INFO - Consulta realizada às 2025-05-15 17:06:48.763657-03:00 para projeto projeto1
+2025-05-15 17:06:50,084 - INFO - [Profile] get_filtered_data_producao executed in 0.0137 seconds
+2025-05-15 17:06:50,316 - INFO - [Profile] get_filtered_data_producao executed in 0.0253 seconds
+2025-05-15 17:06:50,395 - INFO - [Profile] get_filtered_data_producao executed in 0.0721 seconds
+2025-05-15 17:06:50,904 - INFO - [Profile] get_filtered_data_producao executed in 0.0556 seconds
+2025-05-15 17:06:50,954 - INFO - [Profile] get_filtered_data_producao executed in 0.0337 seconds
+2025-05-15 17:06:51,363 - INFO - [Profile] get_filtered_data_producao executed in 0.0247 seconds
+2025-05-15 17:06:51,704 - INFO - [Profile] get_filtered_data_hora executed in 0.2523 seconds
+2025-05-15 17:06:51,715 - INFO - [Profile] compute_truck_stats executed in 0.0060 seconds
+2025-05-15 17:06:51,815 - INFO - [Profile] get_filtered_data_producao executed in 0.0139 seconds
+2025-05-15 17:06:51,973 - INFO - [Profile] get_filtered_data_hora executed in 0.0700 seconds
+2025-05-15 17:06:51,984 - INFO - [Profile] compute_truck_stats executed in 0.0091 seconds
+2025-05-15 17:11:48,815 - INFO - Consulta realizada às 2025-05-15 17:11:48.815598-03:00 para projeto projeto1
+2025-05-15 17:11:50,354 - INFO - [Profile] get_filtered_data_producao executed in 0.0109 seconds
+2025-05-15 17:11:50,589 - INFO - [Profile] get_filtered_data_producao executed in 0.0250 seconds
+2025-05-15 17:11:51,001 - INFO - [Profile] get_filtered_data_producao executed in 0.0689 seconds
+2025-05-15 17:11:51,030 - INFO - [Profile] get_filtered_data_producao executed in 0.0517 seconds
+2025-05-15 17:11:51,067 - INFO - [Profile] get_filtered_data_producao executed in 0.0730 seconds
+2025-05-15 17:11:51,657 - INFO - [Profile] get_filtered_data_producao executed in 0.0213 seconds
+2025-05-15 17:11:52,018 - INFO - [Profile] get_filtered_data_hora executed in 0.0706 seconds
+2025-05-15 17:11:52,034 - INFO - [Profile] compute_truck_stats executed in 0.0095 seconds
+2025-05-15 17:11:52,089 - INFO - [Profile] get_filtered_data_producao executed in 0.0417 seconds
+2025-05-15 17:11:52,310 - INFO - [Profile] get_filtered_data_hora executed in 0.0600 seconds
+2025-05-15 17:11:52,325 - INFO - [Profile] compute_truck_stats executed in 0.0100 seconds
+2025-05-15 17:17:09,387 - INFO - Consulta realizada às 2025-05-15 17:17:09.387852-03:00 para projeto projeto1
+2025-05-15 17:17:10,589 - INFO - [Profile] get_filtered_data_producao executed in 0.0084 seconds
+2025-05-15 17:17:10,843 - INFO - [Profile] get_filtered_data_producao executed in 0.0614 seconds
+2025-05-15 17:17:10,889 - INFO - [Profile] get_filtered_data_producao executed in 0.0216 seconds
+2025-05-15 17:17:11,190 - INFO - [Profile] get_filtered_data_producao executed in 0.0868 seconds
+2025-05-15 17:17:11,191 - INFO - [Profile] get_filtered_data_producao executed in 0.0521 seconds
+2025-05-15 17:17:11,468 - INFO - [Profile] get_filtered_data_producao executed in 0.0192 seconds
+2025-05-15 17:17:11,624 - INFO - [Profile] get_filtered_data_hora executed in 0.0676 seconds
+2025-05-15 17:17:11,632 - INFO - [Profile] compute_truck_stats executed in 0.0060 seconds
+2025-05-15 17:17:11,783 - INFO - [Profile] get_filtered_data_producao executed in 0.0064 seconds
+2025-05-15 17:17:11,864 - INFO - [Profile] get_filtered_data_hora executed in 0.0426 seconds
+2025-05-15 17:17:11,875 - INFO - [Profile] compute_truck_stats executed in 0.0087 seconds
+2025-05-15 17:22:08,768 - INFO - Consulta realizada às 2025-05-15 17:22:08.768808-03:00 para projeto projeto1
+2025-05-15 17:22:09,970 - INFO - [Profile] get_filtered_data_producao executed in 0.0116 seconds
+2025-05-15 17:22:10,226 - INFO - [Profile] get_filtered_data_producao executed in 0.0226 seconds
+2025-05-15 17:22:10,250 - INFO - [Profile] get_filtered_data_producao executed in 0.0217 seconds
+2025-05-15 17:22:10,334 - INFO - [Profile] get_filtered_data_producao executed in 0.0809 seconds
+2025-05-15 17:22:10,588 - INFO - [Profile] get_filtered_data_producao executed in 0.0176 seconds
+2025-05-15 17:22:10,874 - INFO - [Profile] get_filtered_data_producao executed in 0.0312 seconds
+2025-05-15 17:22:11,061 - INFO - [Profile] get_filtered_data_hora executed in 0.0949 seconds
+2025-05-15 17:22:11,097 - INFO - [Profile] compute_truck_stats executed in 0.0070 seconds
+2025-05-15 17:22:11,525 - INFO - [Profile] get_filtered_data_producao executed in 0.0213 seconds
+2025-05-15 17:22:11,765 - INFO - [Profile] get_filtered_data_hora executed in 0.1045 seconds
+2025-05-15 17:22:11,797 - INFO - [Profile] compute_truck_stats executed in 0.0219 seconds
+2025-05-15 17:27:08,711 - INFO - Consulta realizada às 2025-05-15 17:27:08.711345-03:00 para projeto projeto1
+2025-05-15 17:27:10,039 - INFO - [Profile] get_filtered_data_producao executed in 0.0082 seconds
+2025-05-15 17:27:10,289 - INFO - [Profile] get_filtered_data_producao executed in 0.0189 seconds
+2025-05-15 17:27:10,447 - INFO - [Profile] get_filtered_data_producao executed in 0.1520 seconds
+2025-05-15 17:27:10,775 - INFO - [Profile] get_filtered_data_producao executed in 0.0395 seconds
+2025-05-15 17:27:10,783 - INFO - [Profile] get_filtered_data_producao executed in 0.0264 seconds
+2025-05-15 17:27:11,081 - INFO - [Profile] get_filtered_data_producao executed in 0.0135 seconds
+2025-05-15 17:27:11,220 - INFO - [Profile] get_filtered_data_hora executed in 0.0500 seconds
+2025-05-15 17:27:11,227 - INFO - [Profile] compute_truck_stats executed in 0.0045 seconds
+2025-05-15 17:27:11,587 - INFO - [Profile] get_filtered_data_producao executed in 0.0086 seconds
+2025-05-15 17:27:11,691 - INFO - [Profile] get_filtered_data_hora executed in 0.0452 seconds
+2025-05-15 17:27:11,700 - INFO - [Profile] compute_truck_stats executed in 0.0057 seconds
+2025-05-15 17:32:09,151 - INFO - Consulta realizada às 2025-05-15 17:32:09.151500-03:00 para projeto projeto1
+2025-05-15 17:32:10,306 - INFO - [Profile] get_filtered_data_producao executed in 0.0070 seconds
+2025-05-15 17:32:10,609 - INFO - [Profile] get_filtered_data_producao executed in 0.0442 seconds
+2025-05-15 17:32:10,636 - INFO - [Profile] get_filtered_data_producao executed in 0.0470 seconds
+2025-05-15 17:32:10,952 - INFO - [Profile] get_filtered_data_producao executed in 0.1228 seconds
+2025-05-15 17:32:10,957 - INFO - [Profile] get_filtered_data_producao executed in 0.0154 seconds
+2025-05-15 17:32:11,265 - INFO - [Profile] get_filtered_data_producao executed in 0.0089 seconds
+2025-05-15 17:32:11,385 - INFO - [Profile] get_filtered_data_hora executed in 0.0465 seconds
+2025-05-15 17:32:11,393 - INFO - [Profile] compute_truck_stats executed in 0.0051 seconds
+2025-05-15 17:32:11,586 - INFO - [Profile] get_filtered_data_producao executed in 0.0114 seconds
+2025-05-15 17:32:11,688 - INFO - [Profile] get_filtered_data_hora executed in 0.0384 seconds
+2025-05-15 17:32:11,693 - INFO - [Profile] compute_truck_stats executed in 0.0032 seconds
+2025-05-15 17:37:08,699 - INFO - Consulta realizada às 2025-05-15 17:37:08.699129-03:00 para projeto projeto1
+2025-05-15 17:37:09,851 - INFO - [Profile] get_filtered_data_producao executed in 0.0115 seconds
+2025-05-15 17:37:10,084 - INFO - [Profile] get_filtered_data_producao executed in 0.0159 seconds
+2025-05-15 17:37:10,203 - INFO - [Profile] get_filtered_data_producao executed in 0.0681 seconds
+2025-05-15 17:37:10,419 - INFO - [Profile] get_filtered_data_producao executed in 0.0919 seconds
+2025-05-15 17:37:10,586 - INFO - [Profile] get_filtered_data_producao executed in 0.0184 seconds
+2025-05-15 17:37:10,835 - INFO - [Profile] get_filtered_data_producao executed in 0.0187 seconds
+2025-05-15 17:37:11,066 - INFO - [Profile] get_filtered_data_hora executed in 0.0547 seconds
+2025-05-15 17:37:11,079 - INFO - [Profile] compute_truck_stats executed in 0.0106 seconds
+2025-05-15 17:37:11,155 - INFO - [Profile] get_filtered_data_producao executed in 0.0088 seconds
+2025-05-15 17:37:11,239 - INFO - [Profile] get_filtered_data_hora executed in 0.0352 seconds
+2025-05-15 17:37:11,245 - INFO - [Profile] compute_truck_stats executed in 0.0042 seconds
+2025-05-15 17:42:09,146 - INFO - Consulta realizada às 2025-05-15 17:42:09.146051-03:00 para projeto projeto1
+2025-05-15 17:42:10,409 - INFO - [Profile] get_filtered_data_producao executed in 0.0107 seconds
+2025-05-15 17:42:10,691 - INFO - [Profile] get_filtered_data_producao executed in 0.0595 seconds
+2025-05-15 17:42:10,696 - INFO - [Profile] get_filtered_data_producao executed in 0.0791 seconds
+2025-05-15 17:42:11,073 - INFO - [Profile] get_filtered_data_producao executed in 0.0433 seconds
+2025-05-15 17:42:11,089 - INFO - [Profile] get_filtered_data_producao executed in 0.0371 seconds
+2025-05-15 17:42:11,340 - INFO - [Profile] get_filtered_data_producao executed in 0.0113 seconds
+2025-05-15 17:42:11,462 - INFO - [Profile] get_filtered_data_hora executed in 0.0588 seconds
+2025-05-15 17:42:11,474 - INFO - [Profile] compute_truck_stats executed in 0.0090 seconds
+2025-05-15 17:42:11,731 - INFO - [Profile] get_filtered_data_producao executed in 0.0161 seconds
+2025-05-15 17:42:11,850 - INFO - [Profile] get_filtered_data_hora executed in 0.0607 seconds
+2025-05-15 17:42:11,856 - INFO - [Profile] compute_truck_stats executed in 0.0040 seconds
+2025-05-15 17:47:09,297 - INFO - Consulta realizada às 2025-05-15 17:47:09.296991-03:00 para projeto projeto1
+2025-05-15 17:47:11,019 - INFO - [Profile] get_filtered_data_producao executed in 0.0143 seconds
+2025-05-15 17:47:11,513 - INFO - [Profile] get_filtered_data_producao executed in 0.0729 seconds
+2025-05-15 17:47:11,516 - INFO - [Profile] get_filtered_data_producao executed in 0.1430 seconds
+2025-05-15 17:47:11,716 - INFO - [Profile] get_filtered_data_producao executed in 0.1725 seconds
+2025-05-15 17:47:11,773 - INFO - [Profile] get_filtered_data_producao executed in 0.0847 seconds
+2025-05-15 17:47:12,321 - INFO - [Profile] get_filtered_data_producao executed in 0.0310 seconds
+2025-05-15 17:47:12,395 - INFO - [Profile] get_filtered_data_producao executed in 0.0129 seconds
+2025-05-15 17:47:12,523 - INFO - [Profile] get_filtered_data_hora executed in 0.0697 seconds
+2025-05-15 17:47:12,569 - INFO - [Profile] compute_truck_stats executed in 0.0430 seconds
+2025-05-15 17:47:12,571 - INFO - [Profile] get_filtered_data_hora executed in 0.0568 seconds
+2025-05-15 17:47:12,631 - INFO - [Profile] compute_truck_stats executed in 0.0126 seconds
+2025-05-16 08:10:23,867 - INFO - Consulta realizada às 2025-05-16 08:10:23.867831-03:00 para projeto projeto1
+2025-05-16 08:10:24,253 - INFO - [Profile] get_filtered_data_producao executed in 0.0038 seconds
+2025-05-16 08:10:24,281 - INFO - [Profile] get_filtered_data_producao executed in 0.0116 seconds
+2025-05-16 08:10:24,285 - INFO - [Profile] get_filtered_data_producao executed in 0.0039 seconds
+2025-05-16 08:10:24,349 - INFO - [Profile] get_filtered_data_producao executed in 0.0496 seconds
+2025-05-16 08:10:24,398 - INFO - [Profile] get_filtered_data_producao executed in 0.0038 seconds
+2025-05-16 08:10:24,442 - INFO - [Profile] get_filtered_data_producao executed in 0.0061 seconds
+2025-05-16 08:10:24,785 - INFO - [Profile] get_filtered_data_producao executed in 0.0042 seconds
+2025-05-16 08:10:24,793 - INFO - [Profile] get_filtered_data_hora executed in 0.0539 seconds
+2025-05-16 08:10:24,808 - INFO - [Profile] compute_truck_stats executed in 0.0126 seconds
+2025-05-16 08:10:24,929 - INFO - [Profile] get_filtered_data_hora executed in 0.0210 seconds
+2025-05-16 08:10:24,946 - INFO - [Profile] compute_truck_stats executed in 0.0140 seconds
+2025-05-16 08:16:58,407 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-16 14:49:43,034 - INFO - Consulta realizada às 2025-05-16 14:49:43.033908-03:00 para projeto projeto5
+2025-05-16 14:49:44,237 - INFO - [Profile] get_filtered_data_producao executed in 0.0400 seconds
+2025-05-16 14:49:44,733 - INFO - [Profile] get_filtered_data_producao executed in 0.0379 seconds
+2025-05-16 14:49:44,849 - INFO - [Profile] get_filtered_data_producao executed in 0.0391 seconds
+2025-05-16 14:49:44,858 - INFO - [Profile] get_filtered_data_producao executed in 0.0525 seconds
+2025-05-16 14:49:44,973 - INFO - [Profile] get_filtered_data_producao executed in 0.1336 seconds
+2025-05-16 14:49:45,092 - INFO - [Profile] get_filtered_data_producao executed in 0.0861 seconds
+2025-05-16 14:49:45,097 - INFO - [Profile] get_filtered_data_hora executed in 0.0603 seconds
+2025-05-16 14:49:45,122 - INFO - [Profile] compute_truck_stats executed in 0.0198 seconds
+2025-05-16 14:49:45,310 - INFO - [Profile] get_filtered_data_producao executed in 0.0123 seconds
+2025-05-16 14:49:45,415 - INFO - [Profile] get_filtered_data_hora executed in 0.0500 seconds
+2025-05-16 14:49:45,423 - INFO - [Profile] compute_truck_stats executed in 0.0055 seconds
+2025-05-16 15:18:22,140 - INFO - [Profile] fetch_fato_hora executada em 6.7648 segundos
+2025-05-16 15:18:22,141 - INFO - [Profile] fetch_fato_hora executada em 6.7628 segundos
+2025-05-16 15:18:22,175 - INFO - [Profile] compute_segments executada em 0.0273 segundos
+2025-05-16 15:18:22,368 - INFO - [Profile] create_timeline_graph executada em 6.9902 segundos
+2025-05-16 15:18:38,714 - INFO - [Profile] create_timeline_graph executada em 0.0432 segundos
+2025-05-16 15:32:15,505 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-16 15:43:17,743 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-16 15:47:42,539 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-16 15:49:34,834 - INFO - Dash is running on http://0.0.0.0:8050/
+
+2025-05-16 15:57:33,461 - INFO - [Profile] fetch_fato_hora executada em 1.1016 segundos
+2025-05-16 15:57:33,518 - INFO - [Profile] compute_segments executada em 0.0548 segundos
+2025-05-16 15:57:33,558 - INFO - [Profile] fetch_fato_hora executada em 1.2029 segundos
+2025-05-16 15:57:33,694 - INFO - [Profile] create_timeline_graph executada em 1.3347 segundos
+2025-05-16 16:02:33,001 - INFO - [Profile] fetch_fato_hora executada em 0.6491 segundos
+2025-05-16 16:02:33,023 - INFO - [Profile] compute_segments executada em 0.0190 segundos
+2025-05-16 16:02:33,158 - INFO - [Profile] create_timeline_graph executada em 0.8076 segundos
+2025-05-16 16:02:33,189 - INFO - [Profile] fetch_fato_hora executada em 0.8412 segundos
+2025-05-16 16:02:52,686 - INFO - Consulta realizada às 2025-05-16 16:02:52.686349-03:00 para projeto projeto1
+2025-05-16 16:02:53,710 - INFO - [Profile] get_filtered_data_producao executed in 0.0104 seconds
+2025-05-16 16:02:54,019 - INFO - [Profile] get_filtered_data_producao executed in 0.0271 seconds
+2025-05-16 16:02:54,342 - INFO - [Profile] get_filtered_data_producao executed in 0.0690 seconds
+2025-05-16 16:02:54,358 - INFO - [Profile] get_filtered_data_producao executed in 0.1048 seconds
+2025-05-16 16:02:54,414 - INFO - [Profile] get_filtered_data_hora executed in 0.1119 seconds
+2025-05-16 16:02:54,444 - INFO - [Profile] get_filtered_data_producao executed in 0.0974 seconds
+2025-05-16 16:02:54,450 - INFO - [Profile] compute_truck_stats executed in 0.0186 seconds
+2025-05-16 16:02:54,481 - INFO - [Profile] get_filtered_data_producao executed in 0.0415 seconds
+2025-05-16 16:02:54,728 - INFO - [Profile] get_filtered_data_producao executed in 0.0072 seconds
+2025-05-16 16:02:54,855 - INFO - [Profile] get_filtered_data_hora executed in 0.0462 seconds
+2025-05-16 16:02:54,864 - INFO - [Profile] compute_truck_stats executed in 0.0055 seconds
+2025-05-16 16:04:32,302 - INFO - [Profile] fetch_fato_hora executada em 1.3217 segundos
+2025-05-16 16:04:32,332 - INFO - [Profile] compute_segments executada em 0.0266 segundos
+2025-05-16 16:04:32,495 - INFO - [Profile] create_timeline_graph executada em 1.5147 segundos
+2025-05-16 16:04:32,828 - INFO - [Profile] fetch_fato_hora executada em 1.8495 segundos
+2025-05-16 16:08:36,706 - INFO - [Profile] create_timeline_graph executada em 0.3910 segundos
+2025-05-16 16:13:49,929 - INFO - [Profile] fetch_fato_hora executada em 0.4579 segundos
+2025-05-16 16:13:50,222 - INFO - [Profile] fetch_fato_hora executada em 0.7481 segundos
+2025-05-16 16:13:50,239 - INFO - [Profile] compute_segments executada em 0.0150 segundos
+2025-05-16 16:13:50,391 - INFO - [Profile] create_timeline_graph executada em 0.9176 segundos
+2025-05-16 16:18:51,428 - INFO - [Profile] fetch_fato_hora executada em 1.9729 segundos
+2025-05-16 16:18:51,451 - INFO - [Profile] compute_segments executada em 0.0184 segundos
+2025-05-16 16:18:51,602 - INFO - [Profile] create_timeline_graph executada em 2.1471 segundos
+2025-05-16 16:18:51,637 - INFO - [Profile] fetch_fato_hora executada em 2.1842 segundos
+2025-05-16 16:26:33,885 - INFO - [Profile] fetch_fato_hora executada em 0.9310 segundos
+2025-05-16 16:26:33,912 - INFO - [Profile] compute_segments executada em 0.0225 segundos
+2025-05-16 16:26:34,117 - INFO - [Profile] create_timeline_graph executada em 1.1634 segundos
+2025-05-16 16:26:34,145 - INFO - [Profile] fetch_fato_hora executada em 1.1958 segundos
+2025-05-16 16:31:33,614 - INFO - [Profile] fetch_fato_hora executada em 0.6595 segundos
+2025-05-16 16:31:33,652 - INFO - [Profile] compute_segments executada em 0.0319 segundos
+2025-05-16 16:31:33,770 - INFO - [Profile] create_timeline_graph executada em 0.8153 segundos
+2025-05-16 16:31:33,958 - INFO - [Profile] fetch_fato_hora executada em 1.0059 segundos

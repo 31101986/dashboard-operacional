@@ -49,3 +49,10 @@
     50% { transform: scale(0.95); }
     100% { transform: scale(1); }
 }
+
+.Select-menu-outer {
+    position: absolute;
+    top: auto !important;
+    bottom: 100% !important;
+    width: 100%;
+}

@@ -66,7 +66,7 @@ sys.modules.setdefault("app", sys.modules[__name__])
 
 # Importação dos relatórios (restaurada como no original)
 import pages.relatorio1 as rel1
-#import pages.relatorio2 as rel2
+import pages.relatorio2 as rel2
 #import pages.relatorio3 as rel3
 import pages.relatorio4 as rel4
 import pages.relatorio5 as rel5
@@ -80,7 +80,7 @@ import pages.relatorio7 as rel7
 # Mapeamento de rotas para layouts
 PAGES: Dict[str, html.Div] = {
     "/relatorio1": rel1.layout,
-    #"/relatorio2": rel2.layout,
+    "/relatorio2": rel2.layout,
     #"/relatorio3": rel3.layout,
     "/relatorio4": rel4.layout,
     "/relatorio5": rel5.layout,
@@ -91,7 +91,7 @@ PAGES: Dict[str, html.Div] = {
 # Definições de cards (rota, título, subtítulo)
 PAGE_DEFS = [
     ("/relatorio1", "Ciclo", "Análise de Hora"),
-    #("/relatorio2", "Informativo de Produção", "Análise de Produção"),
+    ("/relatorio2", "Informativo de Produção", "Análise de Produção"),
     #("/relatorio3", "Avanço Financeiro", "Avanço Financeiro"),
     ("/relatorio4", "Produção - Indicadores", "Produção - Indicadores"),
     ("/relatorio5", "Timeline de Apontamentos", "Equipamentos de Produção"),
@@ -114,7 +114,7 @@ CARD_IMAGES = [
 NAVBAR_ICONS = {
     "/": "fa-home",
     "/relatorio1": "fa-clock",
-    #"/relatorio2": "fa-industry",
+    "/relatorio2": "fa-industry",
     #"/relatorio3": "fa-dollar-sign",
     "/relatorio4": "fa-chart-bar",
     "/relatorio5": "fa-stream",
@@ -162,7 +162,7 @@ def create_navbar() -> dbc.Navbar:
         for path, title in [
             ("/", "Portal"),
             ("/relatorio1", "Ciclo"),
-            #("/relatorio2", "Informativo"),
+            ("/relatorio2", "Informativo"),
             #("/relatorio3", "Financeiro"),
             ("/relatorio4", "Produção"),
             ("/relatorio5", "Timeline"),

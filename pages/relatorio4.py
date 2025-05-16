@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from typing import Tuple, List, Dict, Any, Union
 
 import dash
-from dash import dcc, html, callback, Input, Output, State, dash_table
+from dash import dcc, html, callback, Input, Output, State
+from dash import dash_table
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
@@ -14,7 +15,8 @@ from dash.dash_table.Format import Format, Scheme
 from pandas.api.types import CategoricalDtype
 
 from db import query_to_df
-from config import META_MINERIO, META_ESTERIL, TIMEZONE
+from app import cache
+from config import META_MINERIO, META_ESTERIL, TIMEZONE, PROJECTS_CONFIG, PROJECT_LABELS
 
 # Configuração do log
 logging.basicConfig(
@@ -46,12 +48,15 @@ PERFURACAO_MODELOS = [
 
 # ===================== Funções Auxiliares =====================
 
-def consulta_producao(dia_str: str) -> pd.DataFrame:
-    """Consulta o fato_producao para o dia informado e retorna o DataFrame filtrado."""
-    logger.debug(f"[DEBUG] Consultando fato_producao para {dia_str}")
-    query = f"EXEC dw_sdp_mt_fas..usp_fato_producao '{dia_str}', '{dia_str}'"
+def consulta_producao(dia_str: str, projeto: str) -> pd.DataFrame:
+    """Consulta o fato_producao para o dia informado e projeto especificado."""
+    logger.debug(f"[DEBUG] Consultando fato_producao para {dia_str} e projeto {projeto}")
+    if projeto not in PROJECTS_CONFIG:
+        logger.error(f"[DEBUG] Projeto {projeto} não encontrado em PROJECTS_CONFIG")
+        return pd.DataFrame()
+    query = f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_producao '{dia_str}', '{dia_str}'"
     try:
-        df = query_to_df(query)
+        df = query_to_df(query, projeto=projeto)
         logger.debug(f"[DEBUG] Dados brutos retornados: {len(df)} linhas")
         logger.debug(f"[DEBUG] Colunas retornadas: {list(df.columns)}")
     except Exception as e:
@@ -68,12 +73,15 @@ def consulta_producao(dia_str: str) -> pd.DataFrame:
     logger.debug(f"[DEBUG] Após filtro por data: {len(df)} linhas")
     return df
 
-def consulta_hora(dia_str: str) -> pd.DataFrame:
-    """Consulta o fato_hora para o dia informado e retorna o DataFrame filtrado."""
-    logger.debug(f"[DEBUG] Consultando fato_hora para {dia_str}")
-    query = f"EXEC dw_sdp_mt_fas..usp_fato_hora '{dia_str}', '{dia_str}'"
+def consulta_hora(dia_str: str, projeto: str) -> pd.DataFrame:
+    """Consulta o fato_hora para o dia informado e projeto especificado."""
+    logger.debug(f"[DEBUG] Consultando fato_hora para {dia_str} e projeto {projeto}")
+    if projeto not in PROJECTS_CONFIG:
+        logger.error(f"[DEBUG] Projeto {projeto} não encontrado em PROJECTS_CONFIG")
+        return pd.DataFrame()
+    query = f"EXEC {PROJECTS_CONFIG[projeto]['database']}..usp_fato_hora '{dia_str}', '{dia_str}'"
     try:
-        df = query_to_df(query)
+        df = query_to_df(query, projeto=projeto)
         logger.debug(f"[DEBUG] Dados brutos retornados: {len(df)} linhas")
         logger.debug(f"[DEBUG] Colunas retornadas: {list(df.columns)}")
     except Exception as e:
@@ -112,7 +120,6 @@ def calc_indicadores_agrupados_por_modelo(df: pd.DataFrame, modelos_lista: List[
     """
     Agrupa os dados (do fato_hora) por modelo, calculando Disponibilidade, Utilização e Rendimento.
     Retorna (data, columns, style_data_conditional) para o DataTable.
-    Esta versão utiliza operações vetorizadas para performance e suporta coluna de estado configurável.
     """
     needed_cols = {"nome_modelo", estado_col, "tempo_hora"}
     if not needed_cols.issubset(df.columns):
@@ -250,227 +257,262 @@ navbar = dbc.Navbar(
 )
 
 layout = dbc.Container([
-    navbar,
-    dbc.Row(
-        dbc.Col(
-            html.H3(
-                "Produção e Indicadores",
-                className="text-center mt-4 mb-4",
-                style={
-                    "fontFamily": "Arial, sans-serif",
-                    "fontSize": "1.6rem",
-                    "fontWeight": "500"
-                }
+    html.Div([
+        navbar,
+        dbc.Row(
+            dbc.Col(
+                html.H3(
+                    "Produção e Indicadores",
+                    className="text-center mt-4 mb-4",
+                    style={
+                        "fontFamily": "Arial, sans-serif",
+                        "fontSize": "1.6rem",
+                        "fontWeight": "500"
+                    }
+                ),
+                width=12
             ),
-            width=12
+            className="mb-3"
         ),
-        className="mb-3"
-    ),
-    # Seleção de Dia
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Selecionar Período", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody([
-            html.P(
-                "Escolha se deseja visualizar o dia atual ou o dia anterior.",
-                style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem", "marginBottom": "10px"}
+        # Seleção de Dia
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Selecionar Período", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            dbc.RadioItems(
-                id="rel4-day-selector",
-                className="btn-group",
-                inputClassName="btn-check",
-                labelClassName="btn btn-outline-primary",
-                labelCheckedClassName="active",
-                options=[
-                    {"label": "Dia Atual", "value": "hoje"},
-                    {"label": "Dia Anterior", "value": "ontem"},
-                ],
-                value="hoje",
-                inline=True,
-                style={
-                    "fontSize": "0.9rem",
-                    "borderRadius": "8px",
-                    "backgroundColor": "#f8f9fa",
-                    "padding": "6px"
-                }
+            dbc.CardBody([
+                html.P(
+                    "Escolha se deseja visualizar o dia atual ou o dia anterior.",
+                    style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem", "marginBottom": "10px"}
+                ),
+                dbc.RadioItems(
+                    id="rel4-day-selector",
+                    className="btn-group",
+                    inputClassName="btn-check",
+                    labelClassName="btn btn-outline-primary",
+                    labelCheckedClassName="active",
+                    options=[
+                        {"label": "Dia Atual", "value": "hoje"},
+                        {"label": "Dia Anterior", "value": "ontem"},
+                    ],
+                    value="hoje",
+                    inline=True,
+                    style={
+                        "fontSize": "0.9rem",
+                        "borderRadius": "8px",
+                        "backgroundColor": "#f8f9fa",
+                        "padding": "6px"
+                    }
+                )
+            ], style={"padding": "0.8rem"})
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # Seleção de Operação (Filtro Opcional) - Reposicionado para o topo
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Filtrar por Operação (Opcional)", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+            ),
+            dbc.CardBody([
+                dcc.Dropdown(
+                    id="rel4-operacao-filter",
+                    options=[],
+                    value=None,
+                    placeholder="Selecione uma operação (ou deixe em branco)",
+                    multi=True,
+                    style={
+                        "width": "100%",
+                        "borderRadius": "6px",
+                        "borderColor": "#17a2b8",
+                        "fontSize": "0.9rem",
+                        "marginBottom": "10px"
+                    },
+                    className="custom-dropdown"
+                )
+            ], style={"padding": "0.8rem"})
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={
+            "borderRadius": "12px",
+            "border": "none",
+            "position": "relative",
+            "zIndex": "10"
+        }),
+        # Stores para dados de produção e hora
+        dcc.Store(id="rel4-producao-store"),
+        dcc.Store(id="rel4-hora-store"),
+        # 1) Tabela de Movimentação
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Movimentação (Dia Atual ou Dia Anterior)", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
+            ),
+            dbc.CardBody(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id="rel4-tabela-movimentacao",
+                        columns=[
+                            {"name": "Operação", "id": "nome_operacao", "type": "text"},
+                            {"name": "Viagens", "id": "viagens", "type": "numeric", "format": num_format},
+                            {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
+                            {"name": "Ritmo (m³/h)", "id": "ritmo_volume", "type": "numeric", "format": num_format},
+                        ],
+                        style_data_conditional=[
+                            {
+                                "if": {"filter_query": '{nome_operacao} = "TOTAL"'},
+                                "backgroundColor": "#fff9c4",
+                                "fontWeight": "bold"
+                            }
+                        ],
+                        page_size=10,
+                        **common_table_style
+                    ),
+                    type="default"
+                ),
+                style={"padding": "0.8rem"}
             )
-        ], style={"padding": "0.8rem"})
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # Stores para dados de produção e hora
-    dcc.Store(id="rel4-producao-store"),
-    dcc.Store(id="rel4-hora-store"),
-    # 1) Tabela de Movimentação
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Movimentação (Dia Atual ou Dia Anterior)", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dash_table.DataTable(
-                    id="rel4-tabela-movimentacao",
-                    columns=[
-                        {"name": "Operação", "id": "nome_operacao", "type": "text"},
-                        {"name": "Viagens", "id": "viagens", "type": "numeric", "format": num_format},
-                        {"name": "Volume", "id": "volume", "type": "numeric", "format": num_format},
-                        {"name": "Ritmo (m³/h)", "id": "ritmo_volume", "type": "numeric", "format": num_format},
-                    ],
-                    style_data_conditional=[
-                        {
-                            "if": {"filter_query": '{nome_operacao} = "TOTAL"'},
-                            "backgroundColor": "#fff9c4",
-                            "fontWeight": "bold"
-                        }
-                    ],
-                    page_size=10,
-                    **common_table_style
-                ),
-                type="default"
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # 2) Gráfico de Viagens por Hora Trabalhada
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Viagens por Hora Trabalhada", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # 2) Gráfico de Viagens por Hora Trabalhada
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Viagens por Hora Trabalhada", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dcc.Graph(
-                    id="rel4-grafico-viagens-hora",
-                    config={"displayModeBar": False},
-                    style={"minHeight": "450px"}
+            dbc.CardBody(
+                dcc.Loading(
+                    dcc.Graph(
+                        id="rel4-grafico-viagens-hora",
+                        config={"displayModeBar": False},
+                        style={"minHeight": "450px"}
+                    ),
+                    type="default"
                 ),
-                type="default"
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # 3) Tabelas de Indicadores
+        # Indicadores - Escavação
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Indicadores - Escavação", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # 3) Tabelas de Indicadores
-    # Indicadores - Escavação
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Indicadores - Escavação", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dash_table.DataTable(
-                    id="rel4-tabela-ind-escavacao",
-                    columns=[],
-                    data=[],
-                    style_data_conditional=[
-                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
-                    ],
-                    page_size=10,
-                    **common_table_style
+            dbc.CardBody(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id="rel4-tabela-ind-escavacao",
+                        columns=[],
+                        data=[],
+                        style_data_conditional=[
+                            {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                        ],
+                        page_size=10,
+                        **common_table_style
+                    ),
+                    type="default"
                 ),
-                type="default"
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # Indicadores - Transporte
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Indicadores - Transporte", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # Indicadores - Transporte
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Indicadores - Transporte", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dash_table.DataTable(
-                    id="rel4-tabela-ind-transporte",
-                    columns=[],
-                    data=[],
-                    style_data_conditional=[
-                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
-                    ],
-                    page_size=10,
-                    **common_table_style
+            dbc.CardBody(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id="rel4-tabela-ind-transporte",
+                        columns=[],
+                        data=[],
+                        style_data_conditional=[
+                            {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                        ],
+                        page_size=10,
+                        **common_table_style
+                    ),
+                    type="default"
                 ),
-                type="default"
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # Indicadores - Perfuração
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Indicadores - Perfuração", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # Indicadores - Perfuração
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Indicadores - Perfuração", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dash_table.DataTable(
-                    id="rel4-tabela-ind-perfuracao",
-                    columns=[],
-                    data=[],
-                    style_data_conditional=[
-                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
-                    ],
-                    page_size=10,
-                    **common_table_style
+            dbc.CardBody(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id="rel4-tabela-ind-perfuracao",
+                        columns=[],
+                        data=[],
+                        style_data_conditional=[
+                            {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                        ],
+                        page_size=10,
+                        **common_table_style
+                    ),
+                    type="default"
                 ),
-                type="default"
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+        # Indicadores - Auxiliares
+        dbc.Card([
+            dbc.CardHeader(
+                html.H5("Indicadores - Auxiliares", className="mb-0 text-white", style={
+                    "fontSize": "1.1rem",
+                    "fontWeight": "500",
+                    "fontFamily": "Arial, sans-serif"
+                }),
+                style={"background": "linear-gradient(90deg, #343a40, #495057)"}
             ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
-    # Indicadores - Auxiliares
-    dbc.Card([
-        dbc.CardHeader(
-            html.H5("Indicadores - Auxiliares", className="mb-0 text-white", style={
-                "fontSize": "1.1rem",
-                "fontWeight": "500",
-                "fontFamily": "Arial, sans-serif"
-            }),
-            style={"background": "linear-gradient(90deg, #343a40, #495057)"}
-        ),
-        dbc.CardBody(
-            dcc.Loading(
-                dash_table.DataTable(
-                    id="rel4-tabela-ind-auxiliares",
-                    columns=[],
-                    data=[],
-                    style_data_conditional=[
-                        {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
-                    ],
-                    page_action="none",
-                    **common_table_style
+            dbc.CardBody(
+                dcc.Loading(
+                    dash_table.DataTable(
+                        id="rel4-tabela-ind-auxiliares",
+                        columns=[],
+                        data=[],
+                        style_data_conditional=[
+                            {"if": {"filter_query": '{nome_modelo} = "TOTAL"'}, "backgroundColor": "#fff9c4", "fontWeight": "bold"}
+                        ],
+                        page_action="none",
+                        **common_table_style
+                    ),
+                    type="default"
                 ),
-                type="default"
-            ),
-            style={"padding": "0.8rem"}
-        )
-    ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+                style={"padding": "0.8rem"}
+            )
+        ], className="shadow-md mb-3 animate__animated animate__zoomIn", style={"borderRadius": "12px", "border": "none"}),
+    ]),
 ], fluid=True)
 
 # ===================== CALLBACKS =====================
@@ -478,20 +520,23 @@ layout = dbc.Container([
 @dash.callback(
     Output("rel4-producao-store", "data"),
     Output("rel4-hora-store", "data"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-day-selector", "value"),
+    Input("projeto-store", "data")
 )
-def fetch_data_dia_escolhido(day_choice: str) -> Tuple[Any, Any]:
+def fetch_data_dia_escolhido(day_choice: str, projeto: str) -> Tuple[Any, Any]:
     """
-    Busca os dados de produção e de hora para o dia selecionado.
-    Se o dia escolhido for "ontem", utiliza a data de ontem; caso contrário, utiliza o dia atual.
+    Busca os dados de produção e de hora para o dia selecionado e projeto especificado.
     Retorna os dados serializados em JSON.
     """
+    if not projeto:
+        logger.debug("[DEBUG] Nenhum projeto selecionado, retornando dados vazios")
+        return {}, {}
     if day_choice == "ontem":
         data_str = (datetime.now(TIMEZONE) - timedelta(days=1)).strftime("%d/%m/%Y")
     else:
         data_str = datetime.now(TIMEZONE).strftime("%d/%m/%Y")
-    df_prod = consulta_producao(data_str)
-    df_hora = consulta_hora(data_str)
+    df_prod = consulta_producao(data_str, projeto)
+    df_hora = consulta_hora(data_str, projeto)
     logger.debug(f"[DEBUG] Dados para stores - Produção: {len(df_prod)} linhas, Hora: {len(df_hora)} linhas")
     return (
         df_prod.to_json(date_format="iso", orient="records") if not df_prod.empty else {},
@@ -499,16 +544,34 @@ def fetch_data_dia_escolhido(day_choice: str) -> Tuple[Any, Any]:
     )
 
 @dash.callback(
+    Output("rel4-operacao-filter", "options"),
+    Input("rel4-producao-store", "data")
+)
+def update_operacao_options(json_prod: Union[str, dict]) -> List[dict]:
+    """Atualiza as opções do dropdown com base nos valores únicos de nome_operacao, excluindo None."""
+    if not json_prod or isinstance(json_prod, dict):
+        logger.debug("[DEBUG] Nenhum dado de produção para atualizar opções de operação")
+        return []
+    df = pd.read_json(json_prod, orient="records")
+    if df.empty or "nome_operacao" not in df.columns:
+        logger.debug("[DEBUG] DataFrame vazio ou sem coluna 'nome_operacao'")
+        return []
+    # Filtra valores None antes de ordenar
+    unique_ops = [op for op in df["nome_operacao"].unique() if op is not None]
+    options = [{"label": op, "value": op} for op in sorted(unique_ops)]
+    logger.debug(f"[DEBUG] Opções de operação atualizadas: {len(options)} itens")
+    return options
+
+@dash.callback(
     Output("rel4-tabela-movimentacao", "data"),
     Output("rel4-tabela-movimentacao", "style_data_conditional"),
     Input("rel4-producao-store", "data"),
-    Input("rel4-day-selector", "value")
+    Input("rel4-day-selector", "value"),
+    Input("rel4-operacao-filter", "value")
 )
-def update_tabela_movimentacao(json_prod: Union[str, dict], day_choice: str) -> Tuple[List[dict], List[dict]]:
+def update_tabela_movimentacao(json_prod: Union[str, dict], day_choice: str, operacao_filter: Union[str, List[str], None]) -> Tuple[List[dict], List[dict]]:
     """
-    Atualiza a tabela de movimentação a partir dos dados de produção.
-    Agrupa por operação e calcula o ritmo (volume ajustado para 24h).
-    Aplica formatação condicional para a linha TOTAL.
+    Atualiza a tabela de movimentação sem filtro automático, com filtro opcional por nome_operacao.
     """
     if not json_prod or isinstance(json_prod, dict):
         logger.debug("[DEBUG] Nenhum dado de produção para tabela de movimentação")
@@ -517,15 +580,17 @@ def update_tabela_movimentacao(json_prod: Union[str, dict], day_choice: str) -> 
     if df.empty:
         logger.debug("[DEBUG] DataFrame de produção vazio")
         return [], []
-    df = df.loc[df["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
-    if df.empty:
-        logger.debug("[DEBUG] Nenhum dado para Minério/Estéril")
-        return [], []
+    # Remove linhas onde nome_operacao é None
+    df = df[df["nome_operacao"].notna()]
     df["nome_operacao"] = df["nome_operacao"].str.title()  # Normaliza capitalização
     df_grp = df.groupby("nome_operacao", as_index=False).agg(
         viagens=("nome_operacao", "size"),
         volume=("volume", "sum")
     )
+    if operacao_filter:
+        if isinstance(operacao_filter, str):
+            operacao_filter = [operacao_filter]
+        df_grp = df_grp[df_grp["nome_operacao"].isin(operacao_filter)]
     total_line = pd.DataFrame({
         "nome_operacao": ["TOTAL"],
         "viagens": [df_grp["viagens"].sum()],
@@ -557,13 +622,17 @@ def update_tabela_movimentacao(json_prod: Union[str, dict], day_choice: str) -> 
 @dash.callback(
     Output("rel4-grafico-viagens-hora", "figure"),
     Input("rel4-producao-store", "data"),
-    Input("rel4-hora-store", "data")
+    Input("rel4-hora-store", "data"),
+    Input("projeto-store", "data")
 )
-def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict]) -> Any:
+def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict], projeto: str) -> Any:
     """
     Cria o gráfico de Viagens por Hora Trabalhada a partir dos dados de produção e fato_hora.
-    Se não houver dados, retorna gráfico vazio com mensagem.
+    Exibe mensagem se nenhum projeto estiver selecionado.
     """
+    if not projeto:
+        logger.debug("[DEBUG] Nenhum projeto selecionado para gráfico de viagens/hora")
+        return px.bar(title="Selecione uma obra para visualizar os dados.", template="plotly_white")
     if (not json_prod or isinstance(json_prod, dict)) or (not json_hora or isinstance(json_hora, dict)):
         logger.debug("[DEBUG] Dados insuficientes para gráfico de viagens/hora")
         return px.bar(title="Sem dados para o período.", template="plotly_white")
@@ -572,10 +641,6 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     if df_prod.empty or df_hora.empty:
         logger.debug("[DEBUG] DataFrames vazios (Produção ou Hora)")
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-    df_prod = df_prod.loc[df_prod["nome_operacao"].isin(["Movimentação Minério", "Movimentação Estéril"])]
-    if df_prod.empty:
-        logger.debug("[DEBUG] Nenhum dado para Minério/Estéril no gráfico")
-        return px.bar(title="Sem dados (Minério/Estéril).", template="plotly_white")
     
     # Verificar coluna de estado
     estado_col = "nome_tipo_estado" if "nome_tipo_estado" in df_hora.columns else "nome_estado" if "nome_estado" in df_hora.columns else None
