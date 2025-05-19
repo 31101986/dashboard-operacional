@@ -83,10 +83,9 @@ def get_color_for_duration(duration: timedelta) -> Tuple[str, int]:
     green = int(255 * (1 - fraction))
     return f"rgb(255, {green}, 0)", green
 
-@cache.memoize(timeout=300)
-def get_all_records_cached(start_date: str, end_date: str, projeto: str) -> pd.DataFrame:
+def get_all_records(start_date: str, end_date: str, projeto: str) -> pd.DataFrame:
     """
-    Consulta a tabela fato_hora para o período e projeto especificados com cache.
+    Consulta a tabela fato_hora para o período e projeto especificados sem cache.
 
     Args:
         start_date (str): Data inicial no formato 'dd/mm/yyyy HH:MM:SS'.
@@ -120,21 +119,19 @@ def get_all_records_cached(start_date: str, end_date: str, projeto: str) -> pd.D
         logger.error(f"[DEBUG] Erro na consulta para projeto {projeto}: {str(e)}")
         return pd.DataFrame()
 
-def get_all_records(projeto: str) -> pd.DataFrame:
-    """Wrapper para obter registros com cache, usando datas atuais."""
-    start_date = DAY_START.strftime("%d/%m/%Y %H:%M:%S")
-    end_date = DAY_END.strftime("%d/%m/%Y %H:%M:%S")
-    return get_all_records_cached(start_date, end_date, projeto)
-
 def get_current_state_records(projeto: str) -> pd.DataFrame:
     """Retorna o registro mais recente por equipamento, com dt_registro_inicio, buscando nos últimos 2 dias ou 3 dias se vazio."""
+    global DAY_END, DAY_START
+    start_date = DAY_START.strftime("%d/%m/%Y %H:%M:%S")
+    end_date = DAY_END.strftime("%d/%m/%Y %H:%M:%S")
+
     # Primeiro tenta os últimos 2 dias
-    df = get_all_records(projeto)
+    df = get_all_records(start_date, end_date, projeto)
     if df.empty:
         logger.debug(f"[DEBUG] Nenhum dado nos últimos 2 dias para projeto {projeto}, tentando últimos 3 dias")
-        global DAY_START
         DAY_START = DAY_END - timedelta(days=3)
-        df = get_all_records(projeto)
+        start_date = DAY_START.strftime("%d/%m/%Y %H:%M:%S")
+        df = get_all_records(start_date, end_date, projeto)
         if df.empty:
             logger.debug(f"[DEBUG] Nenhum dado nos últimos 3 dias para projeto {projeto}")
             return pd.DataFrame()
@@ -272,7 +269,7 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
                     "overflow": "hidden",
                     "backgroundColor": "#FFFFFF"
                 },
-                className="mb-2"  # Garantido como string
+                className="mb-2"
             )
             equip_cards.append(card)
 
@@ -291,12 +288,12 @@ def create_tv_layout(df: pd.DataFrame, filter_values: Optional[List[str]] = None
                     style={"backgroundColor": "#FFFFFF", "padding": "10px"}
                 )
             ],
-            className="mb-2"  # Garantido como string
+            className="mb-2"
         )
         rows.append(row_layout)
 
     logger.debug(f"[DEBUG] Layout criado com {len(rows)} grupos")
-    return html.Div([header] + rows, className="mt-4")  # Garantido como string
+    return html.Div([header] + rows, className="mt-4")
 
 # ============================================================
 # LAYOUT PRINCIPAL
@@ -467,13 +464,11 @@ def update_data(n_clicks: Optional[int], n_intervals: int, projeto: Optional[str
         logger.debug("[DEBUG] Nenhum projeto selecionado ou projeto inválido")
         return None, "Selecione uma obra para visualizar os dados."
     
-    # Recalcular datas dinamicamente para invalidar o cache a cada intervalo
+    # Recalcular datas dinamicamente
     global DAY_END, DAY_START
     DAY_END = datetime.now()
     DAY_START = DAY_END - timedelta(days=2)
     
-    # Forçar atualização do cache com base em n_intervals
-    cache_key = f"{DAY_START.strftime('%d/%m/%Y %H:%M:%S')}_{DAY_END.strftime('%d/%m/%Y %H:%M:%S')}_{n_intervals}_{projeto}"
     try:
         latest = get_current_state_records(projeto)
     except Exception as e:
@@ -494,7 +489,7 @@ def update_data(n_clicks: Optional[int], n_intervals: int, projeto: Optional[str
         return None, f"Erro ao processar dados para {PROJECT_LABELS.get(projeto, projeto)}: {str(e)}"
 
     last_update_text = f"Última atualização: {DAY_END.strftime('%d/%m/%Y %H:%M:%S')} ({PROJECT_LABELS.get(projeto, projeto)})"
-    logger.debug(f"[DEBUG] Dados atualizados: {len(latest)} linhas, cache_key={cache_key}")
+    logger.debug(f"[DEBUG] Dados atualizados: {len(latest)} linhas")
     return json_data, last_update_text
 
 @callback(
