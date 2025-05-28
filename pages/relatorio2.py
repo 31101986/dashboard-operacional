@@ -130,7 +130,8 @@ navbar = dbc.Navbar(
         "background": "linear-gradient(90deg, #343a40, #495057)",
         "borderBottom": "1px solid rgba(255,255,255,0.1)",
         "padding": "0.5rem 0",
-        "fontSize": "0.9rem"
+        "fontSize": "0.9rem",
+        "zIndex": 999
     }
 )
 
@@ -148,7 +149,7 @@ layout = dbc.Container(
             dbc.Col(
                 html.H3(
                     "Informativo de Produção",
-                    className="text-center mt-4 mb-4",
+                    className="text-center mt-5 mb-4",
                     style={"fontFamily": "Arial, sans-serif", "fontSize": "1.6rem", "fontWeight": "500"}
                 ),
                 width=12
@@ -222,7 +223,7 @@ layout = dbc.Container(
                     xs=12, md=8
                 )
             ],
-            className="mb-3 align-items-end"
+            className="mb-3 align-items-end mt-5", style={"zIndex": 1000}
         ),
         dcc.Store(id="data-store"),
         dcc.Store(id="data-store-hora"),
@@ -412,28 +413,30 @@ layout = dbc.Container(
         ),
         html.Hr(),
         dbc.Row(
-            dbc.Col(
-                [
-                    html.Label(
-                        "Filtrar por Modelo (Indicadores):",
-                        className="fw-bold text-secondary",
-                        style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
-                    ),
-                    dcc.Dropdown(
-                        id="modelo-dropdown",
-                        placeholder="(Opcional) Selecione um ou mais modelos (Equipamento)",
-                        multi=True,
-                        style={
-                            "fontSize": "0.9rem",
-                            "borderRadius": "8px",
-                            "backgroundColor": "#f8f9fa",
-                            "width": "100%"
-                        }
-                    )
-                ],
-                xs=12
-            ),
-            className="mt-2"
+            [
+                dbc.Col(
+                    [
+                        html.Label(
+                            "Filtrar por Modelo (Indicadores):",
+                            className="fw-bold text-secondary",
+                            style={"fontFamily": "Arial, sans-serif", "fontSize": "0.9rem"}
+                        ),
+                        dcc.Dropdown(
+                            id="modelo-dropdown",
+                            placeholder="(Opcional) Selecione um ou mais modelos (Equipamento)",
+                            multi=True,
+                            style={
+                                "fontSize": "0.9rem",
+                                "borderRadius": "8px",
+                                "backgroundColor": "#f8f9fa",
+                                "width": "100%"
+                            }
+                        )
+                    ],
+                    xs=12
+                )
+            ],
+            className="mt-5"
         ),
         html.Hr(),
         dbc.Row(
@@ -694,6 +697,11 @@ def _update_graphs(json_data: str, operacoes_selecionadas: str, projeto: str):
 
     df["dia"] = df["dt_registro_turno"].dt.date
     df_grouped = df.groupby("dia", as_index=False).agg(volume=("volume", "sum"), massa=("massa", "sum")).sort_values("dia")
+    # Verificação adicional para evitar erro com dados inválidos
+    if df_grouped.empty or not all(col in df_grouped.columns for col in ["dia", "volume", "massa"]):
+        fig_empty = px.bar(title="Sem dados válidos para gerar os gráficos.", template="plotly_white")
+        return fig_empty, fig_empty
+
     meta_total = META_MINERIO + META_ESTERIL
     df_grouped["bar_color"] = np.where(df_grouped["volume"] >= meta_total, "rgb(149,211,36)", "red")
 

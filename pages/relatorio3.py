@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 
 # ===================== DATAS PADRÃO =====================
-today: datetime.date = datetime.today().date()
+today: datetime.date = datetime(2025, 5, 23).date()  # Ajustado para 23/05/2025
 start_default: datetime.date = today - timedelta(days=45)
 end_default: datetime.date = today
 
@@ -70,7 +70,7 @@ CUSTO_ESPALHAMENTO_ESTERIL: float = 1.58371634448642
 
 PRECO_60_MAP: Dict[str, float] = {
     "ESCAVADEIRA HIDRÁULICA VOLVO EC750DL": 652.784394340166,
-    "ESCAVADEIRA HIDRAULICA SANY SY750H": 652.784394340166,
+    "ESCAVADEIRA HIDRÁULICA SANY SY750H": 652.784394340166,  # Corrigi "HIDRAULICA" para "HIDRÁULICA"
     "ESCAVADEIRA HIDRÁULICA CAT 374DL": 652.784394340166,
     "ESCAVADEIRA HIDRÁULICA CAT 352": 462.241922478712,
     "ESCAVADEIRA HIDRÁULICA CAT 336NGX": 299.927964967103,
@@ -79,7 +79,7 @@ PRECO_60_MAP: Dict[str, float] = {
     "MERCEDES BENZ AROCS 4851/45 8X4": 201.128164742646,
     "VOLVO FMX 500 8X4": 201.128164742646,
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": 165.842521805339,
-    "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": 1030.5313162412,
+    "PERFURATRIZ HIDRÁULICA SANDVIK DP1500I": 1030.5313162412,
     "ESCAVADEIRA HIDRÁULICA VOLVO EC480DL": 839.916000000000
 }
 
@@ -95,8 +95,8 @@ PRECO_LOCACAO_MAP: Dict[str, float] = {
     "MERCEDES BENZ AROCS 4851/45 8X4": 316.090153610947,
     "MERCEDES BENZ AXOR 3344 6X4 (PIPA)": 260.635740696746,
     "MOTONIVELADORA CAT 140K": 0.0,
-    "PERFURATRIZ HIDRAULICA SANDVIK DP1500I": 1619.56831092441,
-    "PERFURATRIZ HIDRAULICA SANDVIK DX800": 1270.01696456104,
+    "PERFURATRIZ HIDRÁULICA SANDVIK DP1500I": 1619.56831092441,
+    "PERFURATRIZ HIDRÁULICA SANDVIK DX800": 1270.01696456104,
     "PÁ CARREGADEIRA CAT 966L": 0.0,
     "RETRO ESCAVADEIRA CAT 416F2": 0.0,
     "TRATOR DE ESTEIRAS CAT D6T": 526.816922684912,
@@ -222,9 +222,15 @@ def execute_query(query: str) -> pd.DataFrame:
 @cache.memoize(timeout=60)
 def parse_json_to_df(json_data: Union[str, dict]) -> pd.DataFrame:
     """
-    Converte dados em JSON para DataFrame.
+    Converte dados em JSON para DataFrame, com tratamento para JSON inválido.
     """
-    return pd.read_json(json_data, orient="records")
+    if not json_data or isinstance(json_data, dict) or json_data == "":
+        return pd.DataFrame()
+    try:
+        return pd.read_json(json_data, orient="records")
+    except (ValueError, TypeError) as e:
+        logging.error(f"Erro ao parsear JSON: {e}")
+        return pd.DataFrame()
 
 # -----------------------------------------------------------------
 # Decorador para Profiling
@@ -305,7 +311,7 @@ def calc_faturamento_transporte(df: pd.DataFrame) -> float:
     df_esteril = calc_custo_por_faixa(df, "Movimentação Estéril", CUSTO_ESTERIL_MAP)
     total_esteril = df_esteril["custo_total"].sum() if not df_esteril.empty else 0
     df_adic = calc_custo_adicional(df)
-    total_adic = df_adic["custo_total (R$)"].sum()
+    total_adic = df_adic["custo_total (R$)"].sum() if not df_adic.empty else 0  # Adicionada verificação
     return total_minero + total_esteril + total_adic
 
 @profile_time
@@ -350,8 +356,8 @@ def build_export_excel_single_sheet(json_producao: Union[str, dict],
     Prepara um arquivo Excel com todos os dados de medição para exportação.
     Utiliza o context manager para garantir o fechamento correto do arquivo.
     """
-    df_prod: pd.DataFrame = pd.read_json(json_producao, orient="records") if json_producao and not isinstance(json_producao, dict) else pd.DataFrame()
-    df_hora: pd.DataFrame = pd.read_json(json_hora, orient="records") if json_hora and not isinstance(json_hora, dict) else pd.DataFrame()
+    df_prod: pd.DataFrame = parse_json_to_df(json_producao)
+    df_hora: pd.DataFrame = parse_json_to_df(json_hora)
 
     df_manut_excel: pd.DataFrame = df_manut_canteiro.copy()
     df_serv_event_excel: pd.DataFrame = df_servicos_eventuais.copy()
@@ -502,12 +508,12 @@ navbar = dbc.Navbar(
     dbc.Container([
         # Título com ícone estilizado
         dbc.NavbarBrand([
-            html.I(className="fas fa-calculator mr-2"),  # Ícone representando boletim de medição
+            html.I(className="fas fa-calculator me-2"),  # Corrigi "mr-2" para "me-2"
             "Boletim de Medição"
         ], href="/relatorio3", className="ms-2 d-flex align-items-center", style={"fontSize": "1.1rem"}),
         # Botão de retorno à página inicial
         dcc.Link([
-            html.I(className="fas fa-home mr-1"),  # Ícone de retorno
+            html.I(className="fas fa-home me-1"),  # Corrigi "mr-1" para "me-1"
             "Voltar"
         ], href="/", className="btn btn-sm", style={
             "borderRadius": "10px",
@@ -535,7 +541,8 @@ navbar = dbc.Navbar(
         "background": "linear-gradient(90deg, #343a40, #495057)",  # Gradiente suave
         "borderBottom": "1px solid rgba(255,255,255,0.1)",
         "padding": "0.5rem 0",
-        "fontSize": "0.9rem"
+        "fontSize": "0.9rem",
+        "zIndex": 999
     }
 )
 
@@ -545,7 +552,7 @@ layout = dbc.Container([
         dbc.Col(
             html.H3(
                 "Boletim de Medição",
-                className="text-center mt-4 mb-4",
+                className="text-center mt-5 mb-4",
                 style={
                     "fontFamily": "Arial, sans-serif",
                     "fontSize": "1.6rem",
@@ -580,7 +587,7 @@ layout = dbc.Container([
             ),
             dbc.Button(
                 [
-                    html.I(className="fas fa-filter mr-1"),  # Ícone de filtro
+                    html.I(className="fas fa-filter me-1"),  # Corrigi "mr-1" para "me-1"
                     "Aplicar Filtro"
                 ],
                 id="rel3-apply-button",
@@ -596,7 +603,7 @@ layout = dbc.Container([
                 }
             )
         ], xs=12, md=4)
-    ], className="mb-3 align-items-end"),
+    ], className="mb-3 align-items-end mt-5", style={"zIndex": 1000}),
     dcc.Store(id="rel3-data-store"),
     dcc.Store(id="rel3-fato-hora-store"),
     dcc.Download(id="download-excel"),
@@ -776,7 +783,7 @@ layout = dbc.Container([
         dbc.CardBody(
             dbc.Button(
                 [
-                    html.I(className="fas fa-file-excel mr-1"),  # Ícone de exportação
+                    html.I(className="fas fa-file-excel me-1"),  # Corrigi "mr-1" para "me-1"
                     "Exportar para Excel (1 Aba)"
                 ],
                 id="export-excel-button",
@@ -831,6 +838,9 @@ def apply_filter_unified(n_clicks: int, start_date: str, end_date: str) -> Tuple
         mask = cond & (group_counts > 1)
         df_prod.loc[mask, "dmt_tratado"] = np.where(group_means[mask] > 7000, 7000, group_means[mask])
 
+        # Garantir que não há valores nulos em dmt_tratado antes de pd.cut
+        df_prod = df_prod.dropna(subset=["dmt_tratado"])
+
         bins = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000]
         labels = [
             "0-500", "501-1000", "1001-1500", "1501-2000",
@@ -840,7 +850,6 @@ def apply_filter_unified(n_clicks: int, start_date: str, end_date: str) -> Tuple
         ]
         cat_type = CategoricalDtype(categories=labels, ordered=True)
         df_prod["dmt_bin"] = pd.cut(df_prod["dmt_tratado"], bins=bins, labels=labels, include_lowest=True, right=True).astype(cat_type)
-
     data_prod_json: Union[str, dict] = df_prod.to_json(orient="records") if not df_prod.empty else {}
 
     query_hora = (
@@ -957,7 +966,7 @@ def update_custo_adicional_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[st
 def update_horas_locacao_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df: pd.DataFrame = pd.read_json(json_data, orient="records")
+    df: pd.DataFrame = parse_json_to_df(json_data)
     if df.empty:
         return [], []
 
@@ -994,7 +1003,7 @@ def update_horas_locacao_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dic
 def update_horas_paradas_table_cb(json_data: Union[str, dict]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     if not json_data or isinstance(json_data, dict):
         return [], []
-    df: pd.DataFrame = pd.read_json(json_data, orient="records")
+    df: pd.DataFrame = parse_json_to_df(json_data)
     if df.empty:
         return [], []
 
@@ -1031,13 +1040,13 @@ def update_faturamento_final_cb(json_producao: Union[str, dict], json_hora: Unio
     if not json_producao or isinstance(json_producao, dict):
         fat_transporte: float = 0.0
     else:
-        df_prod: pd.DataFrame = pd.read_json(json_producao, orient="records")
+        df_prod: pd.DataFrame = parse_json_to_df(json_producao)
         fat_transporte = calc_faturamento_transporte(df_prod) if not df_prod.empty else 0.0
 
     if not json_hora or isinstance(json_hora, dict):
         fat_horas: float = 0.0
     else:
-        df_hora: pd.DataFrame = pd.read_json(json_hora, orient="records")
+        df_hora: pd.DataFrame = parse_json_to_df(json_hora)
         fat_horas = calc_faturamento_hora_60(df_hora) if not df_hora.empty else 0.0
 
     manut_total = df_manut_canteiro.loc[df_manut_canteiro["Item"] == "TOTAL", "Valor Total (R$)"].values[0]

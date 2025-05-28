@@ -623,12 +623,13 @@ def update_tabela_movimentacao(json_prod: Union[str, dict], day_choice: str, ope
     Output("rel4-grafico-viagens-hora", "figure"),
     Input("rel4-producao-store", "data"),
     Input("rel4-hora-store", "data"),
-    Input("projeto-store", "data")
+    Input("projeto-store", "data"),
+    Input("rel4-operacao-filter", "value")  # Novo input para o filtro de operação
 )
-def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict], projeto: str) -> Any:
+def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[str, dict], projeto: str, operacao_filter: Union[str, List[str], None]) -> Any:
     """
-    Cria o gráfico de Viagens por Hora Trabalhada a partir dos dados de produção e fato_hora.
-    Exibe mensagem se nenhum projeto estiver selecionado.
+    Cria o gráfico de Viagens por Hora Trabalhada a partir dos dados de produção e fato_hora, aplicando filtro de operação.
+    Exibe mensagem se nenhum projeto estiver selecionado ou se não houver dados.
     """
     if not projeto:
         logger.debug("[DEBUG] Nenhum projeto selecionado para gráfico de viagens/hora")
@@ -636,12 +637,22 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     if (not json_prod or isinstance(json_prod, dict)) or (not json_hora or isinstance(json_hora, dict)):
         logger.debug("[DEBUG] Dados insuficientes para gráfico de viagens/hora")
         return px.bar(title="Sem dados para o período.", template="plotly_white")
+    
     df_prod = pd.read_json(json_prod, orient="records")
     df_hora = pd.read_json(json_hora, orient="records")
     if df_prod.empty or df_hora.empty:
         logger.debug("[DEBUG] DataFrames vazios (Produção ou Hora)")
         return px.bar(title="Sem dados para o período.", template="plotly_white")
-    
+
+    # Aplicar o filtro de operação, se fornecido
+    if operacao_filter:
+        if isinstance(operacao_filter, str):
+            operacao_filter = [operacao_filter]
+        df_prod = df_prod[df_prod["nome_operacao"].isin(operacao_filter)]
+        if df_prod.empty:
+            logger.debug("[DEBUG] Nenhum dado após filtro de operação")
+            return px.bar(title="Nenhum dado para as operações selecionadas.", template="plotly_white")
+
     # Verificar coluna de estado
     estado_col = "nome_tipo_estado" if "nome_tipo_estado" in df_hora.columns else "nome_estado" if "nome_estado" in df_hora.columns else None
     if estado_col is None:
@@ -664,15 +675,22 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
     )
     if df_merged.empty:
         logger.debug("[DEBUG] Nenhum dado após merge para gráfico")
-        return px.bar(title="Sem dados para gerar Viagens/Hora.", template="plotly_white")
+        return px.bar(title="Sem dados para gerar Viagens/Hora após filtro.", template="plotly_white")
+    
     df_merged["viagens_por_hora"] = df_merged["viagens"] / df_merged["horas_trabalhadas"].replace(0, np.nan)
     df_merged["viagens_por_hora"] = df_merged["viagens_por_hora"].fillna(0)
     df_merged.sort_values("viagens_por_hora", inplace=True)
+
+    # Ajuste no título para indicar as operações filtradas
+    title = "Viagens por Hora Trabalhada"
+    if operacao_filter:
+        title += f" (Filtrado: {', '.join(operacao_filter)})"
+
     fig = px.bar(
         df_merged,
         x="nome_equipamento_utilizado",
         y="viagens_por_hora",
-        title="Viagens por Hora Trabalhada",
+        title=title,
         labels={"nome_equipamento_utilizado": "Equipamento", "viagens_por_hora": "Viagens/Hora"},
         text="viagens_por_hora",
         color="viagens_por_hora",
@@ -684,7 +702,10 @@ def update_grafico_viagens_hora(json_prod: Union[str, dict], json_hora: Union[st
         xaxis_title="Equipamento",
         yaxis_title="Viagens por Hora",
         title_x=0.5,
-        margin=dict(l=40, r=40, t=60, b=40)
+        margin=dict(l=40, r=40, t=60, b=40),
+        # Ajuste para melhorar a legibilidade com poucos dados
+        xaxis_tickangle=45,
+        height=500 if len(df_merged) > 5 else 400  # Ajusta altura com base no número de equipamentos
     )
     logger.debug(f"[DEBUG] Gráfico de viagens/hora criado com {len(df_merged)} equipamentos")
     return fig

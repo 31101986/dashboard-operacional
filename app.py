@@ -67,7 +67,7 @@ sys.modules.setdefault("app", sys.modules[__name__])
 # Importação dos relatórios (restaurada como no original)
 import pages.relatorio1 as rel1
 import pages.relatorio2 as rel2
-import pages.relatorio3 as rel3
+#import pages.relatorio3 as rel3
 import pages.relatorio4 as rel4
 import pages.relatorio5 as rel5
 import pages.relatorio6 as rel6
@@ -103,7 +103,7 @@ PAGE_DEFS = [
 CARD_IMAGES = [
     "/assets/mining.jpg",
     "/assets/mining2.jpg",
-    "/assets/mining3.jpg",
+    #"/assets/mining3.jpg",
     "/assets/mining4.jpg",
     "/assets/mining5.jpg",
     "/assets/mining6.jpg",
